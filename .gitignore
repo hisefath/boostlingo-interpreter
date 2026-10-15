@@ -1,0 +1,4 @@
+# software-factory-kit (scripts/init-repo.sh): agent event logs may contain file contents; raw demo footage
+.handoff/runs/*/events.jsonl
+.handoff/runs/*/stderr.log
+docs/demo/raw/
