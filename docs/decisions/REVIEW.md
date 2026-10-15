@@ -9,9 +9,13 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 ## By topic
 
-### Product (4)
+### Product (8)
 
+- ●●● D8 — Routine calls for the demo; high-stakes only to show failures.
+- ●●● D9 — Score faithfulness and critical terms, not just WER and speed.
 - ●●○ D2 — Ship voice-to-voice end to end before the three-stage chain.
+- ●●○ D10 — Measure from real speech end; show turn-detection wait as a stage.
+- ●●○ D11 — Stream settled segments only; price calls by their real length.
 - ●○○ D3 — Detect the speaker's language; no direction button.
 - ●○○ D4 — Median gates the target; p95 is always reported.
 - ●○○ D7 — The comparison is docs/COMPARISON.md, linked from README.
@@ -38,6 +42,10 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ### 2026-10-14
 
+- D11 · Product · ●●○ — Stream settled segments only; price calls by their real length.
+- D10 · Product · ●●○ — Measure from real speech end; show turn-detection wait as a stage.
+- D9 · Product · ●●● — Score faithfulness and critical terms, not just WER and speed.
+- D8 · Product · ●●● — Routine calls for the demo; high-stakes only to show failures.
 - D7 · Product · ●○○ — The comparison is docs/COMPARISON.md, linked from README.
 - D6 · Security · ●○○ — Paraphrase partner docs; keep the originals private.
 - D5 · Data · ●●○ — Score both modes on the same public FLEURS EN/ES set.

@@ -94,3 +94,39 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 - Cost accepted: a README link to keep in sync (garden-docs) · Reversibility: Type 2 · Confidence: high
 - Revisit if: the portal submission form asks for a specific file · Evidence: brief REQ-08 · Interview line: "The recommendation is one page anyone can open, and every number in it links to a measured run."
 - Review: Topic Product · Weight ●○○ · One-liner: The comparison is docs/COMPARISON.md, linked from README.
+
+### D8 Demo and evaluation use routine calls, not clinical talk  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (A-7, personas, AE-001, AE-003)
+- Context: R04 F6, the partner's own AI Interpreter rule: machine for routine calls, humans for clinical, legal and high-stakes talk; prompt review I-16.
+- Options: do nothing (keep the clinic diagnosis demo; contradicts the partner's product) · high-stakes only (rejected: shows the case they say AI should not handle) · routine scenarios plus a separate high-stakes set used only to show failures (chosen).
+- Choice · Why: in a partner audition, facing their published "AI when it fits, human when it counts" rule, we chose routine scenarios over clinical talk to get a recommendation that speaks their language, accepting a less dramatic demo.
+- Cost accepted: less dramatic demo · Reversibility: Type 2 · Confidence: high
+- Revisit if: the partner says the evaluation should target clinical use · Evidence: R04 F6 (S04.6) · Interview line: "I tested AI where Boostlingo already uses it, and showed exactly where it breaks on the high-stakes calls they keep for humans."
+- Review: Topic Product · Weight ●●● · One-liner: Routine calls for the demo; high-stakes only to show failures.
+
+### D9 Faithfulness and critical-term accuracy are scored per mode  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (FR-021..FR-023, SC-005)
+- Context: prompt review I-14 (the voice model may answer or obey instead of interpreting), I-17 (averages hide numbers and negations); R04 F9 (the open role: evals, guardrails, hallucination, prompt injection).
+- Options: do nothing (WER/BLEU only; misses the failures that matter) · human review of every turn (rejected: does not scale, not reproducible) · scripted adversarial and critical-term clips scored automatically per mode (chosen).
+- Choice · Why: we chose scored adversarial and critical-term clips over averages alone to get the failure modes the partner hires for, accepting ~1–2 h of eval work in M6.
+- Cost accepted: eval time inside the appetite · Reversibility: Type 2 · Confidence: high
+- Revisit if: the appetite forces cuts (keep ≥10 clips per type) · Evidence: prompt review I-14, I-17; R01 gap 6; R04 F9 · Interview line: "Speed means nothing if the interpreter answers the patient's question itself; I measured that first."
+- Review: Topic Product · Weight ●●● · One-liner: Score faithfulness and critical terms, not just WER and speed.
+
+### D10 Delay clock starts at the true end of speech  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (NFR-009)
+- Context: prompt review I-15: the vendor's "speech stopped" event fires after its silence wait (~500 ms default, R01 F6).
+- Options: do nothing (start at the vendor event; flatters numbers by ~0.5 s) · start at the true end of speech in the audio, with turn-detection wait as its own stage (chosen).
+- Choice · Why: we chose the true end of speech over the vendor event to get the delay the listener actually feels, accepting worse-looking numbers.
+- Cost accepted: numbers ~0.5 s higher · Reversibility: Type 2 · Confidence: high
+- Revisit if: never for the write-up; the vendor-event view can be shown beside it · Evidence: R01 F6 (S01.3) · Interview line: "My stopwatch starts when the speaker actually stops, not when the vendor notices."
+- Review: Topic Product · Weight ●●○ · One-liner: Measure from real speech end; show turn-detection wait as a stage.
+
+### D11 Never speak unsettled partial translations; report cost by session length  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (FR-004, FR-025, FR-024)
+- Context: prompt review I-20 (Spanish verbs and negation arrive late; spoken audio cannot be unsaid), I-19 (the voice model re-bills context, so cost per minute rises with call length; average call ~21 min, R06).
+- Options: do nothing (translate every partial; cost from short turns) · translate stable segments only, cost at 1 and 5 minutes with a 21-minute projection (chosen).
+- Choice · Why: we chose stable-segment streaming over translate-every-partial to get audio that is never wrong-then-corrected, accepting a little extra delay; and cost by length to get a number valid for real calls.
+- Cost accepted: some delay in three-stage mode · Reversibility: Type 2 · Confidence: med
+- Revisit if: stable-segment delay alone breaks the 3 s gate · Evidence: prompt review I-19, I-20; R01 I3; R06 · Interview line: "Streaming doesn't mean speaking guesses; I stream the settled part only."
+- Review: Topic Product · Weight ●●○ · One-liner: Stream settled segments only; price calls by their real length.
