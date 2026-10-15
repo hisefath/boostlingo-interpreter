@@ -16,7 +16,8 @@ gate: G0
 ## Ask
 
 > Boostlingo wants a working, measured comparison of two ways a machine can interpret live speech (one end-to-end
-> voice model vs. a chain of three swappable stages), plus a short written recommendation, within 3–4 days of work.
+> voice model vs. a chain of three swappable stages), plus a short written recommendation of which fits which
+> scenario and where each fails, within 3–4 days of work (prompt review AIM-0, AIM-1).
 
 The human's original words: "open https://portal.gauntletai.com/projects, find the boostlingo project, scrape the company info and company project and read through the attachement … and lets start their project with our new ai workflow on the new branch"
 
@@ -61,7 +62,8 @@ up later as slow or wrong interpretation for patients, defendants and students.
 | Stack | Postgres, SQL Server, Redis, AWS, Docker, CI/CD, SQS, LLM APIs, agents; PDF prefers C#/.NET backend + TypeScript frontend | portal company panel; PDF §Languages | a stack choice that matches theirs or explains why not (see REQ-20) |
 | Working style | async remote-first; high autonomy and ambiguous problem solving (5/5); 3–4 interview rounds, no coding assessment; interview access Week 4 | portal company panel | a write-up and decision journal that defend each call |
 | Business value | customers save ~20% on interpreting cost | portal company panel | cost per minute measured, compared with human interpreting ⚠ price (→ R05) |
-| AI product and hiring | ⚠ current machine interpretation offering and open roles (→ R04) | — | — |
+| AI product (answered by R04 F6) | already sells an AI Interpreter: speech-to-speech, 23 languages, one-tap switch to a human; its own rule is machine for routine calls (scheduling, check-in, enrollment) and humans for clinical, legal and high-stakes talk | R04 F6 | scenarios that match their rule; a recommendation per scenario incl. when a human must take over (prompt review AIM-0) |
+| Hiring (answered by R04 F9) | one open engineering role: own AI features, cost-aware trade-offs, evals and guardrails, anticipate hallucination, drift and prompt injection, write design docs | R04 F9 | an eval harness that measures failure modes (faithfulness, critical terms), not just speed |
 
 ## Value and metrics
 
@@ -71,7 +73,7 @@ up later as slow or wrong interpretation for patients, defendants and students.
 
 | ID | Candidate metric | Role | Actionable or vanity ("if bad, what would we fix?") | Leading or lagging | Data that would measure it |
 |---|---|---|---|---|---|
-| NS-01 | Share of interpreted turns that meet the mode's delay target (speech end → first translated audio) with acceptable quality, per mode | North Star | actionable: bad → the per-stage timeline shows which step to fix or which vendor to swap | lagging | per-turn timing log + quality scoring on a fixed test set ⚠ (→ R01, R03) |
+| NS-01 | Share of interpreted turns that meet the mode's delay target (speech end → first translated audio), stay faithful (nothing answered, added or obeyed) and have acceptable quality, per mode | North Star | actionable: bad → the per-stage timeline shows which step to fix or which vendor to swap | lagging | per-turn timing log + quality scoring on a fixed test set ⚠ (→ R01, R03) |
 | SM-01 | Median and p95 per-stage delay (hearing, translating, speaking, network) | explains NS-01 | actionable: points at the slow stage | leading | per-stage timestamps in each turn |
 | SM-02 | Cost per conversation minute, per mode | guards NS-01 (fast but unaffordable is not a win) | actionable: change vendor/model | lagging | metered usage per session × vendor price ⚠ (→ R01, R02) |
 | SM-03 | Source transcript word error rate and a target-side translation score | guards NS-01 (fast but wrong is not a win) | actionable: change the hearing or translating vendor | lagging | references from a public EN/ES test set ⚠ (→ R03) |

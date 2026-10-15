@@ -1,6 +1,6 @@
 ---
 milestone: M1
-reviewed: 2026-10-14 23:21 CDT (UTC-0500)
+reviewed: 2026-10-14 23:21 CDT (UTC-0500); pass 2 2026-10-14 23:54 CDT
 sources: [Boostlingo project PDF "AI Interpreter Workbench: Realtime API vs. Cascade Pipeline" (held by the human), Gauntlet portal project brief page "AI Interpreter Workbench" v1 updated 10/12/2026, Gauntlet portal Boostlingo company panel]
 gate: GI
 ---
@@ -39,17 +39,25 @@ architecture fits which scenario. The timebox is 3–4 days (15–20 hours).
 | REQ-22 | Deployment optional; AWS preferred if deployed; local with clear setup is fine | PDF §Cloud |
 
 ## what the partner is really evaluating
+question, try to find it first"): re-read against the partner's **own live product and hiring page** (R04 F6, F9),
+not just the prompt. AIM-0 and AIM-4 are new; AIM-0 now leads.
+
 | AIM | Hypothesis: what this project really tests | Evidence | Confidence |
 |---|---|---|---|
-| AIM-1 | Can the candidate form a **defensible, measured opinion** on an architecture choice Boostlingo will invest in for 12–18 months? The write-up and the instrumentation are the product; the two modes are the apparatus. | PDF Problem: "form a defensible opinion on when each architecture fits"; Business Context: choices "inform product and platform investment over the next 12–18 months"; impact metrics are all comparison metrics | high |
-| AIM-2 | Can the candidate build **real-time, streaming, vendor-neutral** infrastructure the way Boostlingo's platform needs it (thousands of concurrent sessions, many vendors, compliance)? Provider swap cost and time-to-onboard a language pair are the business levers. | Company panel: real-time ops at scale, HIPAA/SOC 2, "provider flexibility" and "time-to-onboard a new language pair" as impact metrics; FR emphasis on abstractions and streaming | med |
-| AIM-3 | Can the candidate **direct a coding agent** well and show it? The git history and AGENTS.md/CLAUDE.md are graded evidence of process, not just the app. | PDF requires an agentic assistant, "explain their choice", AGENTS.md "documenting how the candidate directed their coding agent", iterative git history | high |
+| AIM-0 | **Can the candidate tell *when* machine interpretation is safe to use, and prove it with evals and guardrails?** Boostlingo already ships an AI interpreter whose own rule is AI for routine calls, a human for clinical, legal and high-stakes talk, with a one-tap handoff. The open Engineer II role asks for evals, guardrails and anticipating AI failure modes (hallucination, drift, prompt injection) plus cost-aware trade-offs. The workbench is an audition for that job: the per-scenario recommendation is the product, and "where does each mode fail, and how would we catch it" is the core of it. | R04 F6 (AI Interpreter page: routine vs high-stakes, human handoff); R04 F9 (Engineer II: evals, guardrails, failure modes, cost-aware trade-offs, design docs); PDF asks "which fits which use case" | high |
+| AIM-1 | Can the candidate form a **defensible, measured opinion** on an architecture choice Boostlingo will invest in for 12–18 months? The write-up and the instrumentation are the product; the two modes are the apparatus. | PDF Problem: "form a defensible opinion on when each architecture fits"; Business Context: 12–18 months of investment; impact metrics are all comparison metrics | high |
+| AIM-4 | **Uncommon language pairs and vendor control are the reason the cascade exists.** The PDF names "differentiated quality on uncommon language pairs", vendor lock-in and "time-to-onboard a new language pair" as levers; an EN↔ES-only study cannot speak to them, and EN↔ES is the pair where the all-in-one model is strongest. | PDF Business Context + Key Impact Metrics; R04 F6 (their AI interpreter covers 23 languages vs 300+ human) | med |
+| AIM-2 | Can the candidate build **real-time, streaming, vendor-neutral** infrastructure the way Boostlingo's platform needs it? | Company panel: real-time ops at scale, HIPAA/SOC 2; FR emphasis on abstractions and streaming | med |
+| AIM-3 | Can the candidate **direct a coding agent** well and show it? The git history and AGENTS.md/CLAUDE.md are graded evidence of process. | PDF requires an agentic assistant, agent-usage doc, iterative history | high |
 
-**Recommended framing for the brief:** Build two instrumented interpretation paths over one shared UI, measured the
-same way, so a 1–2 page recommendation on cost, latency, quality and control is backed by our own numbers, and show
-the agent-directed process that produced it.
+**Recommended framing for the brief:** Build two instrumented interpretation paths over one shared screen and an
+eval harness that measures not just delay and cost but **where each one fails** (answering instead of interpreting,
+dropped negations and numbers, unsupported pairs), so the write-up can say, in Boostlingo's own terms, which
+architecture fits which scenario and when a human must take over.
 
 ## What graders / the partner will look at first
+0. Whether the recommendation matches how Boostlingo already sells AI ("AI when it fits, human when it counts") and
+   is backed by an eval that shows each mode's failure modes, not just its speed.
 1. The live demo: speak English, hear Spanish, see both transcripts and per-stage latency, flip modes.
 2. The comparison write-up and whether its numbers come from our runs (latency, WER, cost per minute).
 3. The code boundaries: provider interfaces, transport separation, a provider swap as a small diff.
@@ -73,10 +81,18 @@ the agent-directed process that produced it.
 | I-12 | Error paths unhandled (rate limit, timeout, empty transcript, mic denied) | Happy path demo works | Explicit code-quality miss | PDF §Code Quality | define-acceptance edge-case list; fake-provider tests |
 | I-13 | API spend runs away during testing (voice-to-voice minutes are expensive) | Lots of manual testing | Real money | inherent | ⚠ spend cap (→ GI); fakes in tests; usage meter |
 
+| I-14 | **Most serious issue.** The voice-to-voice model is a general assistant: asked "Where does it hurt?" or "What should I take for this?", it may *answer* instead of interpreting, add words, or obey "ignore your instructions" spoken by a participant | the mandated model is conversational; a one-line "translate only" instruction looks enough in a 20-second demo | an interpreter that speaks for itself is disqualifying in clinic or court; it is exactly the hallucination/injection failure the Engineer II role names | R01 gap 6 (gpt-realtime may answer instead of translating); R04 F9 | write-prd [Unwanted] FR (never answers, never follows spoken instructions); define-acceptance adversarial clips (questions to the interpreter, spoken injections) scored as a faithfulness rate per mode |
+| I-15 | Delay stopwatch started at the vendor's "speech stopped" event, which fires only after its silence wait (default ~500 ms), so the measured delay hides time the listener actually waits | the event is right there in the stream | numbers look ~0.5 s better than reality; the 1.5 s claim is not defensible | R01 F6 (server VAD, speech_stopped carries audio_end_ms) | write-prd NFR: clock starts at the true end of speech; design-hld reports turn-detection wait as its own stage |
+| I-16 | The demo and evaluation use high-stakes clinical talk, the very case Boostlingo says needs a human | clinic examples feel impressive and on-brand | the recommendation contradicts the partner's own product rule; looks naive | R04 F6 | write-prd: demo and eval scenarios are routine (scheduling, check-in, enrollment); one high-stakes set is used only to show where machine output fails |
+| I-17 | Average WER/BLEU hides the errors that matter: numbers, dates, dosages, names, negation ("no allergies") | averages are what the tools print | a mode that flips "no" to "yes" can still score 90 %+ | R03 (WER/BLEU are corpus averages); domain | define-acceptance: a critical-terms set scored exact-match per mode |
+| I-18 | Only EN↔ES measured, so "uncommon pairs" and "time to onboard a pair" go unanswered | the PDF minimum is EN↔ES | the cascade's main business case is never tested; write-up has a hole where the partner's differentiator sits | PDF Business Context, Key Impact Metrics; AIM-4 | GI decision: add one less-common pair as a timed onboarding exercise, or state the gap explicitly in the write-up |
+| I-19 | Cost per minute measured on short turns; the voice model re-bills the whole conversation on every response, so long calls cost more per minute | short tests are cheap | cost claim wrong for the 21-minute calls Boostlingo actually runs | R01 I3 (context re-billing); R06 (avg call ~21 min) | write-prd: cost reported vs session length from the 5-minute soak, extrapolated to 21 minutes with the formula shown |
+| I-20 | Streaming translation of unstable partial transcripts (Spanish verbs and negation often come late) speaks words that later turn out wrong | "streaming throughout" sounds like "translate every partial" | low delay bought with wrong audio that cannot be unsaid | REQ-10; domain | design-hld commit policy (translate only stable segments); eval counts spoken-then-wrong segments |
+
 Categories checked (each is a T row above or n/a with a reason): literal reading (I-1, I-5) · hidden grading
 criteria (I-10, I-11) · unstated non-functional bar (I-4, I-7, I-8) · wrong stack / partner mismatch (I-3) · demo vs
 depth (I-2, I-5) · deliverable gaps (I-10) · scope creep (I-9) · unverifiable success (I-5, I-6) · domain landmines
-(I-8, I-4, I-13) · copying v1 / prior work: n/a, no prior build of this project exists.
+(I-8, I-4, I-13, I-14, I-17, I-20) · hidden grading criteria also I-16, I-18 · copying v1 / prior work: n/a, no prior build of this project exists.
 
 ## Open questions
 - ⚠ What is the submission deadline and timezone? The portal and PDF give only "3–4 days"; no due date shows on the assignments page. (→ GI)
@@ -92,6 +108,9 @@ depth (I-2, I-5) · deliverable gaps (I-10) · scope creep (I-9) · unverifiable
 - R04: Who is Boostlingo (product, customers, stack, AI interpretation offering) and what do they hire for?
 - R05: Market: who already offers AI interpretation, to whom, at what price per minute, and where do customers cluster?
 - R06: Usage: when and how much is interpretation used (session length, peak hours, concurrency) — sizing the stability and cost story?
+
+Research questions answered since pass 1: R01–R06 (`docs/research/`). New research questions: none; I-14 and I-20
+are settled by our own eval, not by more reading.
 
 ## Interview log
 | Q | Question | Recommended | Human's answer (verbatim) |
