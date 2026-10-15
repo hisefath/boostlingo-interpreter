@@ -7,11 +7,11 @@ several harnesses read it and the repo is public.
 ## Resume
 
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
-- **As of:** <`date` output>
+- **As of:** 2026-10-14 23:30 CDT
 - **In flight:** none
-- **Next:** G-init — review the scaffold, then run `/sharpen-brief`
-- **Waiting on:** human
-- **Verified:** none yet <!-- <sha> <command> → <result> -->
+- **Next:** human answers the GI card (.handoff/checkpoints/GI-M1.md); then record the words in ## Approvals, log Type 1 decisions, and the human types `/plan-design`
+- **Waiting on:** human (GI)
+- **Verified:** 503059c `make check` → OK (pre-stack: no app code; decisions view current)
 
 ## Tasks
 
@@ -20,6 +20,7 @@ several harnesses read it and the repo is public.
 
 | id | ask (link) | track/phase | harness+model | state | since | owns | result |
 |---|---|---|---|---|---|---|---|
+| M1-PP | /plan-product for Boostlingo AI Interpreter Workbench (human, 2026-10-14) | Full / plan-product | Claude Code, claude-opus-5-5 (+3 research subagents) | input-required | 2026-10-14 23:21 CDT | specs/M1-interpreter-tradeoffs/**, docs/research/**, docs/product/prd.md | GI card sent |
 
 ## Approvals
 
@@ -28,9 +29,19 @@ several harnesses read it and the repo is public.
 
 | time | gate | artifact@sha | exact words |
 |---|---|---|---|
+| 2026-10-14 23:30 CDT | auto-T2 | specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2 | standing rule: Type 2 proceeds (WORKFLOW §5) — D1, D6, D7 |
+| 2026-10-14 23:30 CDT | auto-T2 | docs/product/prd.md@2bc910e | standing rule: Type 2 proceeds (WORKFLOW §5) — D2, D3, D4, D5 |
 
 ## Log
 
 <!-- Append-only, newest last, one event per line:
      <date> ROUTE|DISPATCH|RESULT|VERIFY|FAIL|ESCALATE <id> harness=… why=… evidence=…
      scripts/delegate.sh appends DISPATCH and RESULT lines itself. -->
+2026-10-14 23:21 CDT ROUTE M1-PP track=Full why=new graded greenfield product, no PRD (WORKFLOW §3)
+2026-10-14 23:22 CDT DISPATCH M1-R01 harness=claude-subagent why=one skill (gather-evidence), isolated file, parallel
+2026-10-14 23:22 CDT DISPATCH M1-R02R03 harness=claude-subagent why=one skill (gather-evidence), isolated files, parallel
+2026-10-14 23:22 CDT DISPATCH M1-R04R06 harness=claude-subagent why=one skill (gather-evidence), isolated files, parallel
+2026-10-14 23:30 CDT RESULT M1-R01 status=done harness=claude-subagent timeout=no tree=dirty
+2026-10-14 23:30 CDT RESULT M1-R02R03 status=human_review harness=claude-subagent timeout=no tree=dirty
+2026-10-14 23:30 CDT RESULT M1-R04R06 status=human_review harness=claude-subagent timeout=no tree=dirty
+2026-10-14 23:30 CDT VERIFY M1-research sources merged, S-id integrity checks empty, duplicate S02.5→S01.7; evidence=cd5364d
