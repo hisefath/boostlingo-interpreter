@@ -7,11 +7,11 @@ several harnesses read it and the repo is public.
 ## Resume
 
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
-- **As of:** 2026-10-14 23:30 CDT
+- **As of:** 2026-10-14 23:58 CDT
 - **In flight:** none
 - **Next:** human answers the GI card (.handoff/checkpoints/GI-M1.md); then record the words in ## Approvals, log Type 1 decisions, and the human types `/plan-design`
 - **Waiting on:** human (GI)
-- **Verified:** 503059c `make check` → OK (pre-stack: no app code; decisions view current)
+- **Verified:** 37495f6 `make check` → OK (pre-stack: no app code; decisions view current)
 
 ## Tasks
 
@@ -31,6 +31,7 @@ several harnesses read it and the repo is public.
 |---|---|---|---|
 | 2026-10-14 23:30 CDT | auto-T2 | specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2 | standing rule: Type 2 proceeds (WORKFLOW §5) — D1, D6, D7 |
 | 2026-10-14 23:30 CDT | auto-T2 | docs/product/prd.md@2bc910e | standing rule: Type 2 proceeds (WORKFLOW §5) — D2, D3, D4, D5 |
+| 2026-10-14 23:56 CDT | auto-T2 | docs/product/prd.md@d607ae5 | standing rule: Type 2 proceeds (WORKFLOW §5) — D8, D9, D10, D11 |
 
 ## Log
 
@@ -45,3 +46,4 @@ several harnesses read it and the repo is public.
 2026-10-14 23:30 CDT RESULT M1-R02R03 status=human_review harness=claude-subagent timeout=no tree=dirty
 2026-10-14 23:30 CDT RESULT M1-R04R06 status=human_review harness=claude-subagent timeout=no tree=dirty
 2026-10-14 23:30 CDT VERIFY M1-research sources merged, S-id integrity checks empty, duplicate S02.5→S01.7; evidence=cd5364d
+2026-10-14 23:58 CDT VERIFY M1-PP PRD Done-when checks empty after revise; evidence=d607ae5

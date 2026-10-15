@@ -1,22 +1,30 @@
 # GI card — M1 interpreter-tradeoffs
-As of: 2026-10-14 23:30 CDT · Artifacts: specs/M1-interpreter-tradeoffs/prompt-review.md, specs/M1-interpreter-tradeoffs/brief.md @a1dbdf2 · docs/research/R01–R06 + sources.md @cd5364d · docs/product/prd.md @503059c · docs/decisions/DECISION_JOURNAL.md D1–D7 @503059c
+As of: 2026-10-14 23:58 CDT (revised after second prompt review) · Artifacts: specs/M1-interpreter-tradeoffs/prompt-review.md, specs/M1-interpreter-tradeoffs/brief.md @a1dbdf2 · docs/research/R01–R06 + sources.md @cd5364d · docs/product/prd.md @d607ae5 · second prompt review @6d428e5 · docs/decisions/DECISION_JOURNAL.md D1–D11 @37495f6
 
 ## Summary (one screen)
-**Real ask (AIM-1, high):** Boostlingo is not buying an app. It wants a *defensible, measured opinion* on which
-interpretation architecture to invest in for 12–18 months. The two modes are the measuring tool; the 1–2 page write-up
-plus honest per-stage timing is the product. AIM-3 (high): how we directed the coding agent is graded too (agent doc,
-git history).
-**What we build:** one browser screen, EN↔ES. Mode A = OpenAI `gpt-realtime` voice-to-voice. Mode B = streaming
-speech-to-text → translation → text-to-speech with a swappable vendor per stage. Live transcripts, per-stage timing on one
-clock, failure handling, then a scored run of both modes on the same public FLEURS EN/ES clips → `docs/COMPARISON.md`.
-**North Star (SC-001):** share of turns per mode that hit the delay target (≤1.5 s voice-to-voice, ≤3 s chain) with
-word error rate ≤15 %. Guards: cost per minute against human Spanish interpreting at $0.47/min phone and $0.77/min video
-(R05), and a translation quality score.
-**Key research:** voice-to-voice ≈ $0.10/min of audio plus re-billed context (R01); chain stages cost $0.002–0.006/min
-for speech-to-text plus per-character TTS (R02); Boostlingo already sells an "AI Interpreter" with a one-tap human handoff,
-and its one open engineering role is AI features + evals + guardrails (R04).
-**Scope cut:** M4 voice-to-voice tracer bullet → M5 chain + switching + vendor swap → M6 evaluation, 5-minute soak,
-write-up. Not doing: other language pairs, accounts, multi-device calls, production hosting.
+**what the partner is really evaluating (AIM-0, high, new):** *Can you tell when machine interpretation is safe to use, and
+prove it with evals and guardrails?* Boostlingo already sells an AI Interpreter, and its own rule is "AI when it fits,
+human when it counts": machine for routine calls (scheduling, check-in, enrollment), humans for clinical, legal and
+high-stakes talk, with a one-tap handoff (R04 F6). Their one open engineering role asks for evals, guardrails,
+cost-aware trade-offs and catching hallucination and prompt injection (R04 F9). So the workbench is an audition for that
+job: the deliverable is a per-scenario recommendation backed by *where each mode fails*, not just which is faster.
+
+**Most serious issue (I-14):** `gpt-realtime` is a general assistant. Asked "What do you recommend I take?" it may *answer* instead
+of interpreting, add words, or obey "ignore your instructions" spoken by a participant. A 20-second demo never shows it.
+Guard: FR-021 (never answer or obey) + scored adversarial clips per mode (FR-022, SC-005 hard gate).
+
+**Other issues found in pass 2:** I-15 the vendor's "speech stopped" event fires after ~0.5 s of silence-wait, so a naive
+stopwatch flatters both modes (we start at the true end of speech) · I-16 a clinic-diagnosis demo is the case Boostlingo
+says needs a human (now routine calls) · I-17 averages hide flipped numbers and negations (critical-term scoring) · I-18
+EN↔ES alone can't test the cascade's real business case, uncommon pairs (item 11) · I-19 the voice model re-bills the
+whole call, so cost per minute rises with length (priced at 1, 5 and a projected 21 minutes) · I-20 streaming unsettled
+Spanish partials speaks words that turn out wrong (settled segments only).
+
+**What we build:** one browser screen, EN↔ES, two modes (OpenAI `gpt-realtime` voice-to-voice; streaming speech-to-text
+→ translation → text-to-speech with a swappable vendor per stage), live transcripts, per-stage timing, failure handling,
+then an eval of both modes on the same clips (delay, WER, translation score, faithfulness, critical terms, cost by call
+length) → `docs/COMPARISON.md`: which mode fits which scenario, and where a human must take over.
+**Milestones:** M4 voice-to-voice tracer bullet → M5 cascade + switching + vendor swap → M6 eval, 5-minute soak, write-up.
 
 ## Decided for you (Type 2, reversible)
 | D | Decision | Why | Reopen? |
@@ -28,6 +36,10 @@ write-up. Not doing: other language pairs, accounts, multi-device calls, product
 | D5 | Score on FLEURS EN/ES, ≥20 clips per direction | public, licensed, both directions | say "reopen D5" |
 | D6 | Partner docs kept private, paraphrased | repo will be public | say "reopen D6" |
 | D7 | Write-up at docs/COMPARISON.md | one findable page | say "reopen D7" |
+| D8 | Demo and eval use routine calls; a high-stakes set only shows failures | matches Boostlingo's own AI rule | say "reopen D8" |
+| D9 | Score faithfulness and critical terms per mode | the failures the partner hires to catch | say "reopen D9" |
+| D10 | Stopwatch starts at the true end of speech | the delay the listener feels | say "reopen D10" |
+| D11 | Stream settled segments only; cost priced by call length | no wrong-then-unsaid audio; real-call cost | say "reopen D11" |
 
 ## Your decisions (Type 1 and human-only questions)
 ### 1. Submission deadline?
@@ -82,6 +94,16 @@ Recommended answer: yes, stop playback and interpret the new turn. Default: yes.
 Background: the PDF says candidate's choice, *preferred* C#/.NET + TypeScript, Python acceptable, explain the choice (C-3). The stack itself is a Type 1 decision at the Design check.
 Recommended answer: context only. Default: context only.
 
+### 11. Add one less-common language pair as a timed onboarding exercise?
+Background: the PDF names "uncommon language pairs" and "time to onboard a pair" as business levers; that is where the
+cascade should beat the all-in-one model, and EN↔ES alone can't show it (I-18, AIM-4). Scope, not money.
+| Option | Cost | |
+|---|---|---|
+| A Yes, one pair (picked at the Design check from vendor support), timeboxed to 2 h in M6 | ~2 h of the appetite; a measured "hours to onboard" number | **recommended** |
+| B No, state the gap in the write-up | 0 h; the write-up can't answer the partner's differentiator | |
+| Do nothing | same as B, unstated | |
+Default: B.
+
 Also yours (no answer needed now): create the public GitLab repo + GitHub mirror before the first push (U-05).
 
 ## Skipped or reused
@@ -90,41 +112,41 @@ Also yours (no answer needed now): create the public GitLab repo + GitHub mirror
 - Research gaps (38 evidence gaps across R01–R06) are not questions for you; the ones that matter for design go to the Design check.
 
 ## Where each open question in the artifacts lands
-`grep -c` lines: prompt review 8 · brief 18 · prd 6 = 32 lines (37 glyphs, all mapped below).
+`grep -c` lines: prompt review 8 · brief 17 · prd 7 = 32 lines (37 glyphs, all mapped below).
 
 | Artifact line | Glyphs | Lands in |
 |---|---|---|
-| prompt-review.md:72 | ⚠ | 5 git history |
-| prompt-review.md:74 | ⚠ | 2 spend cap |
-| prompt-review.md:82 | ⚠ | 1 deadline |
+| prompt-review.md:81 | ⚠ | 5 git history |
 | prompt-review.md:83 | ⚠ | 2 spend cap |
-| prompt-review.md:84 | ⚠ | 3 vendor accounts |
-| prompt-review.md:85 | ⚠ | 4 hosting |
-| prompt-review.md:86 | ⚠ | 5 git history |
-| prompt-review.md:99 | ⚠ | meta: says questions go to this card |
-| brief.md:63 | ⚠ | answered by R01/R02/R03/R05 (research) |
-| brief.md:64 | ⚠ | answered by R04 |
-| brief.md:74 | ⚠ | answered by R01/R02/R03/R05 (research) |
-| brief.md:76 | ⚠ | answered by R01/R02/R03/R05 (research) |
-| brief.md:77 | ⚠ | answered by R01/R02/R03/R05 (research) |
-| brief.md:86 | ⚠ | 1 deadline |
-| brief.md:87 | ⚠ | 1 deadline |
-| brief.md:91 | ⚠ | 1 deadline |
-| brief.md:92 | ⚠ | 1 deadline |
+| prompt-review.md:99 | ⚠ | 1 deadline |
+| prompt-review.md:100 | ⚠ | 2 spend cap |
+| prompt-review.md:101 | ⚠ | 3 vendor accounts |
+| prompt-review.md:102 | ⚠ | 4 hosting |
+| prompt-review.md:103 | ⚠ | 5 git history |
+| prompt-review.md:120 | ⚠ | meta: says questions go to this card |
+| brief.md:64 | ⚠ | answered by research R01–R05 |
+| brief.md:76 | ⚠ | answered by research R01–R05 |
+| brief.md:78 | ⚠ | answered by research R01–R05 |
+| brief.md:79 | ⚠ | answered by research R01–R05 |
+| brief.md:88 | ⚠ | 1 deadline |
+| brief.md:89 | ⚠ | 1 deadline |
 | brief.md:93 | ⚠ | 1 deadline |
-| brief.md:109 | ⚠⚠⚠ | D7 write-up path (decided for you) |
-| brief.md:116 | ⚠⚠ | 8 agent-usage section |
-| brief.md:123 | ⚠⚠ | 4 hosting |
-| brief.md:133 | ⚠ | 6 partner docs |
-| brief.md:134 | ⚠ | 6 partner docs |
-| brief.md:139 | ⚠ | 1 deadline |
-| brief.md:162 | ⚠ | answered by R04 |
-| brief.md:180 | ⚠⚠ | meta: says questions go to this card |
+| brief.md:94 | ⚠ | 1 deadline |
+| brief.md:95 | ⚠ | 1 deadline |
+| brief.md:111 | ⚠⚠⚠ | D7 write-up path (decided) |
+| brief.md:118 | ⚠⚠ | 8 agent-usage section |
+| brief.md:125 | ⚠⚠ | 4 hosting |
+| brief.md:135 | ⚠ | 6 partner docs |
+| brief.md:136 | ⚠ | 6 partner docs |
+| brief.md:141 | ⚠ | 1 deadline |
+| brief.md:164 | ⚠ | answered by research R04 |
+| brief.md:182 | ⚠⚠ | meta: says questions go to this card |
 | prd.md:66 | ⚠ | 1 deadline |
-| prd.md:158 | ⚠ | 2 spend cap |
-| prd.md:196 | ⚠ | 9 barge-in |
-| prd.md:214 | ⚠ | 7 third model |
-| prd.md:215 | ⚠ | 4 hosting |
-| prd.md:253 | ⚠ | 10 language preference |
+| prd.md:163 | ⚠ | 2 spend cap |
+| prd.md:209 | ⚠ | 9 barge-in |
+| prd.md:228 | ⚠ | 11 uncommon pair |
+| prd.md:229 | ⚠ | 2 spend cap |
+| prd.md:230 | ⚠ | 4 hosting |
+| prd.md:269 | ⚠ | 10 language preference |
 
-Reply in one message, e.g. `1 default 2A 3 "OpenAI+Deepgram" 4A 5-10 default`, or Revise / Stop.
+Reply in one message, e.g. `1 default 2A 3 "OpenAI+Deepgram+ElevenLabs" 4A 5-10 default 11A`, or Revise / Stop.
