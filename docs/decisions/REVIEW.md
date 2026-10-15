@@ -9,7 +9,24 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 ## By topic
 
-- none yet
+### Product (4)
+
+- ●●○ D2 — Ship voice-to-voice end to end before the three-stage chain.
+- ●○○ D3 — Detect the speaker's language; no direction button.
+- ●○○ D4 — Median gates the target; p95 is always reported.
+- ●○○ D7 — The comparison is docs/COMPARISON.md, linked from README.
+
+### Data (1)
+
+- ●●○ D5 — Score both modes on the same public FLEURS EN/ES set.
+
+### Security (1)
+
+- ●○○ D6 — Paraphrase partner docs; keep the originals private.
+
+### Process (1)
+
+- ●○○ D1 — Full track, one planning session, one batched card.
 
 ## How the workflow improved
 
@@ -19,4 +36,12 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ## By day
 
-- none yet
+### 2026-10-14
+
+- D7 · Product · ●○○ — The comparison is docs/COMPARISON.md, linked from README.
+- D6 · Security · ●○○ — Paraphrase partner docs; keep the originals private.
+- D5 · Data · ●●○ — Score both modes on the same public FLEURS EN/ES set.
+- D4 · Product · ●○○ — Median gates the target; p95 is always reported.
+- D3 · Product · ●○○ — Detect the speaker's language; no direction button.
+- D2 · Product · ●●○ — Ship voice-to-voice end to end before the three-stage chain.
+- D1 · Process · ●○○ — Full track, one planning session, one batched card.

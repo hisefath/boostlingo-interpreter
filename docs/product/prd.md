@@ -4,7 +4,7 @@
 |---|---|
 | Source brief | `specs/M1-interpreter-tradeoffs/brief.md` @ pending (committed with this PRD; GI covers both) |
 | Track | Full |
-| Last updated | 2026-10-14 23:40 CDT (UTC-0500) |
+| Last updated | 2026-10-14 23:30 CDT (UTC-0500) |
 | Context names | Boostlingo |
 | Approval | G1 — recorded in `.handoff/TRACKER.md ## Approvals` (never in this file) |
 
@@ -288,7 +288,7 @@ Answered from sources: Problem → brief Problem, R04 · Job stories → brief J
 
 | Date | Change | Ids affected | Gate |
 |---|---|---|---|
-| 2026-10-14 23:40 CDT | First draft | all | G1 |
+| 2026-10-14 23:30 CDT | First draft | all | G1 |
 
 ## Clarifications
 
