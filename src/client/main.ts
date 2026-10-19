@@ -1,7 +1,7 @@
 // Workbench UI: orb, architecture toggle, pipeline view, metrics terminal, conversation (render only; state lives
 // in Session). Every number shown comes from the turn's timing points; a mode never shows a metric it cannot see.
 import type { Lang, Mode, TimingPoint } from "../shared/contracts.ts";
-import { runEval } from "./eval.ts";
+import { runEval, runSoak } from "./eval.ts";
 import {
   cascadeLayers,
   MODE_LABEL,
@@ -22,6 +22,7 @@ import { RealtimeTransport } from "./transports/realtime.ts";
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const startBtn = $<HTMLButtonElement>("start");
 const evalBtn = $<HTMLButtonElement>("eval");
+const soakBtn = $<HTMLButtonElement>("soak");
 const pairSel = $<HTMLSelectElement>("pair");
 const headphones = $<HTMLInputElement>("headphones");
 const statusEl = $("status");
@@ -34,12 +35,14 @@ const LOG_MAX = 500;
 let vendors: Record<string, string> = {};
 let micDenied = false;
 let busy = false;
+let noticeTap: ((msg: string) => void) | null = null; // soak counts disconnect/reconnect notices
 const setStatus = (msg: string) => (statusEl.textContent = msg);
 
 const session = new Session(
   (mode, ev) => (mode === "realtime" ? new RealtimeTransport(ev) : new CascadeTransport(ev)),
   (notice, isError) => {
     if (notice) {
+      noticeTap?.(notice);
       setStatus(notice);
       log(`${isError ? "!" : "#"} ${notice}`, isError ? "bad" : "muted");
       if (isError) flashError();
@@ -255,6 +258,7 @@ function render(): void {
   startBtn.classList.toggle("live", session.live);
   startBtn.disabled = micDenied || busy;
   evalBtn.disabled = busy;
+  soakBtn.disabled = busy;
   pairSel.disabled = session.live;
 }
 
@@ -317,7 +321,10 @@ document.querySelectorAll<HTMLInputElement>('input[name="mode"]').forEach((r) =>
 pairSel.addEventListener("change", () => (session.pair = pairSel.value.split("-") as [Lang, Lang]));
 headphones.addEventListener("change", () => session.setEchoGuard(!headphones.checked));
 
-evalBtn.addEventListener("click", async () => {
+async function runJob(
+  name: string,
+  job: (progress: (msg: string) => void) => Promise<unknown>,
+): Promise<void> {
   busy = true;
   startMeter();
   render();
@@ -326,15 +333,23 @@ evalBtn.addEventListener("click", async () => {
     log(`# ${msg}`, "muted");
   };
   try {
-    await runEval(session, vendors, progress);
+    await job(progress);
   } catch (e) {
-    setStatus(`Eval failed: ${(e as Error).message}`);
-    log(`! eval failed: ${(e as Error).message}`, "bad");
+    setStatus(`${name} failed: ${(e as Error).message}`);
+    log(`! ${name.toLowerCase()} failed: ${(e as Error).message}`, "bad");
     flashError();
   } finally {
+    session.setEchoGuard(!headphones.checked); // eval/soak turn the echo guard off; restore the user's choice
     busy = false;
     render();
   }
+}
+
+evalBtn.addEventListener("click", () => runJob("Eval", (p) => runEval(session, vendors, p)));
+soakBtn.addEventListener("click", () => {
+  const notices: string[] = [];
+  noticeTap = (m) => notices.push(m);
+  void runJob("Soak", (p) => runSoak(session, vendors, p, notices)).finally(() => (noticeTap = null));
 });
 
 fetch("/api/config")
