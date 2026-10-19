@@ -9,28 +9,44 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 ## By topic
 
-### Product (8)
+### Product (11)
 
 - ●●● D8 — Routine calls for the demo; high-stakes only to show failures.
 - ●●● D9 — Score faithfulness and critical terms, not just WER and speed.
 - ●●○ D2 — Ship voice-to-voice end to end before the three-stage chain.
 - ●●○ D10 — Measure from real speech end; show turn-detection wait as a stage.
 - ●●○ D11 — Stream settled segments only; price calls by their real length.
+- ●●○ D21 — One extra pair, 2 h, in M6.
 - ●○○ D3 — Detect the speaker's language; no direction button.
 - ●○○ D4 — Median gates the target; p95 is always reported.
 - ●○○ D7 — The comparison is docs/COMPARISON.md, linked from README.
+- ●○○ D17 — Third model only if time remains.
+- ●○○ D19 — Barge-in stops playback.
 
 ### Data (1)
 
 - ●●○ D5 — Score both modes on the same public FLEURS EN/ES set.
 
-### Security (1)
+### Security (2)
 
 - ●○○ D6 — Paraphrase partner docs; keep the originals private.
+- ●○○ D16 — Confirms D6.
 
-### Process (1)
+### Money (1)
+
+- ●●● D12 — Spend cap $30; tests use fakes.
+
+### Infrastructure (3)
+
+- ●●○ D13 — OpenAI + Deepgram + ElevenLabs.
+- ●●○ D14 — Local-only; hosting decided later.
+- ●○○ D20 — Stack decided at the Design check.
+
+### Process (3)
 
 - ●○○ D1 — Full track, one planning session, one batched card.
+- ●○○ D15 — Per-task commits, no milestone squash.
+- ●○○ D18 — Agent-usage section in AGENTS.md.
 
 ## How the workflow improved
 
@@ -39,6 +55,19 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 - none yet
 
 ## By day
+
+### 2026-10-18
+
+- D21 · Product · ●●○ — One extra pair, 2 h, in M6.
+- D20 · Infrastructure · ●○○ — Stack decided at the Design check.
+- D19 · Product · ●○○ — Barge-in stops playback.
+- D18 · Process · ●○○ — Agent-usage section in AGENTS.md.
+- D17 · Product · ●○○ — Third model only if time remains.
+- D16 · Security · ●○○ — Confirms D6.
+- D15 · Process · ●○○ — Per-task commits, no milestone squash.
+- D14 · Infrastructure · ●●○ — Local-only; hosting decided later.
+- D13 · Infrastructure · ●●○ — OpenAI + Deepgram + ElevenLabs.
+- D12 · Money · ●●● — Spend cap $30; tests use fakes.
 
 ### 2026-10-14
 

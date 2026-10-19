@@ -7,11 +7,11 @@ several harnesses read it and the repo is public.
 ## Resume
 
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
-- **As of:** 2026-10-14 23:58 CDT
+- **As of:** 2026-10-18 22:47 CDT
 - **In flight:** none
-- **Next:** human answers the GI card (.handoff/checkpoints/GI-M1.md); then record the words in ## Approvals, log Type 1 decisions, and the human types `/plan-design`
-- **Waiting on:** human (GI)
-- **Verified:** 37495f6 `make check` → OK (pre-stack: no app code; decisions view current)
+- **Next:** human gives the deadline (GI item 1 still open: reply was the literal "<date>"); then the human types `/plan-design`
+- **Waiting on:** human (deadline)
+- **Verified:** 3c0eba5 `make check` → OK
 
 ## Tasks
 
@@ -20,7 +20,7 @@ several harnesses read it and the repo is public.
 
 | id | ask (link) | track/phase | harness+model | state | since | owns | result |
 |---|---|---|---|---|---|---|---|
-| M1-PP | /plan-product for Boostlingo AI Interpreter Workbench (human, 2026-10-14) | Full / plan-product | Claude Code, claude-opus-5-5 (+3 research subagents) | input-required | 2026-10-14 23:21 CDT | specs/M1-interpreter-tradeoffs/**, docs/research/**, docs/product/prd.md | GI card sent |
+| M1-PP | /plan-product for Boostlingo AI Interpreter Workbench (human, 2026-10-14) | Full / plan-product | Claude Code, claude-opus-5-5 (+3 research subagents) | done (GI approved except deadline) | 2026-10-14 23:21 CDT | specs/M1-interpreter-tradeoffs/**, docs/research/**, docs/product/prd.md | GI card sent |
 
 ## Approvals
 
@@ -32,6 +32,7 @@ several harnesses read it and the repo is public.
 | 2026-10-14 23:30 CDT | auto-T2 | specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2 | standing rule: Type 2 proceeds (WORKFLOW §5) — D1, D6, D7 |
 | 2026-10-14 23:30 CDT | auto-T2 | docs/product/prd.md@2bc910e | standing rule: Type 2 proceeds (WORKFLOW §5) — D2, D3, D4, D5 |
 | 2026-10-14 23:56 CDT | auto-T2 | docs/product/prd.md@d607ae5 | standing rule: Type 2 proceeds (WORKFLOW §5) — D8, D9, D10, D11 |
+| 2026-10-18 22:47 CDT | GI | .handoff/checkpoints/GI-M1.md@3c0eba5 | "Take all your recommendations on the GI card, deadline is <date>." |
 
 ## Log
 
@@ -48,3 +49,4 @@ several harnesses read it and the repo is public.
 2026-10-14 23:30 CDT VERIFY M1-research sources merged, S-id integrity checks empty, duplicate S02.5→S01.7; evidence=cd5364d
 2026-10-14 23:54 CDT ROUTE M1-PP prompt review revised against partner research (R04 F6, F9)
 2026-10-14 23:58 CDT VERIFY M1-PP PRD Done-when checks empty after revise; evidence=d607ae5
+2026-10-18 22:47 CDT VERIFY M1-PP GI approved items 2-11 by the human; item 1 (deadline) unanswered

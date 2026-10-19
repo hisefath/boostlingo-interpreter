@@ -130,3 +130,93 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 - Cost accepted: some delay in three-stage mode · Reversibility: Type 2 · Confidence: med
 - Revisit if: stable-segment delay alone breaks the 3 s gate · Evidence: prompt review I-19, I-20; R01 I3; R06 · Interview line: "Streaming doesn't mean speaking guesses; I stream the settled part only."
 - Review: Topic Product · Weight ●●○ · One-liner: Stream settled segments only; price calls by their real length.
+
+### D12 Vendor spend capped at $30, fakes in automated tests  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: NFR-007; voice-to-voice ≈ $0.10/min before context re-billing (R01)
+- Options: do nothing (no live testing; benchmarks unmeasurable) · $15 (rejected: ~20-clip eval, few soak runs) · $60 (rejected: more than needed) · $30 with fakes in tests (chosen)
+- Choice · Why: we chose cap $30 total to get the demo, soak runs and a 40-clip × 2-mode eval, accepting little room for re-runs.
+- Cost accepted: re-runs limited · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: evaluation needs more than ~2 h of live audio · Evidence: R01, R02; card item 2; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I kept a hard $30 budget and used fake vendors in tests so spend only buys measurements."
+- Review: Topic Money · Weight ●●● · One-liner: Spend cap $30; tests use fakes.
+
+### D13 Vendors: OpenAI required, Deepgram and ElevenLabs on free tiers  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-1, C-4, FR-016, NFR-006; R02 (Deepgram server end-of-speech, ElevenLabs text-streaming input)
+- Options: do nothing / OpenAI only (all three stages on one vendor; weak swap story) · OpenAI + Deepgram + ElevenLabs (chosen)
+- Choice · Why: we chose three vendors to get server-side end-of-speech and streaming text-to-speech plus a real alternate per stage, accepting two more accounts for the human to open.
+- Cost accepted: two extra accounts (human-owned, U-03) · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: a free tier blocks EN/ES streaming · Evidence: R02; card item 3; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Each stage has a second vendor, so the swap is proven, not promised."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: OpenAI + Deepgram + ElevenLabs.
+
+### D14 Run locally; decide hosting after the write-up  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-6, NG-4, REQ-22
+- Options: do nothing (no setup docs; fails REQ-14) · AWS preview (rejected now: ~2–3 h, needs HTTPS for the mic) · Railway (rejected: not the partner preference) · local-only with setup steps (chosen)
+- Choice · Why: we chose local-only to protect the build hours, accepting that graders run it themselves.
+- Cost accepted: graders must run it locally; GT on localhost · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: the write-up is done with time left · Evidence: PRD C-6; card item 4; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Hosting was optional, so I spent the hours on measurement instead."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: Local-only; hosting decided later.
+
+### D15 One commit per task; milestones merged without squash  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: REQ-16 (logical history)
+- Options: do nothing (factory default squash) · per-task commits + merge commits (chosen)
+- Choice · Why: we chose readable logical history, accepting a longer log.
+- Cost accepted: longer log · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: never · Evidence: card item 5; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The history reads as the steps I actually took."
+- Review: Topic Process · Weight ●○○ · One-liner: Per-task commits, no milestone squash.
+
+### D16 Partner documents stay private and paraphrased  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: U-01, U-02
+- Options: do nothing (commit PDF) · paraphrase + private copy (chosen)
+- Choice · Why: we chose no partner text in a public repo, accepting vaguer citations.
+- Cost accepted: vaguer citations · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: partner clears quoting · Evidence: card item 6; D6; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I treated the partner brief as confidential."
+- Review: Topic Security · Weight ●○○ · One-liner: Confirms D6.
+
+### D17 Measure the dedicated translate model only if time and spend remain  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: SC-001, SC-003; R01 (gpt-realtime-translate, $0.034/min)
+- Options: do nothing (skip) · measure in M6 if time and spend remain (chosen)
+- Choice · Why: we chose a stronger write-up at low cost, accepting it may be dropped.
+- Cost accepted: may be cut · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: spend or time runs short · Evidence: card item 7; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The vendor ships a purpose-built interpreter model; I checked it against both modes."
+- Review: Topic Product · Weight ●○○ · One-liner: Third model only if time remains.
+
+### D18 Agent-usage section drafted for AGENTS.md at M6  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: REQ-15, C-7
+- Options: do nothing (fails REQ-15) · separate docs/AGENT_USAGE.md (rejected: graders look in AGENTS.md) · draft in AGENTS.md, human approves the diff (chosen)
+- Choice · Why: we chose meet REQ-15 where graders look, accepting a human-approved edit.
+- Cost accepted: one diff to review · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: never · Evidence: card item 8; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "AGENTS.md says exactly how I directed the agent."
+- Review: Topic Process · Weight ●○○ · One-liner: Agent-usage section in AGENTS.md.
+
+### D19 A new turn cuts off playback still in progress  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: EC-3, FR-002, FR-003
+- Options: do nothing (talk over each other) · stop playback and interpret the new turn (chosen)
+- Choice · Why: we chose natural barge-in, accepting the rest of that interpretation is lost.
+- Cost accepted: lost tail of one interpretation · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: evaluation shows too many cut-offs · Evidence: card item 9; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Like a human interpreter, it stops when someone starts talking."
+- Review: Topic Product · Weight ●○○ · One-liner: Barge-in stops playback.
+
+### D20 Language preference is context, not a mandate  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-3, REQ-20
+- Options: do nothing (unclear) · treat as mandated (rejected: PDF says candidate choice) · context only; stack chosen at the Design check with reasons (chosen)
+- Choice · Why: we chose freedom to pick the stack on merit, accepting we must explain it.
+- Cost accepted: an explanation to write · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: partner says otherwise · Evidence: card item 10; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The PDF preferred .NET but let me choose; I chose on evidence and wrote down why."
+- Review: Topic Infrastructure · Weight ●○○ · One-liner: Stack decided at the Design check.
+
+### D21 Add one less-common language pair as a 2-hour onboarding test  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: NG-1, PRD open question; prompt review AIM-4, I-18
+- Options: do nothing / state the gap (rejected: leaves the partner metric unanswered) · one pair, timeboxed 2 h in M6 (chosen)
+- Choice · Why: we chose a measured time-to-onboard and a test of the cascade where it should win, accepting 2 h.
+- Cost accepted: 2 h of the appetite · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: deadline forces cuts (first to cut) · Evidence: card item 11; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I timed how long it took to add a new language pair, the partner's own metric."
+- Review: Topic Product · Weight ●●○ · One-liner: One extra pair, 2 h, in M6.
