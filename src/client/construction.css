@@ -55,11 +55,12 @@
 .cs-st-mid-dk {
   stop-color: var(--cs-mid-dk);
 }
+/* cones in the UI palette (follow the mode: lavender/periwinkle or green) */
 .cs-st-cone-lit {
-  stop-color: color-mix(in srgb, var(--warn) 60%, var(--bad));
+  stop-color: color-mix(in srgb, var(--accent) 88%, #fff);
 }
 .cs-st-cone-dk {
-  stop-color: color-mix(in srgb, var(--bad) 55%, #2a2b38);
+  stop-color: color-mix(in srgb, var(--accent-2) 48%, #2a2b38);
 }
 .cs-st-weight-lit {
   stop-color: color-mix(in srgb, var(--accent-2) 55%, #3a3b4c);
@@ -161,7 +162,7 @@
   opacity: 0.85;
 }
 .cs-cone-base {
-  fill: color-mix(in srgb, var(--bad) 40%, #2a2b38);
+  fill: color-mix(in srgb, var(--accent-2) 32%, #23242f);
 }
 
 /* hero crane details (keeps the trolley, cable and hook geometry the lift animation depends on) */
@@ -204,7 +205,7 @@
 
 /* subtle life */
 .cs-beacon {
-  fill: #ff5a6a;
+  fill: var(--accent);
   animation: cs-blink 1.8s steps(1) infinite;
 }
 .cs-beacon-2 {
