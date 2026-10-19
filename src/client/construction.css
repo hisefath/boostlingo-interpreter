@@ -254,12 +254,12 @@ footer.sd-footer {
 /* ---- clickable site signs in the scene: Architecture (over the building frame), System demo (over the beams) ---- */
 footer.sd-footer .cs-sign {
   position: absolute;
-  bottom: 118px;
+  bottom: 42px; /* short posts stand on the ground line (button bottom = 30 px) */
   z-index: 2;
   display: grid;
   gap: 1px;
-  padding: 7px 14px 8px;
-  min-width: 132px;
+  padding: 5px 12px 6px;
+  min-width: 112px;
   text-align: center;
   text-decoration: none;
   color: var(--fg);
@@ -285,7 +285,7 @@ footer.sd-footer .cs-sign::after {
   position: absolute;
   top: 100%;
   width: 3px;
-  height: 92px;
+  height: 12px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent-2) 55%, #2a2b38), #1a1b26);
   border-radius: 0 0 2px 2px;
 }
@@ -295,11 +295,12 @@ footer.sd-footer .cs-sign::before {
 footer.sd-footer .cs-sign::after {
   right: 22%;
 }
+/* entrance signs at the two edges of the site: left of the building, right of the truck (they cover neither) */
 footer.sd-footer .cs-sign-arch {
-  left: calc(50% - 360px);
+  left: max(12px, calc(50% - 532px));
 }
 footer.sd-footer .cs-sign-demo {
-  left: calc(50% + 228px);
+  right: max(12px, calc(50% - 532px));
 }
 .cs-sign-kicker {
   font-size: 0.62rem;
@@ -348,5 +349,23 @@ footer.sd-footer .cs-sign:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   footer.sd-footer .cs-sign {
     transition: none;
+  }
+}
+
+/* narrower desktops: the site edges are too tight for ground signs without covering the building or truck */
+@media (min-width: 641px) and (max-width: 1100px) {
+  footer.sd-footer .cs-sign {
+    bottom: auto;
+    top: 14px;
+  }
+  footer.sd-footer .cs-sign::before,
+  footer.sd-footer .cs-sign::after {
+    display: none;
+  }
+  footer.sd-footer .cs-sign-arch {
+    left: 16px;
+  }
+  footer.sd-footer .cs-sign-demo {
+    right: 16px;
   }
 }
