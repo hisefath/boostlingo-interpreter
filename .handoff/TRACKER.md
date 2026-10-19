@@ -39,6 +39,9 @@ several harnesses read it and the repo is public.
 | 2026-10-18 23:01 CDT | GD | .handoff/checkpoints/GD-M1.md@5fcc9c7 | "1A approve all dependencies — start /build-milestone" |
 | 2026-10-18 23:27 CDT | GT | .handoff/checkpoints/GT-M4.md@HEAD | "works" |
 | 2026-10-19 00:45 CDT | close: AGENTS.md section · reword commits · merge + public push | milestone/m4-workbench@b0e076b | "1 yes 2 yes 3 yes" |
+| 2026-10-19 01:12 CDT | push | main@6fa3622 | "push for me" |
+| 2026-10-19 01:12 CDT | deploy (reverses D14) | main@6fa3622 | "also deploy it to railway" |
+| 2026-10-19 02:21 CDT | merge + deploy M5 | milestone/m5-deploy@636a46a | "once youre done, commit, merge and deploy this" |
 
 ## Log
 
@@ -73,3 +76,13 @@ several harnesses read it and the repo is public.
 2026-10-18 23:42 CDT DISPATCH M4-T004 harness=claude-subagent why=one skill, Owns src/client only, parallel with eval scoring
 2026-10-18 23:58 CDT RESULT M4-T004 status=done harness=claude-subagent timeout=no tree=clean
 2026-10-18 23:58 CDT VERIFY M4-T004 c8a4217 scope-guard OK; make check OK; vite build OK → squashed
+2026-10-19 01:12 CDT VERIFY M4 pushed main 6fa3622 to GitLab (project 2280, private) + GitHub public; runner 299 enabled (restarted: stale since 00:23)
+2026-10-19 01:24 CDT ROUTE M5 deploy b67ab03 to Railway (human: "also deploy it to railway")
+2026-10-19 01:26 CDT VERIFY M5 Railway deploy SUCCESS; https://app-production-7e47.up.railway.app/api/version = b67ab03 = HEAD; / and /api/config 401 without code; //a:99999/ → 400, process alive
+2026-10-19 01:30 CDT DISPATCH M5-T005..T007 harness=workflow why=close audit gaps REQ-10, REQ-12/13, REQ-19 in parallel (disjoint Owns)
+2026-10-19 01:32 CDT DISPATCH M5-T008 harness=workflow why=UI polish: header, terminal highlighting, dev-only eval/soak buttons
+2026-10-19 01:39 CDT DISPATCH M5-T009 harness=workflow why=Run demo: scripted multi-turn conversation, prod + dev
+2026-10-19 01:58 CDT DISPATCH M5-T011 harness=workflow why=onboard EN↔FR, EN↔PT, EN↔ZH (timed: partner metric time-to-onboard)
+2026-10-19 02:02 CDT DISPATCH M5-T012 harness=workflow why=in-app Architecture page (system design diagrams), human request
+2026-10-19 02:07 CDT DISPATCH M5-T013 harness=workflow why=system-demo page: scaled design, 1-user + load walkthroughs, simulated per-component dashboard
+2026-10-19 02:21 CDT ROUTE M5 redeploy 636a46a (dashboard, header/terminal, demo, soak, languages, architecture + system demo, injection fix, memory fix)

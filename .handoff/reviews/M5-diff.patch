@@ -1,0 +1,176 @@
+diff --git a/package.json b/package.json
+index c6797a0..1ddce3f 100644
+--- a/package.json
++++ b/package.json
+@@ -11,21 +11,25 @@
+     "build": "vite build",
+     "lint": "make lint",
+     "types": "tsc --noEmit",
+-    "test": "vitest run"
++    "test": "vitest run",
++    "start": "tsx src/server/index.ts"
+   },
+   "type": "module",
+   "dependencies": {
+     "openai": "^7.39.0",
+-    "ws": "^8.22.0"
++    "ws": "^8.22.0",
++    "tsx": "^4.23.15"
+   },
+   "devDependencies": {
+     "@types/node": "^26.6.5",
+     "@types/ws": "^8.18.2",
+     "prettier": "^3.9.10",
+-    "tsx": "^4.23.15",
+     "typescript": "^7.0.2",
+     "vite": "^8.3.4",
+     "vitest": "^5.0.5"
+   },
+-  "private": true
++  "private": true,
++  "engines": {
++    "node": ">=22"
++  }
+ }
+diff --git a/src/server/index.ts b/src/server/index.ts
+index 7582924..1896191 100644
+--- a/src/server/index.ts
++++ b/src/server/index.ts
+@@ -1,5 +1,6 @@
+ // Node server: HTTP routes + WS /cascade (lld.md §3–§4). Never logs keys or transcripts.
+ import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
++import { createHash, timingSafeEqual } from "node:crypto";
+ import { mkdir, readFile, writeFile } from "node:fs/promises";
+ import { join, resolve } from "node:path";
+ import { pathToFileURL } from "node:url";
+@@ -19,8 +20,44 @@ export interface AppOptions {
+   env?: Env;
+   /** folder holding clips.json, clips/ and results/ */
+   evalDir?: string;
++  /** built browser app to serve (default dist/) */
++  staticDir?: string;
+ }
+ 
++// ---- Public mode (Railway): an access code gates every route so a public URL can't spend the vendor keys ----
++const AUTH_COOKIE = "wb_auth";
++const digest = (v: string) => createHash("sha256").update(v).digest();
++const same = (a: Buffer, b: Buffer) => a.length === b.length && timingSafeEqual(a, b);
++const cookieToken = (code: string) => digest(`workbench:${code}`).toString("hex");
++
++/** true when the request carries the access code (Basic auth password) or the cookie it earns. */
++export function authorized(
++  req: IncomingMessage,
++  code: string | undefined,
++): "open" | "cookie" | "basic" | false {
++  if (!code) return "open";
++  const jar = String(req.headers.cookie ?? "");
++  const c = jar.split(/;\s*/).find((x) => x.startsWith(`${AUTH_COOKIE}=`));
++  if (c && same(digest(c.slice(AUTH_COOKIE.length + 1)), digest(cookieToken(code)))) return "cookie";
++  const h = String(req.headers.authorization ?? "");
++  if (h.startsWith("Basic ")) {
++    const pass = Buffer.from(h.slice(6), "base64").toString("utf8").split(":").slice(1).join(":");
++    if (same(digest(pass), digest(code))) return "basic";
++  }
++  return false;
++}
++
++const STATIC_TYPES: Record<string, string> = {
++  ".html": "text/html; charset=utf-8",
++  ".js": "text/javascript; charset=utf-8",
++  ".css": "text/css; charset=utf-8",
++  ".svg": "image/svg+xml",
++  ".png": "image/png",
++  ".ico": "image/x-icon",
++  ".json": "application/json",
++  ".woff2": "font/woff2",
++};
++
+ function send(res: ServerResponse, status: number, body: unknown) {
+   res.writeHead(status, { "content-type": "application/json" });
+   res.end(JSON.stringify(body));
+@@ -82,10 +119,26 @@ async function realtimeSession(env: Env, body: { pair?: unknown; context?: unkno
+ export function createAppServer(opts: AppOptions = {}): Server {
+   const env = opts.env ?? process.env;
+   const evalDir = resolve(opts.evalDir ?? "eval");
++  const staticDir = resolve(opts.staticDir ?? "dist");
++  const code = env.ACCESS_CODE || undefined;
+ 
+   const server = createServer(async (req, res) => {
+     const url = new URL(req.url ?? "/", "http://localhost");
++    const auth = authorized(req, code);
++    if (!auth) {
++      res.writeHead(401, { "www-authenticate": 'Basic realm="Interpreter Workbench", charset="UTF-8"' });
++      return res.end("access code required");
++    }
++    if (auth === "basic" && code) {
++      res.setHeader(
++        "set-cookie",
++        `${AUTH_COOKIE}=${cookieToken(code)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`,
++      );
++    }
+     try {
++      if (req.method === "GET" && url.pathname === "/api/version") {
++        return send(res, 200, { sha: env.RAILWAY_GIT_COMMIT_SHA || env.GIT_SHA || "dev" });
++      }
+       if (req.method === "GET" && url.pathname === "/api/config") {
+         const p = createProviders(env);
+         return send(res, 200, {
+@@ -119,6 +172,8 @@ export function createAppServer(opts: AppOptions = {}): Server {
+         }
+       }
+       if (req.method === "POST" && url.pathname === "/api/eval-results") {
++        // public mode: no 300 MB uploads onto a shared host; run evaluations locally
++        if (code) return send(res, 403, { error: "eval uploads are disabled on the public deployment" });
+         if (!String(req.headers["content-type"]).startsWith("application/json"))
+           return send(res, 415, { error: "json only" });
+         const run = JSON.parse(await readBody(req, MAX_EVAL_BODY)) as { runId?: unknown };
+@@ -128,6 +183,22 @@ export function createAppServer(opts: AppOptions = {}): Server {
+         await writeFile(join(evalDir, "results", `${run.runId}.json`), JSON.stringify(run, null, 2));
+         return send(res, 200, { ok: true });
+       }
++      if (req.method === "GET" && !url.pathname.startsWith("/api/")) {
++        // built browser app (npm run build → dist/); Vite serves it in development
++        const rel =
++          url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname).replace(/^\/+/, "");
++        const file = resolve(staticDir, rel);
++        if (file.startsWith(staticDir + "/")) {
++          try {
++            const body = await readFile(file);
++            const ext = file.slice(file.lastIndexOf("."));
++            res.writeHead(200, { "content-type": STATIC_TYPES[ext] ?? "application/octet-stream" });
++            return res.end(body);
++          } catch {
++            /* fall through to 404 */
++          }
++        }
++      }
+       send(res, 404, { error: "not found" });
+     } catch (e) {
+       send(res, e instanceof SyntaxError ? 400 : 500, {
+@@ -138,11 +209,13 @@ export function createAppServer(opts: AppOptions = {}): Server {
+ 
+   // Browsers don't apply same-origin rules to WebSockets: accept only our own localhost pages.
+   const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
++  const PUBLIC_ORIGIN = env.PUBLIC_ORIGIN || undefined; // e.g. https://<app>.up.railway.app
+   const wss = new WebSocketServer({
+     server,
+     path: "/cascade",
+     maxPayload: 1024 * 1024,
+-    verifyClient: ({ origin }: { origin?: string }) => !origin || LOCAL_ORIGIN.test(origin),
++    verifyClient: ({ origin, req }: { origin?: string; req: IncomingMessage }) =>
++      (!origin || LOCAL_ORIGIN.test(origin) || origin === PUBLIC_ORIGIN) && authorized(req, code) !== false,
+   });
+   wss.on("connection", (ws: WebSocket) => {
+     let pipeline: Pipeline | null = null;
+@@ -205,6 +278,9 @@ export function createAppServer(opts: AppOptions = {}): Server {
+ 
+ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+   const port = Number(process.env.PORT) || 8787;
+-  // localhost only (hld.md §2): never expose the key-backed routes to the LAN
+-  createAppServer().listen(port, "127.0.0.1", () => console.log(`server listening on 127.0.0.1:${port}`));
++  // localhost only by default (hld.md §2); HOST=0.0.0.0 only on a host that also sets ACCESS_CODE
++  const host = process.env.HOST || "127.0.0.1";
++  if (host !== "127.0.0.1" && !process.env.ACCESS_CODE)
++    throw new Error("refusing to listen publicly without ACCESS_CODE");
++  createAppServer().listen(port, host, () => console.log(`server listening on ${host}:${port}`));
+ }

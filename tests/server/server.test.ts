@@ -1,5 +1,6 @@
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { connect } from "node:net";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -71,6 +72,18 @@ describe("http routes", () => {
 });
 
 describe("ws /cascade", () => {
+  it("local mode refuses a foreign Host header (DNS rebinding)", async () => {
+    const reply = await new Promise<string>((r) => {
+      const sock = connect(Number(base.split(":")[1]), "127.0.0.1", () =>
+        sock.write("GET /api/config HTTP/1.1\r\nHost: attacker.example\r\nConnection: close\r\n\r\n"),
+      );
+      let buf = "";
+      sock.on("data", (d) => (buf += d));
+      sock.on("close", () => r(buf));
+    });
+    expect(reply).toMatch(/^HTTP\/1\.1 403/);
+  });
+
   it("rejects a /cascade WebSocket from a foreign web page (R2)", async () => {
     const ws = new WebSocket(`ws://${base}/cascade`, { headers: { origin: "https://evil.example" } });
     const code = await new Promise<string>((r) => {
@@ -117,5 +130,114 @@ describe("ws /cascade", () => {
     expect(frames.length).toBeGreaterThan(0);
     expect(frames[0].readUInt32BE(0)).toBe(1);
     expect(frames[0].length).toBeGreaterThan(4);
+  });
+});
+
+describe("public mode (ACCESS_CODE)", () => {
+  const dist = mkdtempSync(join(tmpdir(), "dist-"));
+  writeFileSync(join(dist, "index.html"), "<!doctype html><title>wb</title>");
+  const pub = createAppServer({
+    env: { ...env, ACCESS_CODE: "s3cret", GIT_SHA: "abc1234", PUBLIC_ORIGIN: "https://wb.example/" },
+    evalDir,
+    staticDir: dist,
+  });
+  let pbase = "";
+  beforeAll(async () => {
+    await new Promise<void>((r) => pub.listen(0, "127.0.0.1", r));
+    pbase = `127.0.0.1:${(pub.address() as AddressInfo).port}`;
+  });
+  afterAll(() => pub.close());
+  const basic = (pw: string) => ({ authorization: `Basic ${Buffer.from(`any:${pw}`).toString("base64")}` });
+
+  it("asks for the access code before anything, including the client-secret route", async () => {
+    for (const [m, path] of [
+      ["GET", "/"],
+      ["GET", "/api/config"],
+      ["POST", "/api/realtime-session"],
+    ]) {
+      const r = await fetch(`http://${pbase}${path}`, { method: m });
+      expect(r.status).toBe(401);
+      expect(r.headers.get("www-authenticate")).toMatch(/^Basic/);
+    }
+    expect((await fetch(`http://${pbase}/`, { headers: basic("wrong") })).status).toBe(401);
+  });
+
+  it("the right code serves the app and sets an HttpOnly Secure cookie that works on its own", async () => {
+    const r = await fetch(`http://${pbase}/`, { headers: basic("s3cret") });
+    expect(r.status).toBe(200);
+    expect(await r.text()).toContain("<title>wb</title>");
+    const cookie = r.headers.get("set-cookie") ?? "";
+    expect(cookie).toMatch(/HttpOnly/);
+    expect(cookie).toMatch(/Secure/);
+    // the cookie alone opens a protected route; a forged one does not
+    const ok = await fetch(`http://${pbase}/api/config`, { headers: { cookie: cookie.split(";")[0] } });
+    expect(ok.status).toBe(200);
+    const forged = await fetch(`http://${pbase}/api/config`, { headers: { cookie: "wb_auth=deadbeef" } });
+    expect(forged.status).toBe(401);
+  });
+
+  it("/api/version stays open for health checks and reveals only the commit id", async () => {
+    const v = await fetch(`http://${pbase}/api/version`);
+    expect(v.status).toBe(200);
+    expect(await v.json()).toEqual({ sha: "abc1234" });
+  });
+
+  it("never serves files outside dist, even ones that exist", async () => {
+    writeFileSync(join(dist, "..", `${dist.split("/").pop()}-secret.txt`), "top secret");
+    for (const p of [`/..%2F${dist.split("/").pop()}-secret.txt`, "/%2e%2e/package.json", "/%E0%A4%A"]) {
+      const r = await fetch(`http://${pbase}${p}`, { headers: basic("s3cret") });
+      expect([400, 404]).toContain(r.status);
+      expect(await r.text()).not.toContain("top secret");
+    }
+  });
+
+  it("a malformed request line cannot crash the server", async () => {
+    const reply = await new Promise<string>((r) => {
+      const sock = connect(Number(pbase.split(":")[1]), "127.0.0.1", () =>
+        sock.write("GET //: HTTP/1.1\r\nHost: x\r\n\r\n"),
+      );
+      let buf = "";
+      sock.on("data", (d) => (buf += d));
+      sock.on("close", () => r(buf));
+      setTimeout(() => sock.destroy(), 500);
+    });
+    expect(reply).toMatch(/^HTTP\/1\.1 (400|401)/);
+    expect((await fetch(`http://${pbase}/api/version`)).status).toBe(200); // still alive
+  });
+
+  it("rejects a /cascade WebSocket without the code, accepts it with the cookie", async () => {
+    const tryWs = (headers: Record<string, string>) =>
+      new Promise<string>((r) => {
+        const ws = new WebSocket(`ws://${pbase}/cascade`, { headers });
+        ws.on("unexpected-response", (_q, res) => r(String(res.statusCode)));
+        ws.on("open", () => (ws.close(), r("open")));
+        ws.on("error", () => r("error"));
+      });
+    expect(await tryWs({})).toBe("401");
+    const r = await fetch(`http://${pbase}/`, { headers: basic("s3cret") });
+    const cookie = (r.headers.get("set-cookie") ?? "").split(";")[0];
+    expect(await tryWs({ cookie })).toBe("open");
+    // public mode: only the configured site (trailing slash normalised); localhost and foreign pages are refused
+    expect(await tryWs({ cookie, origin: "https://wb.example" })).toBe("open");
+    expect(await tryWs({ cookie, origin: "http://localhost:5173" })).toBe("401");
+    expect(await tryWs({ cookie, origin: "https://evil.example" })).toBe("401");
+  });
+
+  it("throttles repeated wrong codes with 429", async () => {
+    const headers = { ...basic("nope"), "x-forwarded-for": "203.0.113.9" };
+    for (let i = 0; i < 10; i++)
+      expect((await fetch(`http://${pbase}/api/config`, { headers })).status).toBe(401);
+    expect((await fetch(`http://${pbase}/api/config`, { headers })).status).toBe(429);
+    const right = { ...basic("s3cret"), "x-forwarded-for": "203.0.113.9" };
+    expect((await fetch(`http://${pbase}/api/config`, { headers: right })).status).toBe(429); // locked out for the window
+  });
+
+  it("refuses eval uploads in public mode", async () => {
+    const r = await fetch(`http://${pbase}/api/eval-results`, {
+      method: "POST",
+      headers: { ...basic("s3cret"), "content-type": "application/json" },
+      body: JSON.stringify({ runId: "x" }),
+    });
+    expect(r.status).toBe(403);
   });
 });

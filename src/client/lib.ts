@@ -1,32 +1,13 @@
 // Pure helpers (no DOM): language guess, clock math, timing summary, PCM conversion, WAV encoding,
-// and the workbench's display maths (mic level, per-mode summary, terminal lines, pipeline layers).
+// and the workbench's display maths (mic level, per-mode summary, vendor names, pipeline layers).
 import type { Lang, Mode, TimingPoint, TurnState } from "../shared/contracts.ts";
+import { guessLang as detectLang } from "../shared/languages.ts";
 
 export type Timings = Partial<Record<TimingPoint, number>>;
 
-const ES_STOPWORDS = new Set(
-  "el la los las un una de del que y en por para con es está estoy tengo usted le lo se su sí no muy pero como dónde donde qué cuándo hola gracias señor señora".split(
-    " ",
-  ),
-);
-const EN_STOPWORDS = new Set(
-  "the a an of and is are i you he she it we they to in on for with do does have has my your what where when how hello thank yes no".split(
-    " ",
-  ),
-);
-
-/** Guess en/es from text: Spanish-only characters win; otherwise count stopwords. */
-export function guessLang(text: string, fallback: Lang = "en"): Lang {
-  if (/[ñáéíóúü¿¡]/i.test(text)) return "es";
-  let es = 0;
-  let en = 0;
-  for (const w of text.toLowerCase().match(/[a-z]+/g) ?? []) {
-    if (ES_STOPWORDS.has(w)) es++;
-    if (EN_STOPWORDS.has(w)) en++;
-  }
-  if (es === en) return fallback;
-  return es > en ? "es" : "en";
-}
+/** Which of the pair's languages `text` is in (shared table); no evidence either way → fallback. */
+export const guessLang = (text: string, fallback: Lang = "en", pair: readonly Lang[] = ["en", "es"]): Lang =>
+  detectLang(text, pair, fallback);
 
 /** offset such that browserT = serverT - offset; assumes the server stamped at the round trip's midpoint. */
 export function clockOffset(sentAt: number, serverT: number, receivedAt: number): number {
@@ -147,7 +128,6 @@ const TERMINAL_STATES = new Set<TurnState>(["done", "failed", "empty", "cut"]);
 export const isTerminalState = (s: TurnState) => TERMINAL_STATES.has(s);
 
 export const MODE_LABEL: Record<Mode, string> = { realtime: "voice-to-voice", cascade: "cascade" };
-const MODE_TAG: Record<Mode, string> = { realtime: "v2v", cascade: "cascade" };
 export const TARGET_MS = 3000;
 
 /** RMS of a block mapped to 0..1 on a dB scale (-55 dB = 0, -15 dB = 1), so quiet speech still moves the orb. */
@@ -197,77 +177,15 @@ export function modeSummary(turns: { mode: Mode; timings: Timings }[], mode: Mod
   };
 }
 
-/** Summary block for the metrics terminal: "—" = no data yet, "n/a (not observable)" = the mode cannot measure it. */
-export function summaryLines(s: ModeSummary): string[] {
-  const pair = (p: Pct | null) => (p ? `p50 ${p.p50} ms  p95 ${p.p95} ms` : "p50 —  p95 —");
-  return [
-    `${MODE_LABEL[s.mode].padEnd(16)}turns ${s.turns}`,
-    `  speech_end→first_audio  ${pair(s.firstAudio)}`,
-    `  speech_end→audio_end    ${pair(s.audioEnd)}`,
-    `  stage p50               ${
-      s.stages
-        ? s.stages.map((x) => `${x.name} ${x.p50 === null ? "—" : `${x.p50} ms`}`).join(" · ")
-        : "n/a (not observable)"
-    }`,
-  ];
-}
-
-const pad2 = (n: number, w = 2) => String(n).padStart(w, "0");
-function clock(wallMs: number): string {
-  const d = new Date(wallMs);
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}.${pad2(d.getMilliseconds(), 3)}`;
-}
-const prefix = (wallMs: number, mode: Mode, seq: number) =>
-  `${clock(wallMs)}  ${MODE_TAG[mode].padEnd(7)}  ${`t${seq + 1}`.padEnd(4)}`;
-
-/** One terminal line per timing event; delta is ms since speech end. */
-export function termTiming(
-  wallMs: number,
-  mode: Mode,
-  seq: number,
-  point: TimingPoint,
-  vendor?: string,
-  sinceSpeechEnd?: number | null,
-): string {
-  const tail =
-    point === "speech_end"
-      ? mode === "realtime"
-        ? "≈ VAD silence 500 ms"
-        : ""
-      : sinceSpeechEnd == null
-        ? ""
-        : `+${sinceSpeechEnd} ms`;
-  return `${prefix(wallMs, mode, seq)}${point.padEnd(16)} ${(vendor ?? "").padEnd(10)} ${tail}`.trimEnd();
-}
-
 export type Tone = "ok" | "bad" | "warn" | "muted";
 
-/** One terminal line per finished turn. */
-export function termResult(
-  wallMs: number,
-  mode: Mode,
-  seq: number,
-  state: TurnState,
-  timings: Timings,
-  reason?: string,
-): { text: string; tone: Tone } {
-  const s = summarizeTimings(timings, mode);
-  const end = s.toEnd === null ? "" : ` · audio end ${s.toEnd} ms`;
-  const p = prefix(wallMs, mode, seq);
-  if (state === "failed") return { text: `${p}✗ not interpreted (${reason ?? "failed"})`, tone: "bad" };
-  if (state === "empty") return { text: `${p}· nothing heard`, tone: "muted" };
-  if (state === "cut")
-    return {
-      text: `${p}✂ cut off${s.toFirstAudio === null ? "" : ` · first audio ${s.toFirstAudio} ms`}`,
-      tone: "warn",
-    };
-  if (s.toFirstAudio === null) return { text: `${p}✓ done (no first-audio timing)`, tone: "muted" };
-  const ok = s.toFirstAudio < TARGET_MS;
-  return {
-    text: `${p}${ok ? "✓" : "✗"} first audio ${s.toFirstAudio} ms  (target < ${TARGET_MS})${end}`,
-    tone: ok ? "ok" : "bad",
-  };
-}
+const VENDOR_NAME: Record<string, string> = {
+  deepgram: "Deepgram",
+  openai: "OpenAI",
+  elevenlabs: "ElevenLabs",
+};
+/** Display name for a vendor key from /api/config ("elevenlabs" → "ElevenLabs"); model names pass through. */
+export const vendorLabel = (v: string) => VENDOR_NAME[v] ?? v;
 
 /** A turn's result line is printed once it is settled: a done turn with audio waits for end of audio. */
 export function resultReady(state: TurnState, t: Timings): boolean {

@@ -14,7 +14,7 @@ check: lint types test decisions
 
 ## lint: formatting / style, in check-only mode (never rewrite files here)
 lint:
-	npx prettier --check --no-error-on-unmatched-pattern "src/**/*.{ts,html,css}" "tests/**/*.ts" "scripts/eval/**/*.ts"
+	npx prettier --check --no-error-on-unmatched-pattern "src/**/*.{ts,html,css}" "tests/**/*.ts" "scripts/eval/**/*.ts" "scripts/demo/**/*.ts"
 
 ## types: static analysis / type checking
 types:

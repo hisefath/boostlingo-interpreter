@@ -46,13 +46,10 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
       let langs: string[] = [];
       let n = 0;
       let closed = false;
+      // Deepgram's code when it is one of the session's languages, else our guess within the pair.
       const toLang = (code: string | undefined, text: string): Lang => {
-        const c = code?.slice(0, 2);
-        return c === "en" || c === "es"
-          ? h.languages.includes(c)
-            ? c
-            : h.languages[0]
-          : guessLang(text, h.languages);
+        const c = code?.slice(0, 2) as Lang;
+        return h.languages.includes(c) ? c : guessLang(text, h.languages);
       };
 
       ws.on("open", () => {

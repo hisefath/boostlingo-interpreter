@@ -6,9 +6,7 @@ import {
   percentile,
   resultReady,
   rmsLevel,
-  summaryLines,
-  termResult,
-  termTiming,
+  vendorLabel,
 } from "../../src/client/lib.ts";
 
 const FULL = {
@@ -54,7 +52,7 @@ describe("percentile", () => {
   });
 });
 
-describe("modeSummary / summaryLines", () => {
+describe("modeSummary", () => {
   const turns = [
     { mode: "cascade" as const, timings: FULL },
     { mode: "cascade" as const, timings: { ...FULL, first_audio: 3000, audio_end: 5000 } },
@@ -72,37 +70,14 @@ describe("modeSummary / summaryLines", () => {
     expect(r.audioEnd).toBeNull();
     expect(r.stages).toBeNull();
   });
-  it("prints n/a (not observable) for voice-to-voice stages, and a dash for no data yet", () => {
-    const r = summaryLines(modeSummary(turns, "realtime")).join("\n");
-    expect(r).toContain("n/a (not observable)");
-    expect(r).toMatch(/audio_end\s+p50 —/);
-    expect(r).not.toMatch(/stage.*\d+ ms/);
-    const c = summaryLines(modeSummary(turns, "cascade")).join("\n");
-    expect(c).not.toContain("n/a");
-    expect(c).toContain("p50 1100 ms  p95 2000 ms");
-    expect(summaryLines(modeSummary([], "cascade")).join("\n")).toContain("turns 0");
-  });
 });
 
-describe("terminal lines", () => {
-  const at = new Date(2026, 9, 18, 23, 41, 2, 120).getTime();
-  it("formats a timing line with clock, mode, turn, point, vendor and delta", () => {
-    const line = termTiming(at, "cascade", 2, "stt_final", "deepgram", 312);
-    expect(line).toMatch(/^23:41:02\.120 {2}cascade {2}t3 {2}stt_final +deepgram +\+312 ms$/);
-  });
-  it("marks voice-to-voice speech end as approximate and omits a missing delta", () => {
-    expect(termTiming(at, "realtime", 0, "speech_end")).toContain("≈ VAD silence 500 ms");
-    expect(termTiming(at, "cascade", 0, "speech_end").trimEnd()).toMatch(/speech_end$/);
-  });
-  it("formats turn results against the 3000 ms target, failures with the reason", () => {
-    const ok = termResult(at, "cascade", 2, "done", { speech_end: 1000, first_audio: 3678 });
-    expect(ok.text).toContain("✓ first audio 2678 ms  (target < 3000)");
-    expect(ok.tone).toBe("ok");
-    expect(termResult(at, "cascade", 2, "done", { speech_end: 0, first_audio: 3400 }).tone).toBe("bad");
-    const failed = termResult(at, "cascade", 2, "failed", {}, "translate timeout");
-    expect(failed.text).toContain("✗ not interpreted (translate timeout)");
-    expect(failed.tone).toBe("bad");
-    expect(termResult(at, "realtime", 0, "empty", {}).text).toContain("nothing heard");
+describe("vendorLabel", () => {
+  it("shows friendly vendor names and passes model names through", () => {
+    expect(vendorLabel("elevenlabs")).toBe("ElevenLabs");
+    expect(vendorLabel("openai")).toBe("OpenAI");
+    expect(vendorLabel("deepgram")).toBe("Deepgram");
+    expect(vendorLabel("gpt-realtime")).toBe("gpt-realtime");
   });
 });
 

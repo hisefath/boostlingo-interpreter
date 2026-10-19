@@ -1,28 +1,34 @@
 // Workbench UI: orb, architecture toggle, pipeline view, metrics terminal, conversation (render only; state lives
 // in Session). Every number shown comes from the turn's timing points; a mode never shows a metric it cannot see.
+/// <reference types="vite/client" />
 import type { Lang, Mode, TimingPoint } from "../shared/contracts.ts";
-import { runEval } from "./eval.ts";
+import { dashHtml } from "./dash.ts";
+import { runDemo } from "./demo.ts";
+import { LANGUAGES } from "../shared/languages.ts";
+import { runEval, runSoak } from "./eval.ts";
 import {
   cascadeLayers,
   MODE_LABEL,
-  modeSummary,
   orbState,
   resultReady,
   rmsLevel,
   summarizeTimings,
-  summaryLines,
-  termResult,
-  termTiming,
+  vendorLabel,
   type Tone,
 } from "./lib.ts";
+import { PAIRS } from "../shared/languages.ts";
 import { Session, type Turn } from "./session.ts";
+import { headerLine, resultLine, timingLine, type Tok } from "./term.ts";
 import { CascadeTransport } from "./transports/cascade.ts";
 import { RealtimeTransport } from "./transports/realtime.ts";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const startBtn = $<HTMLButtonElement>("start");
 const evalBtn = $<HTMLButtonElement>("eval");
+const soakBtn = $<HTMLButtonElement>("soak");
+const demoBtn = $<HTMLButtonElement>("demo");
 const pairSel = $<HTMLSelectElement>("pair");
+pairSel.replaceChildren(...PAIRS.map((p) => new Option(p.label, p.id))); // one list: src/shared/languages.ts
 const headphones = $<HTMLInputElement>("headphones");
 const statusEl = $("status");
 const orb = $("orb");
@@ -34,12 +40,15 @@ const LOG_MAX = 500;
 let vendors: Record<string, string> = {};
 let micDenied = false;
 let busy = false;
+let demoing = false; // during a demo, Start/Stop stays usable as Stop
+let noticeTap: ((msg: string) => void) | null = null; // soak counts disconnect/reconnect notices
 const setStatus = (msg: string) => (statusEl.textContent = msg);
 
 const session = new Session(
   (mode, ev) => (mode === "realtime" ? new RealtimeTransport(ev) : new CascadeTransport(ev)),
   (notice, isError) => {
     if (notice) {
+      noticeTap?.(notice);
       setStatus(notice);
       log(`${isError ? "!" : "#"} ${notice}`, isError ? "bad" : "muted");
       if (isError) flashError();
@@ -56,15 +65,42 @@ function esc(s: string): string {
 
 const nearBottom = (el: HTMLElement) => el.scrollHeight - el.scrollTop - el.clientHeight < 60;
 
-function log(text: string, tone?: Tone): void {
+function append(line: HTMLElement): void {
   const stick = nearBottom(termBody);
-  const line = document.createElement("div");
-  line.className = `line${tone ? ` tone-${tone}` : ""}`;
-  line.textContent = text;
   logEl.append(line);
   while (logEl.childElementCount > LOG_MAX) logEl.firstElementChild!.remove();
   if (stick) termBody.scrollTop = termBody.scrollHeight;
 }
+
+/** A free-text line (notices, errors, prompts). */
+function log(text: string, tone?: Tone): void {
+  const line = document.createElement("div");
+  line.className = `line msg${tone ? ` tone-${tone}` : ""}`;
+  line.textContent = text;
+  append(line);
+}
+
+/** Token spans: class tk-<kind> plus tk-<tone> (a verdict tone, or the mode for the mode column). */
+function fillLine(el: HTMLElement, toks: Tok[]): HTMLElement {
+  el.replaceChildren(
+    ...toks.map((t) => {
+      if (t.kind === "sep") return t.text;
+      const s = document.createElement("span");
+      s.className = `tk-${t.kind}${t.tone ? ` tk-${t.tone}` : ""}`;
+      s.textContent = t.text;
+      return s;
+    }),
+  );
+  return el;
+}
+
+/** A turn line; turns alternate shading and a result line closes its turn with a separator. */
+function logToks(toks: Tok[], seq: number, end = false): void {
+  const line = document.createElement("div");
+  line.className = `line turn-${seq % 2 ? "odd" : "even"}${end ? " end" : ""}`;
+  append(fillLine(line, toks));
+}
+fillLine($("term-head"), headerLine());
 
 const logged = new Set<string>();
 const wall = (t: number) => performance.timeOrigin + t;
@@ -79,23 +115,16 @@ function logTurn(t: Turn): void {
     // voice-to-voice turn_detected is speech_end + the fixed VAD wait by construction: nothing to measure
     if (t.mode === "realtime" && p === "turn_detected") continue;
     const se = t.timings.speech_end;
-    log(termTiming(wall(at), t.mode, t.seq, p, t.vendors[p], se === undefined ? null : Math.round(at - se)));
+    logToks(
+      timingLine(wall(at), t.mode, t.seq, p, t.vendors[p], se === undefined ? null : Math.round(at - se)),
+      t.seq,
+    );
   }
   if (!logged.has(`${t.turnId}:result`) && resultReady(t.state, t.timings)) {
     logged.add(`${t.turnId}:result`);
-    const r = termResult(Date.now(), t.mode, t.seq, t.state, t.timings, t.reason);
-    log(r.text, r.tone);
+    logToks(resultLine(Date.now(), t.mode, t.seq, t.state, t.timings, t.reason), t.seq, true);
     if (t.state === "failed") flashError();
   }
-}
-
-function renderSummary(): void {
-  $("summary").textContent = [
-    ...summaryLines(modeSummary(session.turns, "realtime")),
-    ...summaryLines(modeSummary(session.turns, "cascade")),
-    "# comparable across modes: speech_end→first_audio, speech_end→audio_end (realtime speech_end is approximate)",
-    "# cascade only: per-stage timings, source WER   ·   voice-to-voice: stages not observable",
-  ].join("\n");
 }
 
 // ---- orb ---------------------------------------------------------------------------------------------------
@@ -169,7 +198,7 @@ function renderPipeline(cur: Turn | undefined): void {
       const conn = i ? `<li class="conn${flow ? " flow" : ""}" aria-hidden="true"><span></span></li>` : "";
       return `${conn}<li class="layer" data-status="${l.status}">
         <span class="layer-name">${LAYER_NAME[l.key]}</span>
-        <span class="layer-vendor">${esc(vendorOf[l.key] ?? "—")}</span>
+        <span class="layer-vendor">${esc(vendorLabel(vendorOf[l.key] ?? "—"))}</span>
         <span class="layer-ms">${l.status === "done" ? ms(l.ms) : "&nbsp;"}</span>
         <span class="layer-state">${l.status === "failed" ? `failed: ${esc(l.note ?? "")}` : STATUS_TEXT[l.status]}</span>
       </li>`;
@@ -248,13 +277,15 @@ function render(): void {
   if (stick) turnsEl.scrollTop = turnsEl.scrollHeight;
 
   turns.forEach(logTurn);
-  renderSummary();
+  $("summary").innerHTML = dashHtml(session.turns);
   renderPipeline(cur);
 
   startBtn.textContent = session.live ? "Stop" : "Start";
   startBtn.classList.toggle("live", session.live);
-  startBtn.disabled = micDenied || busy;
+  startBtn.disabled = demoing ? !session.live : micDenied || busy;
   evalBtn.disabled = busy;
+  soakBtn.disabled = busy;
+  demoBtn.disabled = busy;
   pairSel.disabled = session.live;
 }
 
@@ -290,7 +321,7 @@ startBtn.addEventListener("click", async () => {
   setStatus("Connecting…");
   try {
     await session.start(mic);
-    setStatus("Listening. Speak in English or Spanish.");
+    setStatus(`Listening. Speak in ${session.pair.map((l) => LANGUAGES[l].name).join(" or ")}.`);
     log(`❯ listening · ${MODE_LABEL[session.mode]}`, "muted");
   } catch (e) {
     setStatus(`Could not start: ${(e as Error).message}`);
@@ -317,7 +348,10 @@ document.querySelectorAll<HTMLInputElement>('input[name="mode"]').forEach((r) =>
 pairSel.addEventListener("change", () => (session.pair = pairSel.value.split("-") as [Lang, Lang]));
 headphones.addEventListener("change", () => session.setEchoGuard(!headphones.checked));
 
-evalBtn.addEventListener("click", async () => {
+async function runJob(
+  name: string,
+  job: (progress: (msg: string) => void) => Promise<unknown>,
+): Promise<void> {
   busy = true;
   startMeter();
   render();
@@ -326,27 +360,87 @@ evalBtn.addEventListener("click", async () => {
     log(`# ${msg}`, "muted");
   };
   try {
-    await runEval(session, vendors, progress);
+    await job(progress);
   } catch (e) {
-    setStatus(`Eval failed: ${(e as Error).message}`);
-    log(`! eval failed: ${(e as Error).message}`, "bad");
+    setStatus(`${name} failed: ${(e as Error).message}`);
+    log(`! ${name.toLowerCase()} failed: ${(e as Error).message}`, "bad");
     flashError();
   } finally {
+    session.setEchoGuard(!headphones.checked); // eval/soak turn the echo guard off; restore the user's choice
     busy = false;
     render();
   }
+}
+
+// Run demo: in every build (the public site too); Stop stays usable while it plays
+/** demo, eval and soak clips are English/Spanish: run them on that pair whatever is selected (review M5-T011 #1) */
+function useClipPair(): void {
+  pairSel.value = "en-es";
+  session.pair = ["en", "es"];
+}
+
+demoBtn.addEventListener("click", () => {
+  useClipPair();
+  demoing = true;
+  void runJob("Demo", (p) => runDemo(session, p)).finally(() => {
+    demoing = false;
+    render();
+  });
 });
+
+// dev-only tools: Vite sets import.meta.env.DEV false in a build, so this branch (and eval.ts / soak) drops out of it
+if (!import.meta.env.DEV) $("devtools").remove();
+else {
+  $("devtools").hidden = false;
+  evalBtn.addEventListener(
+    "click",
+    () => (useClipPair(), runJob("Eval", (p) => runEval(session, vendors, p))),
+  );
+  soakBtn.addEventListener("click", () => {
+    useClipPair();
+    const notices: string[] = [];
+    noticeTap = (m) => notices.push(m);
+    void runJob("Soak", (p) => runSoak(session, vendors, p, notices)).finally(() => (noticeTap = null));
+  });
+}
+
+const STAGE_CHIP: Record<string, [string, string]> = {
+  stt: ["STT", "speech-to-text"],
+  translate: ["MT", "machine translation"],
+  tts: ["TTS", "text-to-speech"],
+  realtime: ["Realtime", "voice-to-voice model"],
+};
 
 fetch("/api/config")
   .then((r) => r.json() as Promise<Record<string, string>>)
   .then((c) => {
     vendors = c;
-    $("vendors").textContent = Object.entries(c)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(" · ");
+    $("vendors").innerHTML = Object.entries(c)
+      .map(([k, v]) => {
+        const [tag, title] = STAGE_CHIP[k] ?? [k, k];
+        return `<li class="vchip vchip-${esc(k)}"><abbr title="${title}">${esc(tag)}</abbr>${esc(vendorLabel(v))}</li>`;
+      })
+      .join("");
     render();
   })
-  .catch(() => ($("vendors").textContent = "Vendors unavailable (is the server running?)"));
+  .catch(
+    () =>
+      ($("vendors").innerHTML =
+        `<li class="vchip loading">Vendors unavailable (is the server running?)</li>`),
+  );
 
 log("❯ tail -f timings   # one line per timing event and per turn result", "muted");
 render();
+
+// "System Design" footer: the crane lifts once on load and again on hover/focus (CSS does the motion)
+const crane = document.querySelector<HTMLElement>(".sd-wrap");
+if (crane) {
+  const lift = () => {
+    crane.classList.remove("lift");
+    void crane.offsetWidth; // restart the CSS animation
+    crane.classList.add("lift");
+  };
+  lift();
+  crane.addEventListener("mouseenter", lift);
+  crane.addEventListener("focus", lift);
+}

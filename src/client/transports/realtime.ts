@@ -136,7 +136,7 @@ export class RealtimeTransport implements Transport {
 
   private setSrc(id: string, text: string): void {
     this.src.set(id, text);
-    const from = guessLang(text, this.pair[0]);
+    const from = guessLang(text, this.pair[0], this.pair);
     this.ev.turn({ turnId: id, srcText: text, from, to: otherLang(this.pair, from) });
   }
 
