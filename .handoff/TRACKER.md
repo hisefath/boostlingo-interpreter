@@ -86,3 +86,5 @@ several harnesses read it and the repo is public.
 2026-10-19 02:02 CDT DISPATCH M5-T012 harness=workflow why=in-app Architecture page (system design diagrams), human request
 2026-10-19 02:07 CDT DISPATCH M5-T013 harness=workflow why=system-demo page: scaled design, 1-user + load walkthroughs, simulated per-component dashboard
 2026-10-19 02:21 CDT ROUTE M5 redeploy 636a46a (dashboard, header/terminal, demo, soak, languages, architecture + system demo, injection fix, memory fix)
+2026-10-19 02:24 CDT VERIFY M5 merged main d953ecd pushed GitLab+GitHub; Railway deploy SUCCESS; /api/version d953ecd
+2026-10-19 02:26 CDT ROUTE M6 polish (human): crane spacing + construction scene; mode themes green/purple. DISPATCH M6-T014 scene

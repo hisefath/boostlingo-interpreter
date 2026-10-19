@@ -6,6 +6,24 @@
   --glass-line: rgba(255, 255, 255, 0.09);
   --accent: #c4b2ff;
   --accent-2: #a9bcff;
+  /* mode theme: voice-to-voice = purple (default), cascade = green (see [data-mode="cascade"] below) */
+  --orb-conic: conic-gradient(from 0deg, #f6b3d8, #d39cf2, #b6a6f6, #9db6ff, #bcc6ff, #e7b4ec, #f6b3d8);
+  --orb-blob-a: rgba(255, 196, 232, 0.9);
+  --orb-blob-b: rgba(150, 170, 255, 0.85);
+  --orb-blob-c: rgba(186, 150, 255, 0.8);
+  --orb-tint: rgba(132, 92, 240, 0.65);
+  --orb-idle: radial-gradient(
+    circle at 34% 28%,
+    #f5f2fb 0%,
+    #e3dcf3 22%,
+    #cbbfe8 52%,
+    #ad9fd2 78%,
+    #9688bd 100%
+  );
+  --orb-idle-shade: rgba(60, 46, 100, 0.38);
+  --orb-glow: rgba(190, 160, 255, 0.45);
+  --page-glow-1: rgba(178, 150, 255, 0.14);
+  --page-glow-2: rgba(140, 170, 255, 0.07);
   --pink: #f4b4dc;
   --ok: #9fe6b8;
   --warn: #ffd27a;
@@ -32,8 +50,8 @@ body {
     sans-serif;
   color: var(--fg);
   background:
-    radial-gradient(900px 520px at 50% -8%, rgba(178, 150, 255, 0.14), transparent 70%),
-    radial-gradient(700px 500px at 100% 100%, rgba(140, 170, 255, 0.07), transparent 70%), var(--bg);
+    radial-gradient(900px 520px at 50% -8%, var(--page-glow-1), transparent 70%),
+    radial-gradient(700px 500px at 100% 100%, var(--page-glow-2), transparent 70%), var(--bg);
   background-attachment: fixed;
 }
 h1 {
@@ -117,9 +135,9 @@ p {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, #f6b3d8, #d39cf2, #b6a6f6, #9db6ff, #bcc6ff, #e7b4ec, #f6b3d8);
+  background: var(--orb-conic);
   box-shadow:
-    0 0 18px rgba(190, 160, 255, 0.45),
+    0 0 18px var(--orb-glow),
     inset -3px -4px 8px rgba(70, 40, 140, 0.45);
   animation: spin 14s linear infinite;
 }
@@ -418,16 +436,9 @@ main {
   overflow: hidden;
   isolation: isolate;
   /* idle: a soft pearl, pale grey-green, matte */
-  background: radial-gradient(
-    circle at 34% 28%,
-    #f3f6f1 0%,
-    #dfe7e0 22%,
-    #c6d3c9 52%,
-    #a9b9ae 78%,
-    #93a498 100%
-  );
+  background: var(--orb-idle);
   box-shadow:
-    inset -14px -20px 44px rgba(52, 70, 60, 0.38),
+    inset -14px -20px 44px var(--orb-idle-shade),
     inset 12px 14px 30px rgba(255, 255, 255, 0.45),
     0 24px 60px rgba(0, 0, 0, 0.5);
   transform: scale(calc(1 + var(--level) * 0.045));
@@ -450,23 +461,23 @@ main {
 }
 .orb-swirl {
   inset: -20% !important;
-  background: conic-gradient(from 0deg, #f6b3d8, #d39cf2, #b6a6f6, #9db6ff, #bcc6ff, #e7b4ec, #f6b3d8);
+  background: var(--orb-conic);
   filter: blur(14px);
   animation: spin var(--speed) linear infinite;
   animation-play-state: paused;
 }
 .orb-blobs {
   background:
-    radial-gradient(circle at 28% 70%, rgba(255, 196, 232, 0.9), transparent 42%),
-    radial-gradient(circle at 72% 30%, rgba(150, 170, 255, 0.85), transparent 45%),
-    radial-gradient(circle at 60% 78%, rgba(186, 150, 255, 0.8), transparent 40%);
+    radial-gradient(circle at 28% 70%, var(--orb-blob-a), transparent 42%),
+    radial-gradient(circle at 72% 30%, var(--orb-blob-b), transparent 45%),
+    radial-gradient(circle at 60% 78%, var(--orb-blob-c), transparent 40%);
   mix-blend-mode: screen;
   filter: blur(10px);
   animation: drift calc(var(--speed) * 0.7) ease-in-out infinite alternate;
   animation-play-state: paused;
 }
 .orb-tint {
-  background: radial-gradient(circle at 50% 55%, rgba(132, 92, 240, 0.65), transparent 70%);
+  background: radial-gradient(circle at 50% 55%, var(--orb-tint), transparent 70%);
   mix-blend-mode: multiply;
 }
 .orb-sheen {
@@ -1253,4 +1264,28 @@ button.primary.live {
   .sd-wrap.lift .sd-cable {
     animation: none;
   }
+}
+
+/* ---- mode themes: cascade switches the orb, accents and page glow to green ------------------------------------ */
+:root[data-mode="cascade"] {
+  --accent: #a6ecc4;
+  --accent-2: #7fd8c6;
+  --orb-conic: conic-gradient(from 0deg, #c8f7d6, #8fe3b1, #5fcf9f, #6fd3c0, #b4f0d8, #e2f8c9, #c8f7d6);
+  --orb-blob-a: rgba(214, 250, 200, 0.9);
+  --orb-blob-b: rgba(110, 214, 190, 0.85);
+  --orb-blob-c: rgba(120, 222, 150, 0.8);
+  --orb-tint: rgba(36, 150, 104, 0.6);
+  --orb-idle: radial-gradient(
+    circle at 34% 28%,
+    #f3f8f2 0%,
+    #dcebdf 22%,
+    #bcd8c4 52%,
+    #98bfa6 78%,
+    #7fa98e 100%
+  );
+  --orb-idle-shade: rgba(40, 80, 58, 0.38);
+  --orb-glow: rgba(140, 230, 180, 0.45);
+  --page-glow-1: rgba(120, 220, 160, 0.13);
+  --page-glow-2: rgba(110, 210, 200, 0.07);
+  --t-cascade: #8fe6b4;
 }
