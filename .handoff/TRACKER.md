@@ -45,6 +45,7 @@ several harnesses read it and the repo is public.
 | 2026-10-19 02:36 CDT | merge + push + deploy M6 | milestone/m6-polish@b84a728 | "yes, merge to main, push and redeploy this batch" |
 | 2026-10-19 02:40 CDT | merge + push + deploy (pills, scene signs) | milestone/m6-polish | "once your finished, commit merge and deploy" |
 | 2026-10-19 02:45 CDT | commit + merge + deploy all | main@45aafc8 | "nice, commit merge and deploy all of this" |
+| 2026-10-19 11:27 CDT | merge + push + deploy M7 (Bangla) | milestone/m7-bangla@e568f04 | "yes, merge to main, push and redeploy with Bangla" |
 
 ## Log
 

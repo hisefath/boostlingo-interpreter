@@ -23,16 +23,16 @@ vi.mock("../../src/server/providers/registry.ts", async (orig) => {
 });
 
 describe("language table", () => {
-  it("every language is complete and only Mandarin is outside Deepgram multi", () => {
+  it("every language is complete; Mandarin and Bengali are outside Deepgram multi", () => {
     for (const l of LANG_CODES) {
       const x = LANGUAGES[l];
       expect([x.name, x.nativeName, x.sttHint].every((s) => s.length > 0)).toBe(true);
     }
-    expect(LANG_CODES.filter((l) => !LANGUAGES[l].deepgram)).toEqual(["zh"]);
+    expect(LANG_CODES.filter((l) => !LANGUAGES[l].deepgram)).toEqual(["zh", "bn"]);
   });
 
-  it("onboards en-es, en-fr, en-pt, en-zh with ids the UI select can split back into the pair", () => {
-    expect(PAIRS.map((p) => p.id)).toEqual(["en-es", "en-fr", "en-pt", "en-zh"]);
+  it("onboards en-es, en-fr, en-pt, en-zh, en-bn with ids the UI select can split back into the pair", () => {
+    expect(PAIRS.map((p) => p.id)).toEqual(["en-es", "en-fr", "en-pt", "en-zh", "en-bn"]);
     for (const p of PAIRS) {
       expect(p.id.split("-")).toEqual(p.langs);
       expect(p.langs.every((l) => LANG_CODES.includes(l)) && p.langs[0] !== p.langs[1]).toBe(true);

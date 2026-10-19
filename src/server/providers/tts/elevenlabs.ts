@@ -1,5 +1,9 @@
 // ElevenLabs streaming TTS over plain fetch (lld.md §9), output pcm_24000.
 import type { Tts } from "../../../shared/contracts.ts";
+import { LANGUAGES } from "../../../shared/languages.ts";
+
+/** the low-latency model that also speaks the languages Flash v2.5 does not (e.g. Bengali) */
+export const ELEVEN_WIDE_MODEL = "eleven_v4_turbo";
 import { checkResponse, pcmChunks } from "../http.ts";
 
 export function elevenlabsTts(
@@ -14,7 +18,11 @@ export function elevenlabsTts(
       const res = await fetch(url, {
         method: "POST",
         headers: { "xi-api-key": apiKey, "content-type": "application/json" },
-        body: JSON.stringify({ text: req.text, model_id: model, language_code: req.lang }),
+        body: JSON.stringify({
+          text: req.text,
+          model_id: LANGUAGES[req.lang]?.elevenFlash === false ? ELEVEN_WIDE_MODEL : model,
+          language_code: req.lang,
+        }),
         signal,
       });
       await checkResponse("tts", res);

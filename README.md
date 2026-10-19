@@ -53,7 +53,11 @@ Local mode has no password: the server only listens on localhost and refuses oth
 
 ## What you can do in the app
 
-- **Language pairs:** English ↔ Spanish, French, Portuguese (Brazil) or Mandarin. Switch before or during a session.
+- **Language pairs:** English ↔ Spanish, French, Portuguese (Brazil), Mandarin or Bangla (Bengali). Switch before or
+  during a session. Each pair routes every cascade stage to a vendor that supports it: Mandarin and Bangla use OpenAI
+  speech recognition (Deepgram's multilingual model covers neither), and Bangla speaks through ElevenLabs
+  `eleven_v4_turbo` (Flash and OpenAI TTS don't support Bengali). The interpreter uses the formal register a clinic
+  would (usted, vous, 您, আপনি).
 - **Modes:** Voice-to-voice (OpenAI Realtime) or Cascade (STT → translate → TTS); switch mid-conversation.
 - **▶ Run demo:** plays a scripted 8-turn English/Spanish clinic scheduling call through the active mode, with the
   original voices audible, so a screen recording captures the whole flow. Works locally and on the deployed site.
