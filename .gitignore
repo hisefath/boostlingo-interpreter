@@ -12,3 +12,4 @@ dist/
 eval/results/
 eval/clips/
 .claude/worktrees/
+eval/results-old/
