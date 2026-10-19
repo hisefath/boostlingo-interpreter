@@ -39,6 +39,8 @@ several harnesses read it and the repo is public.
 | 2026-10-18 23:01 CDT | GD | .handoff/checkpoints/GD-M1.md@5fcc9c7 | "1A approve all dependencies — start /build-milestone" |
 | 2026-10-18 23:27 CDT | GT | .handoff/checkpoints/GT-M4.md@HEAD | "works" |
 | 2026-10-19 00:45 CDT | close: AGENTS.md section · reword commits · merge + public push | milestone/m4-workbench@b0e076b | "1 yes 2 yes 3 yes" |
+| 2026-10-19 01:12 CDT | push | main@6fa3622 | "push for me" |
+| 2026-10-19 01:12 CDT | deploy (reverses D14) | main@6fa3622 | "also deploy it to railway" |
 
 ## Log
 
@@ -73,3 +75,4 @@ several harnesses read it and the repo is public.
 2026-10-18 23:42 CDT DISPATCH M4-T004 harness=claude-subagent why=one skill, Owns src/client only, parallel with eval scoring
 2026-10-18 23:58 CDT RESULT M4-T004 status=done harness=claude-subagent timeout=no tree=clean
 2026-10-18 23:58 CDT VERIFY M4-T004 c8a4217 scope-guard OK; make check OK; vite build OK → squashed
+2026-10-19 01:12 CDT VERIFY M4 pushed main 6fa3622 to GitLab (project 2280, private) + GitHub public; runner 299 enabled (restarted: stale since 00:23)
