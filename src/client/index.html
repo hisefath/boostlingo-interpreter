@@ -150,6 +150,35 @@
           </div>
         </section>
       </div>
+      <footer class="sd-footer">
+        <a
+          class="sd-wrap"
+          href="/architecture.html"
+          aria-label="System design: architecture, diagrams and scale walkthrough"
+        >
+          <svg class="sd-crane" viewBox="0 0 260 100" aria-hidden="true">
+            <!-- mast (lattice), cab, jib, counter-jib, counterweight -->
+            <rect x="36" y="14" width="8" height="86" class="sd-steel" />
+            <path
+              d="M36 22 L44 30 L36 38 L44 46 L36 54 L44 62 L36 70 L44 78 L36 86 L44 94"
+              class="sd-lattice"
+            />
+            <rect x="30" y="2" width="20" height="12" rx="2" class="sd-cab" />
+            <rect x="8" y="10" width="236" height="4" rx="1" class="sd-steel" />
+            <path d="M40 2 L14 10 M40 2 L120 10 M40 2 L230 10" class="sd-tie" />
+            <rect x="8" y="14" width="16" height="10" rx="1" class="sd-weight" />
+            <!-- trolley above the Design half (x = 195) -->
+            <rect x="188" y="14" width="14" height="4" rx="1" class="sd-steel" />
+            <!-- cable (scaled) and hook (moved) -->
+            <rect x="194.5" y="18" width="1" height="8" class="sd-cable" />
+            <g class="sd-hook"><path d="M195 26 v3 a3 3 0 1 1 -3 3" class="sd-hookline" /></g>
+          </svg>
+          <span class="sd-btn">
+            <span class="sd-half sd-system">System</span>
+            <span class="sd-half sd-design">Design</span>
+          </span>
+        </a>
+      </footer>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

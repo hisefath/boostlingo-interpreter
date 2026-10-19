@@ -431,3 +431,16 @@ fetch("/api/config")
 
 log("❯ tail -f timings   # one line per timing event and per turn result", "muted");
 render();
+
+// "System Design" footer: the crane lifts once on load and again on hover/focus (CSS does the motion)
+const crane = document.querySelector<HTMLElement>(".sd-wrap");
+if (crane) {
+  const lift = () => {
+    crane.classList.remove("lift");
+    void crane.offsetWidth; // restart the CSS animation
+    crane.classList.add("lift");
+  };
+  lift();
+  crane.addEventListener("mouseenter", lift);
+  crane.addEventListener("focus", lift);
+}

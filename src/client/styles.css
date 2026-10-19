@@ -1107,3 +1107,150 @@ button.primary.live {
   display: inline-flex;
   align-items: center;
 }
+
+/* ---- "System Design" footer button: a crane lowers the Design half into place ---------------------------------- */
+.sd-footer {
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px 56px;
+}
+.sd-wrap {
+  position: relative;
+  display: inline-block;
+  width: 260px;
+  padding-top: 100px; /* room for the crane */
+  text-decoration: none;
+  color: var(--accent);
+  border-radius: 14px;
+}
+.sd-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+.sd-crane {
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: 260px;
+  height: 100px;
+  overflow: visible;
+}
+.sd-steel {
+  fill: var(--accent-2);
+  opacity: 0.85;
+}
+.sd-cab {
+  fill: var(--accent);
+}
+.sd-weight {
+  fill: #8f86b8;
+}
+.sd-lattice,
+.sd-tie {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+.sd-cable {
+  fill: var(--muted);
+  transform-box: fill-box;
+  transform-origin: top;
+}
+.sd-hookline {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.sd-btn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 44px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+.sd-half {
+  display: grid;
+  place-items: center;
+  color: #0b0b12;
+}
+.sd-system {
+  background: linear-gradient(135deg, #e9d2f5, var(--accent));
+  border-radius: 12px 0 0 12px;
+}
+.sd-design {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 10px 24px -12px rgba(169, 188, 255, 0.7);
+}
+.sd-wrap:hover .sd-half,
+.sd-wrap:focus-visible .sd-half {
+  filter: brightness(1.08);
+}
+
+/* one 2.6 s lift: Design and the hook descend together (70 px), settle with a small bounce, then the hook winds back */
+@keyframes sd-drop {
+  0% {
+    transform: translateY(-70px);
+  }
+  60% {
+    transform: translateY(0);
+  }
+  66% {
+    transform: translateY(-4px);
+  }
+  72%,
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes sd-hook {
+  0% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(70px);
+  }
+  66% {
+    transform: translateY(66px);
+  }
+  72% {
+    transform: translateY(70px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes sd-cable {
+  0% {
+    transform: scaleY(1);
+  }
+  60% {
+    transform: scaleY(9.75);
+  }
+  66% {
+    transform: scaleY(9.25);
+  }
+  72% {
+    transform: scaleY(9.75);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+.sd-wrap.lift .sd-design {
+  animation: sd-drop 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.3s both;
+}
+.sd-wrap.lift .sd-hook {
+  animation: sd-hook 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.3s both;
+}
+.sd-wrap.lift .sd-cable {
+  animation: sd-cable 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.3s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-wrap.lift .sd-design,
+  .sd-wrap.lift .sd-hook,
+  .sd-wrap.lift .sd-cable {
+    animation: none;
+  }
+}
