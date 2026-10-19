@@ -1100,3 +1100,10 @@ button.primary.live {
 .demo-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, rgba(196, 160, 255, 0.32), rgba(140, 170, 255, 0.26));
 }
+
+/* header link to the Architecture page */
+.nav-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}

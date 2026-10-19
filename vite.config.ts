@@ -10,5 +10,10 @@ export default defineConfig({
       "/cascade": { target: "ws://localhost:8787", ws: true },
     },
   },
-  build: { outDir: "../../dist", emptyOutDir: true },
+  build: {
+    outDir: "../../dist",
+    emptyOutDir: true,
+    // two pages; paths are relative to root (src/client)
+    rollupOptions: { input: { main: "index.html", architecture: "architecture.html" } },
+  },
 });

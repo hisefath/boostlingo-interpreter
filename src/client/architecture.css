@@ -1,0 +1,621 @@
+/* Architecture page: layout and diagram colours on top of the workbench tokens in styles.css. */
+:root {
+  --surface: #14151d; /* opaque box fill so edges never show through */
+  --surface-line: rgba(255, 255, 255, 0.14);
+}
+a {
+  color: var(--accent);
+}
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  height: var(--ctl-h);
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  transition: border-color 0.2s;
+}
+.back:hover {
+  border-color: rgba(196, 178, 255, 0.5);
+}
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ---- hero ---------------------------------------------------------------------------------------------------- */
+.arch {
+  display: grid;
+  gap: 18px;
+}
+.arch > * {
+  min-width: 0;
+}
+.hero {
+  padding: 36px 0 10px;
+}
+.kicker {
+  font: 700 0.7rem/1.4 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hero h2 {
+  margin: 8px 0 14px;
+  max-width: 22ch;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #fff, #e4dcff 55%, #cbd6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lede {
+  max-width: 76ch;
+  font-size: 1rem;
+  color: #d9d6e6;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+}
+.stat-k {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.stat-v {
+  font: 600 1.15rem/1.4 var(--mono);
+  color: var(--muted);
+}
+.stat-v .v2v {
+  color: var(--pink);
+}
+.stat-v .cas {
+  color: var(--accent-2);
+}
+.stat-n {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 18px;
+}
+.toc a {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-line);
+}
+.toc a:hover {
+  border-color: rgba(196, 178, 255, 0.5);
+}
+
+/* ---- section blocks ------------------------------------------------------------------------------------------ */
+.panel.block {
+  padding: 20px;
+  scroll-margin-top: 90px;
+}
+.block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 16px;
+}
+.block-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.block-head p {
+  flex-basis: 100%;
+  font-size: 0.88rem;
+}
+.num {
+  font: 700 0.78rem var(--mono);
+  color: var(--accent);
+}
+.diagram {
+  margin: 0;
+}
+.scroll {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--glass-line);
+}
+.scroll svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 680px; /* below this the diagram scrolls inside its box, never the page */
+}
+figcaption {
+  margin-top: 10px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  max-width: 100ch;
+}
+.swipe {
+  display: none;
+}
+
+/* ---- SVG diagram styling (every colour is a theme token) ----------------------------------------------------- */
+.dg {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+.dg text {
+  fill: var(--fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+.dg .c {
+  text-anchor: middle;
+}
+.dg .e {
+  text-anchor: end;
+}
+.dg .t-big {
+  font-size: 15px;
+}
+.dg .t-sub {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.dg .t-mono,
+.dg .t-lbl,
+.dg .t-kick,
+.dg .t-span {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+.dg .t-mono {
+  fill: var(--muted);
+}
+.dg .t-lbl {
+  fill: #d4d0e6;
+}
+.dg .t-kick {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  fill: var(--accent);
+}
+.dg .t-span {
+  font-size: 10.5px;
+  fill: var(--fg);
+}
+.dg .t-acc {
+  fill: var(--accent);
+  font-weight: 600;
+}
+.dg .t-ok {
+  fill: var(--ok);
+}
+.dg .t-bad {
+  fill: var(--bad);
+}
+.dg .t-warn {
+  fill: var(--warn);
+}
+.dg .t-muted {
+  fill: var(--muted);
+}
+.dg .t-ok,
+.dg .t-bad {
+  font-size: 13px;
+}
+
+.dg .zone {
+  fill: rgba(255, 255, 255, 0.02);
+  stroke: var(--glass-line);
+  stroke-dasharray: 6 6;
+}
+.dg .box,
+.dg .pill,
+.dg .st {
+  fill: var(--surface);
+  stroke: var(--surface-line);
+  stroke-width: 1.2;
+}
+.dg .box.v2v {
+  stroke: var(--pink);
+  stroke-opacity: 0.55;
+}
+.dg .box.cas {
+  stroke: var(--accent-2);
+  stroke-opacity: 0.55;
+}
+.dg .box.ext {
+  stroke: var(--accent);
+  stroke-dasharray: 4 3;
+}
+.dg .gate {
+  fill: rgba(255, 210, 122, 0.06);
+  stroke: var(--warn);
+  stroke-opacity: 0.6;
+  stroke-dasharray: 4 4;
+}
+.dg .stage-box {
+  fill: url(#g-stage);
+  stroke: var(--accent);
+  stroke-opacity: 0.55;
+  stroke-width: 1.2;
+}
+.gs-a {
+  stop-color: var(--pink);
+  stop-opacity: 0.18;
+}
+.gs-b {
+  stop-color: var(--accent-2);
+  stop-opacity: 0.18;
+}
+.dg .callout {
+  fill: rgba(196, 178, 255, 0.08);
+  stroke: var(--accent);
+  stroke-opacity: 0.4;
+}
+
+.dg .edge {
+  fill: none;
+  stroke-width: 1.6;
+}
+.dg .edge.v2v {
+  stroke: var(--pink);
+}
+.dg .edge.cas,
+.dg .edge.acc {
+  stroke: var(--accent-2);
+}
+.dg .edge.ok {
+  stroke: var(--ok);
+}
+.dg .edge.bad {
+  stroke: var(--bad);
+}
+.dg .edge.warn {
+  stroke: var(--warn);
+}
+.dg .edge.mut {
+  stroke: var(--muted);
+  stroke-opacity: 0.7;
+}
+.dg .edge.dash {
+  stroke-dasharray: 3 4;
+}
+.m-pink {
+  fill: var(--pink);
+}
+.m-acc {
+  fill: var(--accent-2);
+}
+.m-mut {
+  fill: var(--muted);
+}
+.m-bad {
+  fill: var(--bad);
+}
+.m-warn {
+  fill: var(--warn);
+}
+
+/* state machine */
+.dg .start {
+  fill: var(--accent);
+}
+.dg .st {
+  stroke: var(--accent);
+  stroke-opacity: 0.6;
+}
+.dg .st.ok {
+  stroke: var(--ok);
+}
+.dg .st.bad {
+  stroke: var(--bad);
+}
+.dg .st.warn {
+  stroke: var(--warn);
+}
+.dg .st.mut {
+  stroke: var(--muted);
+  stroke-dasharray: 4 4;
+}
+
+/* turn bars */
+.dg .bar {
+  fill-opacity: 0.85;
+}
+.dg .bar.stt {
+  fill: var(--accent-2);
+}
+.dg .bar.mt {
+  fill: var(--accent);
+}
+.dg .bar.tts {
+  fill: var(--pink);
+}
+.dg .bar.bad {
+  fill: var(--bad);
+}
+
+/* timelines */
+.dg .lane {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 2;
+}
+.dg .guide {
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-dasharray: 2 5;
+}
+.dg .tick {
+  stroke: rgba(255, 255, 255, 0.28);
+}
+.dg .pt.v2v {
+  fill: var(--pink);
+}
+.dg .pt.cas {
+  fill: var(--accent-2);
+}
+.dg .pt.est {
+  fill: var(--bg);
+  stroke: var(--pink);
+  stroke-width: 2;
+  stroke-dasharray: 2 2;
+}
+.dg .seal {
+  fill: url(#hatch);
+  stroke: var(--surface-line);
+}
+.hatch-bg {
+  fill: var(--surface);
+}
+.hatch-line {
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 4;
+}
+.dg .play.v2v {
+  fill: var(--pink);
+  fill-opacity: 0.35;
+}
+.dg .span {
+  fill-opacity: 0.24;
+}
+.dg .span.wait {
+  fill: var(--warn);
+}
+.dg .span.mt {
+  fill: var(--accent);
+}
+.dg .span.tts {
+  fill: var(--pink);
+}
+.dg .span.net {
+  fill: var(--accent-2);
+}
+.dg .span.out {
+  fill: var(--ok);
+}
+
+/* ---- stage contracts ----------------------------------------------------------------------------------------- */
+.contracts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.contract,
+.card {
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-line);
+}
+.contract h3,
+.card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+.cn {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font: 700 0.72rem var(--mono);
+  color: #17142a;
+  background: linear-gradient(135deg, #f2c6e6, var(--accent) 50%, var(--accent-2));
+}
+.sig {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent-2);
+  overflow-wrap: anywhere;
+}
+.contract dl {
+  margin: 0;
+}
+.contract dt {
+  font: 700 0.66rem/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.contract dd {
+  margin: 2px 0 10px;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.contract dd:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- trust boundaries ---------------------------------------------------------------------------------------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card-k {
+  font: 700 0.66rem/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.card h3 {
+  margin-top: 4px;
+}
+.card p {
+  font-size: 0.86rem;
+  color: #d9d6e6;
+  overflow-wrap: anywhere;
+}
+
+/* ---- scale table --------------------------------------------------------------------------------------------- */
+.table-wrap {
+  overflow-x: auto;
+}
+.scale {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.scale th,
+.scale td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--glass-line);
+}
+.scale thead th {
+  font: 700 0.68rem/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.scale tbody th {
+  font: 650 1.05rem var(--mono);
+  color: var(--accent);
+  white-space: nowrap;
+}
+.scale tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* ---- decisions ----------------------------------------------------------------------------------------------- */
+.decisions {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.decisions li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-line);
+}
+.decisions p {
+  font-size: 0.88rem;
+}
+.dn {
+  justify-self: start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font: 700 0.72rem/1.5 var(--mono);
+  color: #17142a;
+  background: linear-gradient(135deg, #e9d2f5, var(--accent));
+}
+.decisions a {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.decisions a:hover {
+  text-decoration: underline;
+}
+.foot {
+  padding: 8px 0 0;
+  line-height: 1.8;
+}
+.foot a + a:last-child {
+  margin-left: 12px;
+}
+
+/* ---- responsive ---------------------------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .contracts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .swipe {
+    display: block;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .panel.block {
+    padding: 16px 14px;
+  }
+  .scroll {
+    padding: 8px;
+  }
+  .decisions li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .decisions a {
+    grid-column: 2;
+  }
+  .top .tools {
+    width: auto; /* styles.css stretches the tools row on phones; one link does not need it */
+  }
+}
