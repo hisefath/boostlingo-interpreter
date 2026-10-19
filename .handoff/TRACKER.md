@@ -7,10 +7,10 @@ several harnesses read it and the repo is public.
 ## Resume
 
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
-- **As of:** 2026-10-19 14:12 CDT
+- **As of:** 2026-10-19 15:14 CDT
 - **In flight:** none
-- **Next:** human: push main (3058f47+) to GitLab/GitHub; deploy only on request (Railway still runs 5bb097f)
-- **Waiting on:** human yes for push
+- **Next:** deploy only on request (Railway still runs 5bb097f; main has the M8 rename)
+- **Waiting on:** nothing
 - **Verified:** 3058f47 `make check` → 182 passed OK
 
 ## Tasks
@@ -47,6 +47,7 @@ several harnesses read it and the repo is public.
 | 2026-10-19 02:45 CDT | commit + merge + deploy all | main@45aafc8 | "nice, commit merge and deploy all of this" |
 | 2026-10-19 11:27 CDT | merge + push + deploy M7 (Bangla) | milestone/m7-bangla@e568f04 | "yes, merge to main, push and redeploy with Bangla" |
 | 2026-10-19 12:53 CDT | merge M8 rename (no deploy) | milestone/m8-clear-names@ab47806 | "rename all the files and variables and functions, anything needed, so that things are very very clear. so if sim.ts was meant to mean simulation, make sure its spelled out. merge this. no deploy needed for now" |
+| 2026-10-19 15:13 CDT | push main (no deploy) | main@fe9692e | "yes, push main to GitLab and GitHub (no deploy)" |
 
 ## Log
 
