@@ -9,8 +9,8 @@ several harnesses read it and the repo is public.
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
 - **As of:** 2026-10-18 22:50 CDT
 - **In flight:** none
-- **Next:** deadline 2026-10-19 03:00 CDT (~4 h): compressed design card (stack, keys, scope cut) → build → try-it → write-up
-- **Waiting on:** human fills .env; human says "go" for /plan-design
+- **Next:** GD answer → /build-milestone (M4+M5+M6 compressed) → GT → write-up → push (human yes)
+- **Waiting on:** human answers GD (dependencies), fills .env
 - **Verified:** 15b177e `make check` → OK
 
 ## Tasks
@@ -35,6 +35,7 @@ several harnesses read it and the repo is public.
 | 2026-10-18 22:47 CDT | GI | .handoff/checkpoints/GI-M1.md@3c0eba5 | "Take all your recommendations on the GI card, deadline is <date>." |
 | 2026-10-18 22:50 CDT | GI item 1 (deadline) | .handoff/checkpoints/GI-M1.md@3c0eba5 | "tomorrow 3am" |
 | 2026-10-18 22:55 CDT | GD (compressed, before design) | .handoff/TRACKER.md@8b4dbe0 | "A: TypeScript everywhere — yes" · ".env: create this file for me, with all the var names, and ill populate them. always create file and populate var names you need" · "Keep, full size — keep full size" |
+| 2026-10-18 23:00 CDT | auto-T2 | docs/architecture/lld.md@483f50c | standing rule: Type 2 proceeds (WORKFLOW §5) — D24, D25 |
 
 ## Log
 
@@ -54,3 +55,4 @@ several harnesses read it and the repo is public.
 2026-10-18 22:47 CDT VERIFY M1-PP GI approved items 2-11 by the human; item 1 (deadline) unanswered
 2026-10-18 22:50 CDT ROUTE M1-PP deadline set to 2026-10-19 03:00 CDT; appetite collapses from 15-20 h to ~4 h; scope cut needed
 2026-10-18 22:55 CDT VERIFY M1 GD answers recorded; .env + .env.example created (names only)
+2026-10-18 23:00 CDT ROUTE M1 plan-design compressed; human said "go — start /plan-design"
