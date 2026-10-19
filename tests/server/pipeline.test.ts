@@ -44,7 +44,13 @@ describe("pipeline (unit)", () => {
     expect(r.audio.map((a) => a.chunk[0])).toEqual([0, 1]);
     expect(r.audio.every((a) => a.seq === 1)).toBe(true);
     expect(r.updates.at(-1)).toMatchObject({ state: "done", tgtText: "Uno, dos.", seq: 1, mode: "cascade" });
-    expect(r.timings).toEqual(["speech_end", "stt_final", "first_translation", "first_tts_byte"]);
+    expect(r.timings).toEqual([
+      "speech_end",
+      "turn_detected",
+      "stt_final",
+      "first_translation",
+      "first_tts_byte",
+    ]);
     r.p.stop();
   });
 
@@ -127,5 +133,23 @@ describe("pipeline (unit)", () => {
     await sleep(20);
     expect(seen).toEqual([5]);
     p.stop();
+  });
+});
+
+describe("idle timeout (FR-013)", () => {
+  it("a translation that keeps streaming past the limit is not cut off (limit is per silence, not total)", async () => {
+    const tts: Tts = {
+      name: "t",
+      async *speak() {
+        yield new Uint8Array([1]);
+      },
+    };
+    // 240 ms in total, past the 200 ms limit, but never silent for 200 ms
+    const r = setup(tts, { "One, two.": ["Uno ", 120, "dos ", 120, "tres."] });
+    r.p.pushAudio(new Int16Array(160));
+    await sleep(400);
+    const first = r.updates.filter((u) => u.srcText === "One, two.").at(-1);
+    expect(first).toMatchObject({ state: "done", tgtText: "Uno dos tres." });
+    r.p.stop();
   });
 });

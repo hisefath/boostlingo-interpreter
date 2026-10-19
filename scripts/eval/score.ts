@@ -92,8 +92,11 @@ async function scoreMode(run: EvalRun, mode: Mode, turns: EvalTurnResult[]) {
     const clip = clips.get(t.clipId);
     if (!clip) continue;
     const to = clip.lang === "en" ? "es" : "en";
-    if (t.srcText) wers.push(wer(clip.text, t.srcText));
-    const heard = t.outputAudioWav ? await transcribe(t.outputAudioWav, to) : t.tgtText;
+    // WER only where a real recognition stage exists: voice-to-voice's transcript is a side model's "rough guide" (I-22).
+    if (t.srcText && t.mode === "cascade") wers.push(wer(clip.text, t.srcText));
+    // One independent recogniser for both modes (FR-027): no recorded audio means unscored, never the transport's text.
+    if (!t.outputAudioWav) continue;
+    const heard = await transcribe(t.outputAudioWav, to);
     chrfs.push(chrF(clip.reference, heard));
     const c = criticalTermHits(clip.criticalTerms, heard);
     hits += c.hits;

@@ -67,7 +67,7 @@ async function realtimeSession(env: Env, body: { pair?: unknown; context?: unkno
         audio: {
           input: {
             transcription: { model: env.OPENAI_STT_MODEL || "gpt-4o-transcribe" },
-            turn_detection: { type: "server_vad" },
+            turn_detection: { type: "server_vad", silence_duration_ms: 500 },
           },
         },
       },

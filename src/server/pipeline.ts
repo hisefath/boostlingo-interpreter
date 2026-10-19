@@ -94,20 +94,30 @@ export function createPipeline(o: PipelineOptions): Pipeline {
       dead = true;
       for (const ac of mine) ac.abort();
     };
-    /** Runs one stage call with its own AbortController and timeout; the race fires even if fn ignores the signal. */
-    const stage = async (st: Stage, ms: number, fn: (signal: AbortSignal) => Promise<void>) => {
+    /** Runs one stage call with its own AbortController and an idle timeout: the stage fails only when it
+     * produces nothing for `ms` (FR-013); `kick()` on every delta/chunk re-arms it. The race fires even if fn
+     * ignores the signal. */
+    const stage = async (
+      st: Stage,
+      ms: number,
+      fn: (signal: AbortSignal, kick: () => void) => Promise<void>,
+    ) => {
       const ac = new AbortController();
       mine.add(ac);
       live.add(ac);
       let timer: ReturnType<typeof setTimeout> | undefined;
-      const timeout = new Promise<never>((_, rej) => {
+      let reject!: (e: unknown) => void;
+      const timeout = new Promise<never>((_, rej) => (reject = rej));
+      const kick = () => {
+        clearTimeout(timer);
         timer = setTimeout(() => {
           ac.abort();
-          rej(new ProviderError(st, "timeout"));
+          reject(new ProviderError(st, "timeout"));
         }, ms);
-      });
+      };
+      kick();
       try {
-        await Promise.race([fn(ac.signal), timeout]);
+        await Promise.race([fn(ac.signal, kick), timeout]);
       } finally {
         clearTimeout(timer);
         mine.delete(ac);
@@ -116,6 +126,8 @@ export function createPipeline(o: PipelineOptions): Pipeline {
     };
 
     o.events.timing(turnId, "speech_end", f.endMs, o.stt.name);
+    // In the cascade the final transcript arriving IS the end-of-turn signal (HLD §4: turn-detection wait).
+    o.events.timing(turnId, "turn_detected", Date.now(), o.stt.name);
     o.events.timing(turnId, "stt_final", Date.now(), o.stt.name);
     if (!srcText) {
       emit("empty");
@@ -133,9 +145,10 @@ export function createPipeline(o: PipelineOptions): Pipeline {
       speaking = speaking.then(async () => {
         if (dead || stopped) return;
         try {
-          await stage("tts", o.limits.ttsMs, async (signal) => {
+          await stage("tts", o.limits.ttsMs, async (signal, kick) => {
             for await (const chunk of o.tts.speak({ turnId, segmentIdx, text, lang: to }, signal)) {
               if (dead || stopped) return;
+              kick();
               if (!firstByte) {
                 firstByte = true;
                 o.events.timing(turnId, "first_tts_byte", Date.now(), o.tts.name);
@@ -164,9 +177,10 @@ export function createPipeline(o: PipelineOptions): Pipeline {
     try {
       for (let attempt = 0; ; attempt++) {
         try {
-          await stage("translate", o.limits.translateMs, async (signal) => {
+          await stage("translate", o.limits.translateMs, async (signal, kick) => {
             for await (const delta of o.translator.translate(req, signal)) {
               if (dead || stopped) return;
+              kick();
               if (!tgt) o.events.timing(turnId, "first_translation", Date.now(), o.translator.name);
               tgt += delta;
               buf += delta;
@@ -178,7 +192,15 @@ export function createPipeline(o: PipelineOptions): Pipeline {
         } catch (e) {
           // FR-012: one retry after the advised wait, only if nothing was streamed yet.
           if (e instanceof ProviderError && e.kind === "rate_limited" && attempt === 0 && !tgt && !dead) {
-            await sleep(e.retryAfterMs ?? 1000);
+            const wait = Math.min(e.retryAfterMs ?? 1000, o.limits.translateMs);
+            o.events.error?.(
+              new ProviderError(
+                "translate",
+                "rate_limited",
+                `translation rate-limited, retrying in ${wait} ms`,
+              ),
+            );
+            await sleep(wait);
             continue;
           }
           throw e;

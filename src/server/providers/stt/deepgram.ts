@@ -35,7 +35,8 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
       const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${q}`, {
         headers: { authorization: `Token ${apiKey}` },
       });
-      const t0 = Date.now(); // pipeline clock origin for word times (INV-2)
+      // Word times count from the first audio byte Deepgram receives, so the clock origin is the first push (INV-2).
+      let t0 = 0;
       const pending: Buffer[] = [];
       let parts: string[] = [];
       let lastEnd = 0;
@@ -96,6 +97,7 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
 
       return {
         push(pcm) {
+          if (!t0) t0 = Date.now();
           const b = Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength);
           if (ws.readyState === WebSocket.OPEN) ws.send(b);
           else if (ws.readyState === WebSocket.CONNECTING) pending.push(Buffer.from(b));

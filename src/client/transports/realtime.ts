@@ -4,7 +4,8 @@ import type { Lang, TurnText } from "../../shared/contracts.ts";
 import { guessLang, otherLang } from "../lib.ts";
 import type { Transport, TransportEvents } from "../session.ts";
 
-const CALLS_URL = "https://api.openai.com/v1/realtime/calls?model=gpt-realtime";
+const CALLS_URL = "https://api.openai.com/v1/realtime/calls";
+const VAD_SILENCE_MS = 500; // matches turn_detection.silence_duration_ms in src/server/index.ts
 
 // Shape of the data-channel events we read (fields are optional on purpose: we only trust what arrives).
 interface OaiEvent {
@@ -146,7 +147,9 @@ export class RealtimeTransport implements Transport {
         return;
       case "input_audio_buffer.speech_stopped": {
         const id = this.turnFor(e.item_id);
-        if (e.audio_end_ms !== undefined) this.ev.timing(id, "speech_end", this.t0 + e.audio_end_ms);
+        // audio_end_ms counts from the session's audio start, which this page cannot see; anchor speech end to the
+        // event's arrival minus the configured VAD silence wait (500 ms, server-side). Approximation, stated in the write-up.
+        this.ev.timing(id, "speech_end", now - VAD_SILENCE_MS);
         this.ev.timing(id, "turn_detected", now);
         this.ev.turn({ turnId: id, state: "translating" });
         return;
