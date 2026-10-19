@@ -26,5 +26,7 @@ export const PRICES = {
     ttsAudioOutPer1M: 12,
     // Deepgram Aura-2 $0.030 per 1k characters (R02 F5; S02.2)
     deepgramTtsPer1kChars: 0.03,
+    // ElevenLabs Flash/Turbo $0.04 per 1k characters (R02 F10; S02.6)
+    elevenlabsTtsPer1kChars: 0.04,
   },
 };

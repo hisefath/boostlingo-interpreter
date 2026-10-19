@@ -167,9 +167,11 @@ async function scoreMode(run: EvalRun, mode: Mode, turns: EvalTurnResult[]) {
       : NaN;
     const tts = !inMin
       ? NaN
-      : run.vendors.tts?.includes("deepgram")
-        ? ((tgtChars / 1000) * p.deepgramTtsPer1kChars) / inMin
-        : (outMin * REALTIME_TOKENS_PER_MIN.out * p.ttsAudioOutPer1M) / 1e6 / inMin;
+      : run.vendors.tts?.includes("elevenlabs")
+        ? ((tgtChars / 1000) * p.elevenlabsTtsPer1kChars) / inMin
+        : run.vendors.tts?.includes("deepgram")
+          ? ((tgtChars / 1000) * p.deepgramTtsPer1kChars) / inMin
+          : (outMin * REALTIME_TOKENS_PER_MIN.out * p.ttsAudioOutPer1M) / 1e6 / inMin;
     const perMin = stt + translate + tts;
     out.push(
       "",
