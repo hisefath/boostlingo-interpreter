@@ -58,9 +58,9 @@ turns but the quality sample is small; pacing clips on the model's end-of-audio 
 
 **Stability (REQ-19), cascade, 5-minute soak:** 310 s of alternating EN/ES speech, 30 turns completed, 0 failed,
 0 disconnects; first-audio median 2,087 ms in the first five turns vs 1,993 ms in the last five (no drift); playback
-lag grew 9 ms. Page memory rose and fell with garbage collection (4 → 12 → 9 MB, coarse browser counter); the soak
-exposed the player keeping every interpreted clip in memory for no caller, which was removed afterwards. A
-voice-to-voice soak was not run.
+lag grew 9 ms. **Memory did not pass:** page memory climbed from 4 to 17 MB over the run (coarse browser counter),
+consistent with the player keeping every interpreted clip (~48 KB/s) although nothing used it. That retention was
+removed afterwards (commit 4a8d24b); the soak was not re-run, and a voice-to-voice soak was not run.
 
 ## Measured provider comparison (cascade, same 36 clips, only settings changed)
 
