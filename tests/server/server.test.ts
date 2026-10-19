@@ -53,15 +53,43 @@ describe("http routes", () => {
 
   it("POST /api/eval-results writes eval/results/<runId>.json", async () => {
     const run = { runId: "r1", startedAt: "now", vendors: {}, turns: [] };
-    const res = await fetch(`http://${base}/api/eval-results`, { method: "POST", body: JSON.stringify(run) });
+    const json = { "content-type": "application/json" };
+    const res = await fetch(`http://${base}/api/eval-results`, {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify(run),
+    });
     expect(res.status).toBe(200);
     expect(JSON.parse(readFileSync(join(evalDir, "results", "r1.json"), "utf8"))).toEqual(run);
-    const bad = await fetch(`http://${base}/api/eval-results`, { method: "POST", body: '{"runId":"../x"}' });
+    const bad = await fetch(`http://${base}/api/eval-results`, {
+      method: "POST",
+      headers: json,
+      body: '{"runId":"../x"}',
+    });
     expect(bad.status).toBe(400);
   });
 });
 
 describe("ws /cascade", () => {
+  it("rejects a /cascade WebSocket from a foreign web page (R2)", async () => {
+    const ws = new WebSocket(`ws://${base}/cascade`, { headers: { origin: "https://evil.example" } });
+    const code = await new Promise<string>((r) => {
+      ws.on("unexpected-response", (_req, res) => r(String(res.statusCode)));
+      ws.on("open", () => r("open"));
+      ws.on("error", () => r("error"));
+    });
+    expect(code).toBe("401");
+  });
+
+  it("refuses a non-JSON eval-results post (R2)", async () => {
+    const r = await fetch(`http://${base}/api/eval-results`, {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: JSON.stringify({ runId: "x" }),
+    });
+    expect(r.status).toBe(415);
+  });
+
   it("speaks the ClientMsg/ServerMsg protocol", async () => {
     const ws = new WebSocket(`ws://${base}/cascade`);
     const msgs: ServerMsg[] = [];

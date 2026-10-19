@@ -32,7 +32,7 @@ export function openaiStt(apiKey: string, model = "gpt-4o-transcribe"): SttProvi
       const send = (msg: object) => {
         const s = JSON.stringify(msg);
         if (ws.readyState === WebSocket.OPEN) ws.send(s);
-        else pending.push(s);
+        else if (ws.readyState === WebSocket.CONNECTING) pending.push(s); // never buffer after close (no unbounded growth)
       };
 
       ws.on("open", () => {

@@ -38,7 +38,12 @@ async function readBody(req: IncomingMessage): Promise<string> {
 
 const isPair = (p: unknown): p is [Lang, Lang] =>
   Array.isArray(p) && p.length === 2 && p.every((l) => LANGS.includes(l)) && p[0] !== p[1];
-const asContext = (c: unknown): TurnText[] => (Array.isArray(c) ? (c as TurnText[]).slice(-5) : []);
+// Client-supplied context goes into model instructions: keep only well-formed, short items.
+const clip = (v: unknown) => (typeof v === "string" ? v.slice(0, 500) : "");
+const asContext = (c: unknown): TurnText[] =>
+  (Array.isArray(c) ? c.slice(-5) : [])
+    .filter((t): t is TurnText => !!t && LANGS.includes(t.from) && LANGS.includes(t.to))
+    .map((t) => ({ from: t.from, to: t.to, srcText: clip(t.srcText), tgtText: clip(t.tgtText) }));
 
 async function realtimeSession(env: Env, body: { pair?: unknown; context?: unknown }) {
   const pair = isPair(body.pair) ? body.pair : (["en", "es"] as [Lang, Lang]);
@@ -51,6 +56,7 @@ async function realtimeSession(env: Env, body: { pair?: unknown; context?: unkno
   }
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",
+    signal: AbortSignal.timeout(10_000),
     headers: { authorization: `Bearer ${env.OPENAI_API_KEY ?? ""}`, "content-type": "application/json" },
     body: JSON.stringify({
       expires_after: { anchor: "created_at", seconds: 600 },
@@ -112,6 +118,8 @@ export function createAppServer(opts: AppOptions = {}): Server {
         }
       }
       if (req.method === "POST" && url.pathname === "/api/eval-results") {
+        if (!String(req.headers["content-type"]).startsWith("application/json"))
+          return send(res, 415, { error: "json only" });
         const run = JSON.parse(await readBody(req)) as { runId?: unknown };
         if (typeof run.runId !== "string" || !SAFE_ID.test(run.runId))
           return send(res, 400, { error: "bad runId" });
@@ -127,7 +135,14 @@ export function createAppServer(opts: AppOptions = {}): Server {
     }
   });
 
-  const wss = new WebSocketServer({ server, path: "/cascade" });
+  // Browsers don't apply same-origin rules to WebSockets: accept only our own localhost pages.
+  const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+  const wss = new WebSocketServer({
+    server,
+    path: "/cascade",
+    maxPayload: 1024 * 1024,
+    verifyClient: ({ origin }: { origin?: string }) => !origin || LOCAL_ORIGIN.test(origin),
+  });
   wss.on("connection", (ws: WebSocket) => {
     let pipeline: Pipeline | null = null;
     const out = (m: ServerMsg) => {
@@ -189,5 +204,6 @@ export function createAppServer(opts: AppOptions = {}): Server {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const port = Number(process.env.PORT) || 8787;
-  createAppServer().listen(port, () => console.log(`server listening on :${port}`));
+  // localhost only (hld.md §2): never expose the key-backed routes to the LAN
+  createAppServer().listen(port, "127.0.0.1", () => console.log(`server listening on 127.0.0.1:${port}`));
 }

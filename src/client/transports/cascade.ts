@@ -20,6 +20,10 @@ export class CascadeTransport implements Transport {
   private seqOf = new Map<string, number>();
   private idOf = new Map<number, string>();
   private context: TurnText[] = [];
+  // A reconnect starts a new server pipeline whose seq and turn ids restart; offset them so they never collide.
+  private epoch = 0;
+  private seqBase = 0;
+  private maxSeq = 0;
   private pair: [Lang, Lang] = ["en", "es"];
 
   constructor(private ev: TransportEvents) {}
@@ -98,6 +102,8 @@ export class CascadeTransport implements Transport {
         if (!opened) return reject(new Error("could not connect to the cascade server"));
         if (this.reconnected) return this.ev.error("cascade connection lost");
         this.reconnected = true;
+        this.epoch++;
+        this.seqBase = this.maxSeq;
         this.ev.notice("cascade connection lost, reconnecting…");
         this.connect().then(
           () => this.ev.notice("reconnected"),
@@ -109,7 +115,7 @@ export class CascadeTransport implements Transport {
 
   private onAudio(buf: ArrayBuffer): void {
     const { seq, pcm } = parseAudioFrame(buf);
-    this.player?.push(seq, pcm);
+    this.player?.push(seq + this.seqBase, pcm);
   }
 
   private onJson(m: ServerMsg): void {
@@ -124,7 +130,9 @@ export class CascadeTransport implements Transport {
         return;
       }
       case "turn": {
-        const { type: _type, ...u } = m;
+        const { type: _type, ...raw } = m;
+        const u = { ...raw, seq: raw.seq + this.seqBase, turnId: `${this.epoch}-${raw.turnId}` };
+        this.maxSeq = Math.max(this.maxSeq, u.seq);
         this.seqOf.set(u.turnId, u.seq);
         this.idOf.set(u.seq, u.turnId);
         this.ev.turn(u);
@@ -132,8 +140,9 @@ export class CascadeTransport implements Transport {
         return;
       }
       case "timing": {
-        this.ev.timing(m.turnId, m.point, m.serverT - this.offset, m.vendor);
-        const seq = this.seqOf.get(m.turnId);
+        const turnId = `${this.epoch}-${m.turnId}`;
+        this.ev.timing(turnId, m.point, m.serverT - this.offset, m.vendor);
+        const seq = this.seqOf.get(turnId);
         // barge-in only with headphones: with the echo guard on, the mic is silent while we play, so a new
         // speech end then belongs to speech from before playback. ponytail: no per-turn time comparison.
         const ended = m.point === "speech_end" || m.point === "stt_final";
