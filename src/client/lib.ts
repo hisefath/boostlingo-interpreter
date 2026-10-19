@@ -1,5 +1,6 @@
-// Pure helpers (no DOM): language guess, clock math, timing summary, PCM conversion, WAV encoding.
-import type { Lang, Mode, TimingPoint } from "../shared/contracts.ts";
+// Pure helpers (no DOM): language guess, clock math, timing summary, PCM conversion, WAV encoding,
+// and the workbench's display maths (mic level, per-mode summary, terminal lines, pipeline layers).
+import type { Lang, Mode, TimingPoint, TurnState } from "../shared/contracts.ts";
 
 export type Timings = Partial<Record<TimingPoint, number>>;
 
@@ -44,11 +45,11 @@ export interface TimingSummary {
 }
 
 const STAGES: [string, TimingPoint, TimingPoint][] = [
-  ["turn detection", "speech_end", "turn_detected"],
-  ["hearing (STT final)", "turn_detected", "stt_final"],
-  ["translating (first text)", "stt_final", "first_translation"],
-  ["speaking (first TTS byte)", "first_translation", "first_tts_byte"],
-  ["playback start", "first_tts_byte", "first_audio"],
+  ["turn detect", "speech_end", "turn_detected"],
+  ["stt final", "turn_detected", "stt_final"],
+  ["translate", "stt_final", "first_translation"],
+  ["tts 1st byte", "first_translation", "first_tts_byte"],
+  ["playback", "first_tts_byte", "first_audio"],
 ];
 
 function span(t: Timings, a: TimingPoint, b: TimingPoint): number | null {
@@ -139,3 +140,176 @@ export function toBase64(bytes: Uint8Array): string {
 }
 
 export const otherLang = (pair: [Lang, Lang], l: Lang): Lang => (l === pair[0] ? pair[1] : pair[0]);
+
+// ---- Workbench display maths ---------------------------------------------------------------------------
+
+const TERMINAL_STATES = new Set<TurnState>(["done", "failed", "empty", "cut"]);
+export const isTerminalState = (s: TurnState) => TERMINAL_STATES.has(s);
+
+export const MODE_LABEL: Record<Mode, string> = { realtime: "voice-to-voice", cascade: "cascade" };
+const MODE_TAG: Record<Mode, string> = { realtime: "v2v", cascade: "cascade" };
+export const TARGET_MS = 3000;
+
+/** RMS of a block mapped to 0..1 on a dB scale (-55 dB = 0, -15 dB = 1), so quiet speech still moves the orb. */
+export function rmsLevel(block: ArrayLike<number>): number {
+  if (!block.length) return 0;
+  let sum = 0;
+  for (let i = 0; i < block.length; i++) sum += block[i] * block[i];
+  const rms = Math.sqrt(sum / block.length);
+  if (rms <= 0) return 0;
+  return Math.max(0, Math.min(1, (20 * Math.log10(rms) + 55) / 40));
+}
+
+/** nearest-rank percentile; xs must be non-empty */
+export function percentile(xs: number[], p: number): number {
+  const s = [...xs].sort((a, b) => a - b);
+  return s[Math.max(0, Math.ceil((p / 100) * s.length) - 1)];
+}
+
+export interface Pct {
+  p50: number;
+  p95: number;
+}
+export interface ModeSummary {
+  mode: Mode;
+  turns: number;
+  firstAudio: Pct | null;
+  audioEnd: Pct | null;
+  /** null = this mode cannot observe stages (FR-026) */
+  stages: { name: string; p50: number | null }[] | null;
+}
+
+export function modeSummary(turns: { mode: Mode; timings: Timings }[], mode: Mode): ModeSummary {
+  const mine = turns.filter((t) => t.mode === mode).map((t) => summarizeTimings(t.timings, mode));
+  const pct = (xs: (number | null)[]): Pct | null => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length ? { p50: percentile(v, 50), p95: percentile(v, 95) } : null;
+  };
+  return {
+    mode,
+    turns: mine.length,
+    firstAudio: pct(mine.map((s) => s.toFirstAudio)),
+    audioEnd: pct(mine.map((s) => s.toEnd)),
+    stages:
+      mode === "realtime"
+        ? null
+        : STAGES.map(([name], i) => ({ name, p50: pct(mine.map((s) => s.stages[i].ms))?.p50 ?? null })),
+  };
+}
+
+/** Summary block for the metrics terminal: "—" = no data yet, "n/a (not observable)" = the mode cannot measure it. */
+export function summaryLines(s: ModeSummary): string[] {
+  const pair = (p: Pct | null) => (p ? `p50 ${p.p50} ms  p95 ${p.p95} ms` : "p50 —  p95 —");
+  return [
+    `${MODE_LABEL[s.mode].padEnd(16)}turns ${s.turns}`,
+    `  speech_end→first_audio  ${pair(s.firstAudio)}`,
+    `  speech_end→audio_end    ${pair(s.audioEnd)}`,
+    `  stage p50               ${
+      s.stages
+        ? s.stages.map((x) => `${x.name} ${x.p50 === null ? "—" : `${x.p50} ms`}`).join(" · ")
+        : "n/a (not observable)"
+    }`,
+  ];
+}
+
+const pad2 = (n: number, w = 2) => String(n).padStart(w, "0");
+function clock(wallMs: number): string {
+  const d = new Date(wallMs);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}.${pad2(d.getMilliseconds(), 3)}`;
+}
+const prefix = (wallMs: number, mode: Mode, seq: number) =>
+  `${clock(wallMs)}  ${MODE_TAG[mode].padEnd(7)}  ${`t${seq + 1}`.padEnd(4)}`;
+
+/** One terminal line per timing event; delta is ms since speech end. */
+export function termTiming(
+  wallMs: number,
+  mode: Mode,
+  seq: number,
+  point: TimingPoint,
+  vendor?: string,
+  sinceSpeechEnd?: number | null,
+): string {
+  const tail =
+    point === "speech_end"
+      ? mode === "realtime"
+        ? "≈ VAD silence 500 ms"
+        : ""
+      : sinceSpeechEnd == null
+        ? ""
+        : `+${sinceSpeechEnd} ms`;
+  return `${prefix(wallMs, mode, seq)}${point.padEnd(16)} ${(vendor ?? "").padEnd(10)} ${tail}`.trimEnd();
+}
+
+export type Tone = "ok" | "bad" | "warn" | "muted";
+
+/** One terminal line per finished turn. */
+export function termResult(
+  wallMs: number,
+  mode: Mode,
+  seq: number,
+  state: TurnState,
+  timings: Timings,
+  reason?: string,
+): { text: string; tone: Tone } {
+  const s = summarizeTimings(timings, mode);
+  const end = s.toEnd === null ? "" : ` · audio end ${s.toEnd} ms`;
+  const p = prefix(wallMs, mode, seq);
+  if (state === "failed") return { text: `${p}✗ not interpreted (${reason ?? "failed"})`, tone: "bad" };
+  if (state === "empty") return { text: `${p}· nothing heard`, tone: "muted" };
+  if (state === "cut")
+    return {
+      text: `${p}✂ cut off${s.toFirstAudio === null ? "" : ` · first audio ${s.toFirstAudio} ms`}`,
+      tone: "warn",
+    };
+  if (s.toFirstAudio === null) return { text: `${p}✓ done (no first-audio timing)`, tone: "muted" };
+  const ok = s.toFirstAudio < TARGET_MS;
+  return {
+    text: `${p}${ok ? "✓" : "✗"} first audio ${s.toFirstAudio} ms  (target < ${TARGET_MS})${end}`,
+    tone: ok ? "ok" : "bad",
+  };
+}
+
+/** A turn's result line is printed once it is settled: a done turn with audio waits for end of audio. */
+export function resultReady(state: TurnState, t: Timings): boolean {
+  if (!isTerminalState(state)) return false;
+  if (state !== "done") return true;
+  return t.audio_end !== undefined || (t.first_audio === undefined && t.first_tts_byte === undefined);
+}
+
+export type LayerKey = "stt" | "translate" | "tts";
+export type LayerStatus = "waiting" | "active" | "done" | "failed";
+export interface Layer {
+  key: LayerKey;
+  status: LayerStatus;
+  ms: number | null;
+  note?: string;
+}
+const LAYERS: [LayerKey, TimingPoint, TimingPoint][] = [
+  ["stt", "speech_end", "stt_final"], // turn detection + STT final
+  ["translate", "stt_final", "first_translation"],
+  ["tts", "first_translation", "first_tts_byte"],
+];
+
+/** Cascade pipeline view for one turn: each layer waiting / active / done (with ms) / failed (with reason). */
+export function cascadeLayers(t?: { state: TurnState; timings: Timings; reason?: string }): Layer[] {
+  if (!t) return LAYERS.map(([key]) => ({ key, status: "waiting", ms: null }));
+  const failed =
+    t.state !== "failed"
+      ? undefined
+      : (LAYERS.find(([k]) => t.reason?.startsWith(k))?.[0] ??
+        LAYERS.find(([, , b]) => t.timings[b] === undefined)?.[0]);
+  return LAYERS.map(([key, a, b], i) => {
+    if (t.timings[b] !== undefined) return { key, status: "done", ms: span(t.timings, a, b) };
+    if (key === failed) return { key, status: "failed", ms: null, note: t.reason ?? "failed" };
+    const ready = i === 0 || t.timings[LAYERS[i - 1][2]] !== undefined;
+    return { key, status: ready && !isTerminalState(t.state) ? "active" : "waiting", ms: null };
+  });
+}
+
+export type OrbState = "idle" | "listening" | "translating" | "speaking";
+export function orbState(live: boolean, state?: TurnState): OrbState {
+  if (!live) return "idle";
+  if (state === "translating") return "translating";
+  if (state === "speaking") return "speaking";
+  return "listening";
+}

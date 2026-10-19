@@ -1,6 +1,6 @@
 // Session store (lld §5): owns mode, pair and the conversation history; transports are swapped under it.
 import type { Lang, Mode, TimingPoint, TurnText, TurnUpdate } from "../shared/contracts.ts";
-import type { Timings } from "./lib.ts";
+import { isTerminalState, type Timings } from "./lib.ts";
 
 export interface Turn extends TurnUpdate {
   timings: Timings;
@@ -29,8 +29,7 @@ export interface Transport {
 
 export type TransportFactory = (mode: Mode, events: TransportEvents) => Transport;
 
-const TERMINAL = new Set(["done", "failed", "empty", "cut"]);
-export const isTerminal = (t: Turn) => TERMINAL.has(t.state);
+export const isTerminal = (t: Turn) => isTerminalState(t.state);
 
 export class Session {
   mode: Mode = "realtime";
@@ -44,7 +43,7 @@ export class Session {
 
   constructor(
     private make: TransportFactory,
-    private onChange: (notice?: string) => void,
+    private onChange: (notice?: string, isError?: boolean) => void,
   ) {}
 
   /** last 5 interpreted turns, oldest first (INV-6, FR-029) */
@@ -80,7 +79,7 @@ export class Session {
         if (!current()) return;
         const turn = id ? this.upsert({ turnId: key(id) }, mode) : this.turns.at(-1);
         if (turn) turn.error = msg;
-        this.onChange(msg);
+        this.onChange(msg, true);
       },
     });
     this.transport = t;
