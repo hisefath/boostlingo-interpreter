@@ -106,3 +106,32 @@ export type ServerMsg =
   | ({ type: "turn" } & TurnUpdate)
   | { type: "timing"; turnId: string; point: TimingPoint; serverT: number; vendor?: string }
   | { type: "error"; stage: Stage | "session"; kind: ErrorKind; message: string };
+
+// ---- Evaluation (lld.md §7): clips defined in eval/clips.json, audio in eval/clips/<id>.wav ---------------
+export interface EvalClip {
+  id: string;
+  lang: Lang;
+  text: string;
+  /** reference translation into the other language */
+  reference: string;
+  kind: "routine" | "trick" | "critical";
+  /** terms that must survive exactly (numbers, doses, negations, names) */
+  criticalTerms: string[];
+}
+export interface EvalTurnResult {
+  clipId: string;
+  mode: Mode;
+  /** ms on the browser clock, keyed by timing point */
+  timings: Partial<Record<TimingPoint, number>>;
+  srcText: string;
+  tgtText: string;
+  state: TurnState;
+  /** base64 WAV of the interpreted audio, for independent re-transcription */
+  outputAudioWav?: string;
+}
+export interface EvalRun {
+  runId: string;
+  startedAt: string;
+  vendors: Record<Stage | "realtime", string>;
+  turns: EvalTurnResult[];
+}
