@@ -250,3 +250,103 @@ footer.sd-footer {
     display: none;
   }
 }
+
+/* ---- clickable site signs in the scene: Architecture (over the building frame), System demo (over the beams) ---- */
+footer.sd-footer .cs-sign {
+  position: absolute;
+  bottom: 118px;
+  z-index: 2;
+  display: grid;
+  gap: 1px;
+  padding: 7px 14px 8px;
+  min-width: 132px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--fg);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 22%, #1d1e29),
+    color-mix(in srgb, var(--accent-2) 10%, #15161e)
+  );
+  box-shadow:
+    0 10px 24px -14px color-mix(in srgb, var(--accent) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+/* two posts down to the ground */
+footer.sd-footer .cs-sign::before,
+footer.sd-footer .cs-sign::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  width: 3px;
+  height: 92px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-2) 55%, #2a2b38), #1a1b26);
+  border-radius: 0 0 2px 2px;
+}
+footer.sd-footer .cs-sign::before {
+  left: 22%;
+}
+footer.sd-footer .cs-sign::after {
+  right: 22%;
+}
+footer.sd-footer .cs-sign-arch {
+  left: calc(50% - 360px);
+}
+footer.sd-footer .cs-sign-demo {
+  left: calc(50% + 228px);
+}
+.cs-sign-kicker {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cs-sign-title {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--accent);
+}
+footer.sd-footer .cs-sign:hover,
+footer.sd-footer .cs-sign:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 16px 30px -12px color-mix(in srgb, var(--accent) 85%, transparent);
+}
+footer.sd-footer .cs-sign:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  /* not enough ground on phones: signs float at the top corners, no posts */
+  footer.sd-footer .cs-sign {
+    bottom: auto;
+    top: 14px;
+    min-width: 0;
+    padding: 5px 10px 6px;
+  }
+  footer.sd-footer .cs-sign::before,
+  footer.sd-footer .cs-sign::after {
+    display: none;
+  }
+  footer.sd-footer .cs-sign-arch {
+    left: 12px;
+  }
+  footer.sd-footer .cs-sign-demo {
+    left: auto;
+    right: 12px;
+  }
+  .cs-sign-kicker {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  footer.sd-footer .cs-sign {
+    transition: none;
+  }
+}

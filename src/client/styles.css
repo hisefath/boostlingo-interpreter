@@ -231,7 +231,7 @@ p {
     background 0.2s;
 }
 .ctl:hover {
-  border-color: rgba(196, 178, 255, 0.45);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .ctl:has(:focus-visible) {
   outline: 2px solid var(--accent);
@@ -1118,6 +1118,9 @@ button.primary.live {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  padding: 0 16px; /* .ctl leaves the left edge to an icon; links have none */
+  gap: 6px;
+  white-space: nowrap;
 }
 
 /* ---- "System Design" footer button: a crane lowers the Design half into place ---------------------------------- */

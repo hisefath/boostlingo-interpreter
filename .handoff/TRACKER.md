@@ -43,6 +43,7 @@ several harnesses read it and the repo is public.
 | 2026-10-19 01:12 CDT | deploy (reverses D14) | main@6fa3622 | "also deploy it to railway" |
 | 2026-10-19 02:21 CDT | merge + deploy M5 | milestone/m5-deploy@636a46a | "once youre done, commit, merge and deploy this" |
 | 2026-10-19 02:36 CDT | merge + push + deploy M6 | milestone/m6-polish@b84a728 | "yes, merge to main, push and redeploy this batch" |
+| 2026-10-19 02:40 CDT | merge + push + deploy (pills, scene signs) | milestone/m6-polish | "once your finished, commit merge and deploy" |
 
 ## Log
 
@@ -89,3 +90,4 @@ several harnesses read it and the repo is public.
 2026-10-19 02:21 CDT ROUTE M5 redeploy 636a46a (dashboard, header/terminal, demo, soak, languages, architecture + system demo, injection fix, memory fix)
 2026-10-19 02:24 CDT VERIFY M5 merged main d953ecd pushed GitLab+GitHub; Railway deploy SUCCESS; /api/version d953ecd
 2026-10-19 02:26 CDT ROUTE M6 polish (human): crane spacing + construction scene; mode themes green/purple. DISPATCH M6-T014 scene
+2026-10-19 02:37 CDT VERIFY M6 merged main 00c4892 pushed GitLab+GitHub; Railway SUCCESS
