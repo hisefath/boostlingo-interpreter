@@ -137,7 +137,7 @@ describe("public mode (ACCESS_CODE)", () => {
   const dist = mkdtempSync(join(tmpdir(), "dist-"));
   writeFileSync(join(dist, "index.html"), "<!doctype html><title>wb</title>");
   const pub = createAppServer({
-    env: { ...env, ACCESS_CODE: "s3cret", GIT_SHA: "abc1234" },
+    env: { ...env, ACCESS_CODE: "s3cret", GIT_SHA: "abc1234", PUBLIC_ORIGIN: "https://wb.example/" },
     evalDir,
     staticDir: dist,
   });
@@ -215,7 +215,12 @@ describe("public mode (ACCESS_CODE)", () => {
       });
     expect(await tryWs({})).toBe("401");
     const r = await fetch(`http://${pbase}/`, { headers: basic("s3cret") });
-    expect(await tryWs({ cookie: (r.headers.get("set-cookie") ?? "").split(";")[0] })).toBe("open");
+    const cookie = (r.headers.get("set-cookie") ?? "").split(";")[0];
+    expect(await tryWs({ cookie })).toBe("open");
+    // public mode: only the configured site (trailing slash normalised); localhost and foreign pages are refused
+    expect(await tryWs({ cookie, origin: "https://wb.example" })).toBe("open");
+    expect(await tryWs({ cookie, origin: "http://localhost:5173" })).toBe("401");
+    expect(await tryWs({ cookie, origin: "https://evil.example" })).toBe("401");
   });
 
   it("throttles repeated wrong codes with 429", async () => {

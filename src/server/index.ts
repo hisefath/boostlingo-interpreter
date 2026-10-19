@@ -256,13 +256,15 @@ export function createAppServer(opts: AppOptions = {}): Server {
 
   // Browsers don't apply same-origin rules to WebSockets: accept only our own localhost pages.
   const LOCAL_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-  const PUBLIC_ORIGIN = env.PUBLIC_ORIGIN || undefined; // e.g. https://<app>.up.railway.app
+  // public mode accepts only its own site; local mode only localhost pages (review M5 F3/AUTH-3)
+  const PUBLIC_ORIGIN = (env.PUBLIC_ORIGIN || "").replace(/\/+$/, "") || undefined; // e.g. https://<app>.up.railway.app
+  const originOk = (o?: string) => !o || (code ? o === PUBLIC_ORIGIN : LOCAL_ORIGIN.test(o));
   const wss = new WebSocketServer({
     server,
     path: "/cascade",
     maxPayload: 1024 * 1024,
     verifyClient: ({ origin, req }: { origin?: string; req: IncomingMessage }) =>
-      (!origin || LOCAL_ORIGIN.test(origin) || origin === PUBLIC_ORIGIN) && authorized(req, code) !== false,
+      originOk(origin) && authorized(req, code) !== false,
   });
   wss.on("connection", (ws: WebSocket) => {
     let pipeline: Pipeline | null = null;
