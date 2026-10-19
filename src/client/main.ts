@@ -4,6 +4,7 @@
 import type { Lang, Mode, TimingPoint } from "../shared/contracts.ts";
 import { dashHtml } from "./dash.ts";
 import { runDemo } from "./demo.ts";
+import { LANGUAGES } from "../shared/languages.ts";
 import { runEval, runSoak } from "./eval.ts";
 import {
   cascadeLayers,
@@ -15,6 +16,7 @@ import {
   vendorLabel,
   type Tone,
 } from "./lib.ts";
+import { PAIRS } from "../shared/languages.ts";
 import { Session, type Turn } from "./session.ts";
 import { headerLine, resultLine, timingLine, type Tok } from "./term.ts";
 import { CascadeTransport } from "./transports/cascade.ts";
@@ -26,6 +28,7 @@ const evalBtn = $<HTMLButtonElement>("eval");
 const soakBtn = $<HTMLButtonElement>("soak");
 const demoBtn = $<HTMLButtonElement>("demo");
 const pairSel = $<HTMLSelectElement>("pair");
+pairSel.replaceChildren(...PAIRS.map((p) => new Option(p.label, p.id))); // one list: src/shared/languages.ts
 const headphones = $<HTMLInputElement>("headphones");
 const statusEl = $("status");
 const orb = $("orb");
@@ -318,7 +321,7 @@ startBtn.addEventListener("click", async () => {
   setStatus("Connecting…");
   try {
     await session.start(mic);
-    setStatus("Listening. Speak in English or Spanish.");
+    setStatus(`Listening. Speak in ${session.pair.map((l) => LANGUAGES[l].name).join(" or ")}.`);
     log(`❯ listening · ${MODE_LABEL[session.mode]}`, "muted");
   } catch (e) {
     setStatus(`Could not start: ${(e as Error).message}`);
@@ -370,7 +373,14 @@ async function runJob(
 }
 
 // Run demo: in every build (the public site too); Stop stays usable while it plays
+/** demo, eval and soak clips are English/Spanish: run them on that pair whatever is selected (review M5-T011 #1) */
+function useClipPair(): void {
+  pairSel.value = "en-es";
+  session.pair = ["en", "es"];
+}
+
 demoBtn.addEventListener("click", () => {
+  useClipPair();
   demoing = true;
   void runJob("Demo", (p) => runDemo(session, p)).finally(() => {
     demoing = false;
@@ -382,8 +392,12 @@ demoBtn.addEventListener("click", () => {
 if (!import.meta.env.DEV) $("devtools").remove();
 else {
   $("devtools").hidden = false;
-  evalBtn.addEventListener("click", () => runJob("Eval", (p) => runEval(session, vendors, p)));
+  evalBtn.addEventListener(
+    "click",
+    () => (useClipPair(), runJob("Eval", (p) => runEval(session, vendors, p))),
+  );
   soakBtn.addEventListener("click", () => {
+    useClipPair();
     const notices: string[] = [];
     noticeTap = (m) => notices.push(m);
     void runJob("Soak", (p) => runSoak(session, vendors, p, notices)).finally(() => (noticeTap = null));

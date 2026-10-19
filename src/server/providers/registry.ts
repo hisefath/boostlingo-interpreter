@@ -1,5 +1,6 @@
 // One line per vendor (AGENTS.md). Picks each stage's vendor from env; a blank vendor key falls back to openai.
-import type { SttProvider, Translator, Tts } from "../../shared/contracts.ts";
+import type { Lang, SttProvider, Translator, Tts } from "../../shared/contracts.ts";
+import { LANGUAGES } from "../../shared/languages.ts";
 import { fakeStt, fakeTranslator, fakeTts } from "./fake.ts";
 import { deepgramStt } from "./stt/deepgram.ts";
 import { openaiStt } from "./stt/openai.ts";
@@ -15,14 +16,19 @@ export interface Providers {
   tts: Tts;
 }
 
-type Factory<T> = { key?: string; make: (e: Env) => T };
+/** `hears` = the vendor transcribes this language (STT only; absent = every language). */
+type Factory<T> = { key?: string; make: (e: Env) => T; hears?: (l: Lang) => boolean };
 
 const STT: Record<string, Factory<SttProvider>> = {
   openai: {
     key: "OPENAI_API_KEY",
     make: (e) => openaiStt(e.OPENAI_API_KEY ?? "", e.OPENAI_STT_MODEL || undefined),
   },
-  deepgram: { key: "DEEPGRAM_API_KEY", make: (e) => deepgramStt(e.DEEPGRAM_API_KEY ?? "") },
+  deepgram: {
+    key: "DEEPGRAM_API_KEY",
+    make: (e) => deepgramStt(e.DEEPGRAM_API_KEY ?? ""),
+    hears: (l) => LANGUAGES[l].deepgram,
+  },
   fake: { make: () => fakeStt() },
 };
 const TRANSLATE: Record<string, Factory<Translator>> = {
@@ -51,9 +57,12 @@ function pick<T>(table: Record<string, Factory<T>>, wanted: string | undefined, 
   return f.make(env);
 }
 
-export function createProviders(env: Env = process.env): Providers {
+/** `pair` = the session's languages: an STT vendor that can't hear one of them hands this session to openai
+ * (per-pair routing; the pipeline's timing events then name the vendor that actually ran). */
+export function createProviders(env: Env = process.env, pair?: readonly Lang[]): Providers {
+  const hears = STT[env.STT_PROVIDER ?? "openai"]?.hears;
   return {
-    stt: pick(STT, env.STT_PROVIDER, env),
+    stt: pick(STT, pair && hears && !pair.every(hears) ? "openai" : env.STT_PROVIDER, env),
     translator: pick(TRANSLATE, env.TRANSLATE_PROVIDER, env),
     tts: pick(TTS, env.TTS_PROVIDER, env),
   };

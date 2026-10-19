@@ -8,13 +8,13 @@ import { WebSocketServer, type WebSocket } from "ws";
 import type { ClientMsg, Lang, ServerMsg, TurnText } from "../shared/contracts.ts";
 import { createPipeline, type Pipeline } from "./pipeline.ts";
 import { createProviders, type Env } from "./providers/registry.ts";
-import { interpreterInstructions } from "./providers/http.ts";
+import { interpreterInstructions, sttPrompt } from "./providers/http.ts";
+import { isPair, LANG_CODES } from "../shared/languages.ts";
 
 const LIMITS = { translateMs: 4000, ttsMs: 5000 }; // lld.md §2
 const MAX_BODY = 64 * 1024; // control routes
 const MAX_EVAL_BODY = 300 * 1024 * 1024; // eval runs carry base64 WAVs of every interpreted turn (localhost only)
 const SAFE_ID = /^[A-Za-z0-9_-]{1,100}$/;
-const LANGS: Lang[] = ["en", "es"];
 
 export interface AppOptions {
   env?: Env;
@@ -105,13 +105,11 @@ async function readBody(req: IncomingMessage, max = MAX_BODY): Promise<string> {
   return Buffer.concat(parts).toString("utf8");
 }
 
-const isPair = (p: unknown): p is [Lang, Lang] =>
-  Array.isArray(p) && p.length === 2 && p.every((l) => LANGS.includes(l)) && p[0] !== p[1];
 // Client-supplied context goes into model instructions: keep only well-formed, short items.
 const clip = (v: unknown) => (typeof v === "string" ? v.slice(0, 500) : "");
 const asContext = (c: unknown): TurnText[] =>
   (Array.isArray(c) ? c.slice(-5) : [])
-    .filter((t): t is TurnText => !!t && LANGS.includes(t.from) && LANGS.includes(t.to))
+    .filter((t): t is TurnText => !!t && LANG_CODES.includes(t.from) && LANG_CODES.includes(t.to))
     .map((t) => ({ from: t.from, to: t.to, srcText: clip(t.srcText), tgtText: clip(t.tgtText) }));
 
 async function realtimeSession(env: Env, body: { pair?: unknown; context?: unknown }) {
@@ -135,7 +133,7 @@ async function realtimeSession(env: Env, body: { pair?: unknown; context?: unkno
         instructions,
         audio: {
           input: {
-            transcription: { model: env.OPENAI_STT_MODEL || "gpt-4o-transcribe" },
+            transcription: { model: env.OPENAI_STT_MODEL || "gpt-4o-transcribe", prompt: sttPrompt(pair) },
             turn_detection: { type: "server_vad", silence_duration_ms: 500 },
           },
         },
@@ -298,7 +296,7 @@ export function createAppServer(opts: AppOptions = {}): Server {
         stop();
         if (!isPair(msg.pair))
           return out({ type: "error", stage: "session", kind: "failed", message: "bad pair" });
-        const p = createProviders(env);
+        const p = createProviders(env, msg.pair);
         pipeline = createPipeline({
           ...p,
           pair: msg.pair,

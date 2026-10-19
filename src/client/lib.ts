@@ -1,32 +1,13 @@
 // Pure helpers (no DOM): language guess, clock math, timing summary, PCM conversion, WAV encoding,
 // and the workbench's display maths (mic level, per-mode summary, vendor names, pipeline layers).
 import type { Lang, Mode, TimingPoint, TurnState } from "../shared/contracts.ts";
+import { guessLang as detectLang } from "../shared/languages.ts";
 
 export type Timings = Partial<Record<TimingPoint, number>>;
 
-const ES_STOPWORDS = new Set(
-  "el la los las un una de del que y en por para con es está estoy tengo usted le lo se su sí no muy pero como dónde donde qué cuándo hola gracias señor señora".split(
-    " ",
-  ),
-);
-const EN_STOPWORDS = new Set(
-  "the a an of and is are i you he she it we they to in on for with do does have has my your what where when how hello thank yes no".split(
-    " ",
-  ),
-);
-
-/** Guess en/es from text: Spanish-only characters win; otherwise count stopwords. */
-export function guessLang(text: string, fallback: Lang = "en"): Lang {
-  if (/[ñáéíóúü¿¡]/i.test(text)) return "es";
-  let es = 0;
-  let en = 0;
-  for (const w of text.toLowerCase().match(/[a-z]+/g) ?? []) {
-    if (ES_STOPWORDS.has(w)) es++;
-    if (EN_STOPWORDS.has(w)) en++;
-  }
-  if (es === en) return fallback;
-  return es > en ? "es" : "en";
-}
+/** Which of the pair's languages `text` is in (shared table); no evidence either way → fallback. */
+export const guessLang = (text: string, fallback: Lang = "en", pair: readonly Lang[] = ["en", "es"]): Lang =>
+  detectLang(text, pair, fallback);
 
 /** offset such that browserT = serverT - offset; assumes the server stamped at the round trip's midpoint. */
 export function clockOffset(sentAt: number, serverT: number, receivedAt: number): number {

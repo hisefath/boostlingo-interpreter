@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import type { EvalClip, Lang } from "../../src/shared/contracts.ts";
 import { pcm16ToWav, resample } from "./metrics.ts";
 
-const VOICE: Record<Lang, string> = { en: "alloy", es: "nova" };
+const VOICE: Partial<Record<Lang, string>> = { en: "alloy", es: "nova" };
 const model = process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts";
 const clips: EvalClip[] = JSON.parse(readFileSync("eval/clips.json", "utf8"));
 const openai = new OpenAI();
@@ -20,7 +20,7 @@ for (const clip of clips) {
   // response_format "pcm" = raw 24 kHz 16-bit little-endian mono
   const res = await openai.audio.speech.create({
     model,
-    voice: VOICE[clip.lang],
+    voice: VOICE[clip.lang] ?? "nova",
     input: clip.text,
     response_format: "pcm",
   });

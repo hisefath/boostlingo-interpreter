@@ -1,7 +1,10 @@
 // Stage contracts (docs/architecture/lld.md §1). Every vendor adapter implements one of these;
 // swapping a vendor = one new adapter file + one registry line.
 
-export type Lang = "en" | "es";
+import type { LANGUAGES } from "./languages.ts";
+
+/** a language code from the table in languages.ts */
+export type Lang = keyof typeof LANGUAGES;
 export type Stage = "stt" | "translate" | "tts";
 export type ErrorKind = "rate_limited" | "timeout" | "empty" | "disconnected" | "failed";
 export type Mode = "realtime" | "cascade";

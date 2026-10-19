@@ -1,8 +1,21 @@
 // Shared helpers for vendor HTTP adapters: error mapping and PCM streaming.
 import { ProviderError } from "../../shared/contracts.ts";
 import type { Lang, Stage } from "../../shared/contracts.ts";
+import { LANG_CODES, LANGUAGES } from "../../shared/languages.ts";
 
-export const LANG_NAME: Record<Lang, string> = { en: "English", es: "Spanish" };
+export { guessLang } from "../../shared/languages.ts";
+
+export const LANG_NAME = Object.fromEntries(LANG_CODES.map((l) => [l, LANGUAGES[l].name])) as Record<
+  Lang,
+  string
+>;
+
+/** Transcription prompt naming the pair's languages (dialect, script), for OpenAI STT in both modes. */
+// Only pairs that need a script/language hint get one (zh); en-es stays exactly as measured (review M5-T011 #2).
+export const sttPrompt = (pair: readonly Lang[]) =>
+  pair.some((l) => !LANGUAGES[l].deepgram)
+    ? `The speaker uses ${pair.map((l) => LANGUAGES[l].sttHint).join(" or ")}. Transcribe in the language spoken; never translate.`
+    : undefined;
 
 /** lld.md §6, shared by both modes (INV-4). */
 export function interpreterInstructions(a: Lang, b: Lang): string {
@@ -52,18 +65,4 @@ export async function* pcmChunks(stage: Stage, res: Response): AsyncIterable<Uin
     }
   }
   if (!any) throw new ProviderError(stage, "empty");
-}
-
-/** Guess en/es from text for STT vendors that do not report language. */
-// ponytail: stopword count heuristic; replace with a vendor language field when one is available.
-export function guessLang(text: string, pair: Lang[]): Lang {
-  const words = text.toLowerCase().match(/[a-záéíóúñü¿¡]+/g) ?? [];
-  const es =
-    /^(el|la|los|las|de|que|y|en|un|una|es|no|por|con|para|mi|su|lo|se|del|al|está|estoy|tengo|sí|qué|cómo|necesito|usted)$/;
-  const en =
-    /^(the|a|an|and|of|to|is|are|i|you|it|in|on|for|my|your|what|how|can|do|have|need|this|that|with)$/;
-  let score = /[ñáéíóú¿¡]/.test(text) ? 2 : 0;
-  for (const w of words) score += es.test(w) ? 1 : en.test(w) ? -1 : 0;
-  const lang: Lang = score > 0 ? "es" : "en";
-  return pair.includes(lang) ? lang : pair[0];
 }

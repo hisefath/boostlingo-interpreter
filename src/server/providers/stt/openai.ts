@@ -3,7 +3,7 @@
 import { WebSocket } from "ws";
 import { ProviderError } from "../../../shared/contracts.ts";
 import type { SttProvider } from "../../../shared/contracts.ts";
-import { guessLang } from "../http.ts";
+import { guessLang, sttPrompt } from "../http.ts";
 
 function upsample16to24(pcm: Int16Array): Int16Array {
   const out = new Int16Array(Math.floor((pcm.length * 3) / 2));
@@ -44,7 +44,7 @@ export function openaiStt(apiKey: string, model = "gpt-4o-transcribe"): SttProvi
               audio: {
                 input: {
                   format: { type: "audio/pcm", rate: 24000 },
-                  transcription: { model },
+                  transcription: { model, prompt: sttPrompt(h.languages) },
                   turn_detection: { type: "server_vad", silence_duration_ms: 500 },
                 },
               },
