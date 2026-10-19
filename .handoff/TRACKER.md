@@ -42,6 +42,7 @@ several harnesses read it and the repo is public.
 | 2026-10-19 01:12 CDT | push | main@6fa3622 | "push for me" |
 | 2026-10-19 01:12 CDT | deploy (reverses D14) | main@6fa3622 | "also deploy it to railway" |
 | 2026-10-19 02:21 CDT | merge + deploy M5 | milestone/m5-deploy@636a46a | "once youre done, commit, merge and deploy this" |
+| 2026-10-19 02:36 CDT | merge + push + deploy M6 | milestone/m6-polish@b84a728 | "yes, merge to main, push and redeploy this batch" |
 
 ## Log
 
