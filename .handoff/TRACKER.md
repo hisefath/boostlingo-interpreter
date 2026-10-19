@@ -38,6 +38,7 @@ several harnesses read it and the repo is public.
 | 2026-10-18 23:00 CDT | auto-T2 | docs/architecture/lld.md@483f50c | standing rule: Type 2 proceeds (WORKFLOW §5) — D24, D25 |
 | 2026-10-18 23:01 CDT | GD | .handoff/checkpoints/GD-M1.md@5fcc9c7 | "1A approve all dependencies — start /build-milestone" |
 | 2026-10-18 23:27 CDT | GT | .handoff/checkpoints/GT-M4.md@HEAD | "works" |
+| 2026-10-19 00:45 CDT | close: AGENTS.md section · reword commits · merge + public push | milestone/m4-workbench@b0e076b | "1 yes 2 yes 3 yes" |
 
 ## Log
 

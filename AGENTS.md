@@ -58,3 +58,20 @@ test output, questions). Templates: `specs/_templates/task.md`, `specs/_template
 - TypeScript everywhere (D22): `src/shared` contracts, `src/server` Node (ws), `src/client` browser (Vite). One package.
 - Stage contracts live in `src/shared/contracts.ts`; a vendor adapter goes in `src/server/providers/<stage>/<vendor>.ts` + one line in `src/server/providers/registry.ts`.
 - Tests use fakes only, never the network or real keys. Vendor keys come from `.env` via `tsx --env-file`.
+
+## How the coding agent was directed (REQ-15)
+- **Harness:** Claude Code (Opus) as supervisor, running a personal spec-driven workflow (software-factory-kit v0.2): three
+  sessions with one human checkpoint each — plan the product (Intent check), plan the design (Design check), build
+  (Try-it check) — then merge on green.
+- **Planning:** the agent reviewed the project prompt and partner materials for issues before writing anything (see
+  `specs/M1-interpreter-tradeoffs/prompt-review.md`), ran three research subagents in parallel (`docs/research/R01–R06`,
+  every claim cited), and wrote the PRD (`docs/product/prd.md`). The human answered one batched card per checkpoint.
+- **Decisions:** reversible choices were made by the agent and logged; one-way choices (stack, spend, vendors, hosting)
+  waited for the human. All are in `docs/decisions/DECISION_JOURNAL.md` with options, costs and the human's words.
+- **Build:** the agent wrote the stage contracts (`src/shared/contracts.ts`) and failing acceptance tests first, then
+  dispatched three subagents in parallel git worktrees (server + pipeline, browser, evaluation), each limited to its
+  own folders by a task file (`specs/M4-workbench/tasks/`) and checked by `scripts/scope-guard.sh` and `make check`.
+- **Review:** three independent reviewer agents (spec fidelity, correctness and security, adversarial "tests that
+  lie") read the diff; 11 findings were fixed, including a server bound to all interfaces and a missing WebSocket
+  origin check (`.handoff/reviews/M4-pass1.md`). New tests were mutation-checked (break the line, see the test fail).
+- **Human role:** product and one-way decisions, API keys and spend, trying the app (Try-it check), and every push.
