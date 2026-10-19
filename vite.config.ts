@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -13,7 +14,13 @@ export default defineConfig({
   build: {
     outDir: "../../dist",
     emptyOutDir: true,
-    // two pages; paths are relative to root (src/client)
-    rollupOptions: { input: { main: "index.html", architecture: "architecture.html" } },
+    // three pages, absolute paths so the build works from any cwd
+    rollupOptions: {
+      input: {
+        main: resolve(import.meta.dirname, "src/client/index.html"),
+        architecture: resolve(import.meta.dirname, "src/client/architecture.html"),
+        "system-demo": resolve(import.meta.dirname, "src/client/system-demo.html"),
+      },
+    },
   },
 });

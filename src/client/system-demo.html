@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>System Demo · Interpreter Workbench</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./system-demo.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-inner">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div class="brand-text">
+            <div class="title-row">
+              <h1>Interpreter Workbench</h1>
+              <span class="tagline">System demo: how requests flow, one user and 3,000</span>
+            </div>
+          </div>
+        </div>
+        <nav class="sd-nav" aria-label="Pages">
+          <a href="/">← Workbench</a>
+          <a href="/architecture.html">Architecture</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="sd">
+      <section class="panel" aria-labelledby="arch-h">
+        <div class="sd-head">
+          <h2 id="arch-h">Target architecture, designed for scale</h2>
+          <span class="tag tag-measured">Measured: hop latencies</span>
+          <span class="tag tag-sim">Simulated: load, limits, queues</span>
+        </div>
+        <div
+          class="diagram-scroll"
+          tabindex="0"
+          aria-label="Architecture diagram, scrolls sideways on small screens"
+        >
+          <svg id="diagram" viewBox="0 0 1000 440" role="img" aria-labelledby="dg-title dg-desc"></svg>
+        </div>
+      </section>
+
+      <div class="sd-walks">
+        <section class="panel" aria-labelledby="wa-h">
+          <div class="sd-head">
+            <h2 id="wa-h">Walkthrough A: one user, one turn</h2>
+            <span class="tag tag-measured">Measured medians</span>
+          </div>
+          <fieldset class="sd-seg">
+            <legend class="sr-only">Mode</legend>
+            <label><input type="radio" name="wa-mode" value="cascade" checked /> <span>Cascade</span></label>
+            <label><input type="radio" name="wa-mode" value="v2v" /> <span>Voice-to-voice</span></label>
+          </fieldset>
+          <div class="sd-ctrls">
+            <button id="wa-play" type="button" class="demo-btn">▶ Play</button>
+            <button id="wa-next" type="button">Next</button>
+            <button id="wa-reset" type="button">Reset</button>
+          </div>
+          <p id="wa-caption" class="sd-caption" aria-live="polite"></p>
+          <div id="wa-bar" class="tl-bar" aria-hidden="true"></div>
+          <ol id="wa-hops" class="hops"></ol>
+          <p id="wa-total" class="sd-total"></p>
+          <p id="wa-callout" class="callout"></p>
+        </section>
+
+        <section class="panel" aria-labelledby="wb-h">
+          <div class="sd-head">
+            <h2 id="wb-h">Walkthrough B: ramp to 3,000 sessions</h2>
+            <span class="tag tag-sim">Simulated</span>
+          </div>
+          <fieldset class="sd-seg">
+            <legend class="sr-only">Design</legend>
+            <label
+              ><input type="radio" name="wb-design" value="naive" />
+              <span>Naive (1 server, 1 key per vendor)</span></label
+            >
+            <label
+              ><input type="radio" name="wb-design" value="scaled" checked />
+              <span>Scaled design</span></label
+            >
+          </fieldset>
+          <div class="sd-ctrls">
+            <button id="wb-play" type="button" class="demo-btn">▶ Play</button>
+            <button id="wb-reset" type="button">Reset</button>
+            <label class="sd-speed"
+              >Speed
+              <select id="wb-speed">
+                <option value="1">1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+              </select>
+            </label>
+          </div>
+          <p id="wb-clock" class="sd-clock"></p>
+          <div class="ramp" aria-hidden="true"><span id="wb-ramp"></span></div>
+          <p id="wb-callout" class="callout" aria-live="polite"></p>
+          <p class="small muted">
+            A seeded, deterministic model: 20% of sessions voice-to-voice, a turn every 6 s, M/M/c queueing,
+            429s above each pool's limit. Naive retries every 250 ms with no budget; scaled backs off (200 ms
+            × 2ⁿ, 3 tries) inside a 10% retry budget. Limits are illustrative, not vendor quotes.
+          </p>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="why-h">
+        <h2 id="why-h">What makes it scale</h2>
+        <ul class="sd-points small">
+          <li>
+            <b>Stateless edges, sticky sessions.</b> The load balancer pins each WebSocket to one Node
+            instance; instances autoscale on session count and drain before deploys.
+          </li>
+          <li>
+            <b>Per-vendor pools.</b> Each vendor gets a pool of keys sized to its concurrency cap; a shared
+            Redis rate limiter and retry budget stop retry storms.
+          </li>
+          <li>
+            <b>Failover per stage.</b> When the Deepgram pool is full, new streams go to OpenAI STT instead of
+            queuing.
+          </li>
+          <li>
+            <b>Voice-to-voice skips our servers.</b> The browser talks to OpenAI Realtime over WebRTC; the API
+            only mints a short-lived client secret.
+          </li>
+        </ul>
+      </section>
+
+      <section class="panel dash" aria-labelledby="dash-h">
+        <div class="sd-head">
+          <h2 id="dash-h">Per-component metrics</h2>
+          <span class="tag tag-sim">Simulated</span>
+          <span id="dash-design" class="small muted"></span>
+        </div>
+        <div class="dash-scroll" tabindex="0" aria-label="Metrics table, scrolls sideways on small screens">
+          <table class="dash-t">
+            <thead>
+              <tr>
+                <th scope="col">Component</th>
+                <th scope="col" class="num">req<span class="u">/s</span></th>
+                <th scope="col" class="num">p50 <span class="u">ms</span></th>
+                <th scope="col" class="num">p95 <span class="u">ms</span></th>
+                <th scope="col" class="num">util <span class="u">%</span></th>
+                <th scope="col" class="num">queue</th>
+                <th scope="col" class="num">err<span class="u">/s</span></th>
+              </tr>
+            </thead>
+            <tbody id="dash-body"></tbody>
+          </table>
+        </div>
+        <dl id="dash-totals" class="totals"></dl>
+      </section>
+    </main>
+    <script type="module" src="./system-demo.ts"></script>
+  </body>
+</html>
