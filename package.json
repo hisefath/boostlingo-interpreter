@@ -15,7 +15,6 @@
   },
   "type": "module",
   "dependencies": {
-    "@deepgram/sdk": "^5.15.0",
     "openai": "^7.39.0",
     "ws": "^8.22.0"
   },
