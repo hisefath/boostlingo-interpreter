@@ -9,7 +9,6 @@ const STALL_MS = 1500;
 
 interface Q {
   pending: Int16Array[];
-  recorded: Int16Array[];
   final: boolean;
   started: boolean;
   live: Set<AudioBufferSourceNode>;
@@ -48,7 +47,6 @@ export class Player {
     const q = this.q(seq);
     if (!q) return;
     q.pending.push(pcm);
-    q.recorded.push(pcm);
     q.lastChunkAt = performance.now();
     this.pump();
   }
@@ -72,16 +70,10 @@ export class Player {
       });
       this.queues.delete(s);
       this.done.add(s);
-      this.kept.set(s, q.recorded);
       this.ev.cut(s);
     }
     this.nextTime = 0;
     this.pump();
-  }
-
-  /** PCM16 24 kHz audio received for a turn (eval recording) */
-  recorded(seq: number): Int16Array[] {
-    return this.queues.get(seq)?.recorded ?? this.kept.get(seq) ?? [];
   }
 
   close(): void {
@@ -90,13 +82,12 @@ export class Player {
   }
 
   private done = new Set<number>();
-  private kept = new Map<number, Int16Array[]>();
 
   private q(seq: number): Q | undefined {
     if (this.done.has(seq)) return undefined;
     let q = this.queues.get(seq);
     if (!q) {
-      q = { pending: [], recorded: [], final: false, started: false, live: new Set(), lastChunkAt: 0 };
+      q = { pending: [], final: false, started: false, live: new Set(), lastChunkAt: 0 };
       this.queues.set(seq, q);
     }
     return q;
@@ -105,7 +96,6 @@ export class Player {
   private finish(seq: number, q: Q): void {
     this.queues.delete(seq);
     this.done.add(seq);
-    this.kept.set(seq, q.recorded);
     if (q.started) this.ev.audioEnd(seq, performance.now());
   }
 

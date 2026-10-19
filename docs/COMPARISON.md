@@ -56,6 +56,12 @@ fix. High-stakes clinical and legal talk stays with human interpreters, which ma
 model is still speaking, the server's turn detection cuts the reply off. The latency figures are consistent across those
 turns but the quality sample is small; pacing clips on the model's end-of-audio is the first follow-up.
 
+**Stability (REQ-19), cascade, 5-minute soak:** 310 s of alternating EN/ES speech, 30 turns completed, 0 failed,
+0 disconnects; first-audio median 2,087 ms in the first five turns vs 1,993 ms in the last five (no drift); playback
+lag grew 9 ms. Page memory rose and fell with garbage collection (4 → 12 → 9 MB, coarse browser counter); the soak
+exposed the player keeping every interpreted clip in memory for no caller, which was removed afterwards. A
+voice-to-voice soak was not run.
+
 ## Measured provider comparison (cascade, same 36 clips, only settings changed)
 
 Swapping a stage's vendor is a settings change (`STT_PROVIDER`, `TTS_PROVIDER`), so we ran the cascade three ways:

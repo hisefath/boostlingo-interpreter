@@ -65,12 +65,6 @@ export class CascadeTransport implements Transport {
     return this.player?.stream ?? null;
   }
 
-  /** PCM16 24 kHz audio received for a turn (eval recording) */
-  recorded(turnId: string): Int16Array[] {
-    const seq = this.seqOf.get(turnId);
-    return seq === undefined || !this.player ? [] : this.player.recorded(seq);
-  }
-
   setEchoGuard(on: boolean): void {
     this.echoGuard = on;
   }
