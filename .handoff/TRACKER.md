@@ -57,3 +57,6 @@ several harnesses read it and the repo is public.
 2026-10-18 22:50 CDT ROUTE M1-PP deadline set to 2026-10-19 03:00 CDT; appetite collapses from 15-20 h to ~4 h; scope cut needed
 2026-10-18 22:55 CDT VERIFY M1 GD answers recorded; .env + .env.example created (names only)
 2026-10-18 23:00 CDT ROUTE M1 plan-design compressed; human said "go — start /plan-design"
+2026-10-18 23:05 CDT DISPATCH M4-T001 harness=claude-subagent why=one skill, disjoint Owns (src/server), parallel
+2026-10-18 23:05 CDT DISPATCH M4-T002 harness=claude-subagent why=one skill, disjoint Owns (src/client), parallel
+2026-10-18 23:05 CDT DISPATCH M4-T003 harness=claude-subagent why=one skill, disjoint Owns (scripts/eval), parallel
