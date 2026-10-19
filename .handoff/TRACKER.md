@@ -37,6 +37,8 @@ several harnesses read it and the repo is public.
 | 2026-10-18 22:55 CDT | GD (compressed, before design) | .handoff/TRACKER.md@8b4dbe0 | "A: TypeScript everywhere — yes" · ".env: create this file for me, with all the var names, and ill populate them. always create file and populate var names you need" · "Keep, full size — keep full size" |
 | 2026-10-18 23:00 CDT | auto-T2 | docs/architecture/lld.md@483f50c | standing rule: Type 2 proceeds (WORKFLOW §5) — D24, D25 |
 | 2026-10-18 23:01 CDT | GD | .handoff/checkpoints/GD-M1.md@5fcc9c7 | "1A approve all dependencies — start /build-milestone" |
+| 2026-10-18 23:27 CDT | GT | .handoff/checkpoints/GT-M4.md@HEAD | "works" |
+| 2026-10-19 00:45 CDT | close: AGENTS.md section · reword commits · merge + public push | milestone/m4-workbench@b0e076b | "1 yes 2 yes 3 yes" |
 
 ## Log
 
@@ -57,3 +59,17 @@ several harnesses read it and the repo is public.
 2026-10-18 22:50 CDT ROUTE M1-PP deadline set to 2026-10-19 03:00 CDT; appetite collapses from 15-20 h to ~4 h; scope cut needed
 2026-10-18 22:55 CDT VERIFY M1 GD answers recorded; .env + .env.example created (names only)
 2026-10-18 23:00 CDT ROUTE M1 plan-design compressed; human said "go — start /plan-design"
+2026-10-18 23:05 CDT DISPATCH M4-T001 harness=claude-subagent why=one skill, disjoint Owns (src/server), parallel
+2026-10-18 23:05 CDT DISPATCH M4-T002 harness=claude-subagent why=one skill, disjoint Owns (src/client), parallel
+2026-10-18 23:05 CDT DISPATCH M4-T003 harness=claude-subagent why=one skill, disjoint Owns (scripts/eval), parallel
+2026-10-18 23:11 CDT RESULT M4-T003 status=human_review harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:11 CDT VERIFY M4-T003 93e6f33 scope-guard OK; vitest tests/eval 17/17; prettier OK → squashed
+2026-10-18 23:11 CDT FAIL M4-eval make-clips: OpenAI insufficient_quota (no billing credit) → human
+2026-10-18 23:13 CDT RESULT M4-T001 status=done harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:13 CDT RESULT M4-T002 status=human_review harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:13 CDT VERIFY M4 481819e make check → OK (51 tests); scope-guard OK T001, T002
+2026-10-18 23:14 CDT VERIFY M4 app starts; /api/config, /api/eval-clips (36), /api/realtime-session 200; OpenAI still 429 no credits
+2026-10-18 23:18 CDT VERIFY M4 review pass1: 11 fixed (2d0e576, f62178e), 7 filed/kept; make check OK 54 tests
+2026-10-18 23:42 CDT DISPATCH M4-T004 harness=claude-subagent why=one skill, Owns src/client only, parallel with eval scoring
+2026-10-18 23:58 CDT RESULT M4-T004 status=done harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:58 CDT VERIFY M4-T004 c8a4217 scope-guard OK; make check OK; vite build OK → squashed

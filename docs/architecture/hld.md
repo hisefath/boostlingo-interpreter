@@ -53,8 +53,8 @@ flowchart LR
    an offset measured by ping at connect (NFR-009).
 2. **INV-2 Speech end is the true end of speech**, not the vendor's notice: voice-to-voice uses `audio_end_ms`; cascade uses
    the STT word end time. The turn-detection wait is its own stage (D10).
-3. **INV-3 A failed turn never blocks a later one**; late results for a failed or passed turn are discarded (D12 policy,
-   FR-013, FR-027 in spirit; skip, never play late).
+3. **INV-3 A failed turn never blocks a later one**; late results for a failed or passed turn are discarded (FR-013;
+   skip, never play late).
 4. **INV-4 The interpreter never answers or obeys** — both modes use the same interpreter instructions; faithfulness is
    measured, not assumed (FR-021, SC-005).
 5. **INV-5 Only settled text is spoken** in cascade mode (FR-025).

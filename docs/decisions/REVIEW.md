@@ -24,10 +24,11 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 - ●○○ D17 — Third model only if time remains.
 - ●○○ D19 — Barge-in stops playback.
 
-### Data (2)
+### Data (3)
 
 - ●●○ D5 — Score both modes on the same public FLEURS EN/ES set.
 - ●●○ D24 — Same synthetic clips for both modes; limitation stated.
+- ●●○ D26 — Quality scored on the spoken text; recording fix deferred.
 
 ### Security (2)
 
@@ -62,6 +63,7 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ### 2026-10-18
 
+- D26 · Data · ●●○ — Quality scored on the spoken text; recording fix deferred.
 - D25 · Infrastructure · ●●○ — WebRTC direct for voice-to-voice; WS for the cascade.
 - D24 · Data · ●●○ — Same synthetic clips for both modes; limitation stated.
 - D23 · Product · ●●○ — Ship all required functions; shrink the evaluation.

@@ -6,10 +6,6 @@
 # Commands table in AGENTS.md). Until then they fail on purpose, so an unconfigured repo can never look green.
 # Keep the target names: skills and hooks call `make check`, not the tools directly.
 
-## Until the stack is chosen at the Design check (GD), there is no app code: lint/types/test pass only while
-## apps/ and src/ are absent, and fail the moment code lands without real commands (so it can never look green falsely).
-NO_CODE = @if [ -e apps ] || [ -e src ]; then echo "make $@: app code exists but the stack commands are not configured" >&2; exit 1; fi; echo "make $@: no app code yet (pre-stack)"
-
 .PHONY: check lint types test decisions
 
 ## check: lint + types + tests + decision review in sync — the gate
@@ -18,15 +14,15 @@ check: lint types test decisions
 
 ## lint: formatting / style, in check-only mode (never rewrite files here)
 lint:
-	$(NO_CODE)
+	npx prettier --check --no-error-on-unmatched-pattern "src/**/*.{ts,html,css}" "tests/**/*.ts" "scripts/eval/**/*.ts"
 
 ## types: static analysis / type checking
 types:
-	$(NO_CODE)
+	npx tsc --noEmit
 
 ## test: the whole test suite, including tests/acceptance/**
 test:
-	$(NO_CODE)
+	npx vitest run
 
 ## decisions: docs/decisions/REVIEW.md matches the decision journal (works as is; no adapting needed)
 decisions:

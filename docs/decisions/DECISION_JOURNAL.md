@@ -256,3 +256,12 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 - Cost accepted: two transports · Reversibility: Type 2 · Confidence: high
 - Revisit if: the eval needs server-side capture of voice-to-voice events · Evidence: R01 F1 · Interview line: "Each mode got its natural transport, so neither paid for the other's plumbing."
 - Review: Topic Infrastructure · Weight ●●○ · One-liner: WebRTC direct for voice-to-voice; WS for the cascade.
+
+### D26 Score the text each mode spoke, not re-transcribed recordings  [status: accepted (auto, Type 2); amends D9/FR-027 method]
+- 2026-10-18 23:48 CDT · build-milestone · M4 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: supervisor (Claude Code, claude-opus-5-5) · scripts/eval/score.ts
+- Context and forces: first live eval run: browser recordings of interpreted audio were misaligned across turns (silence or another turn's audio), so the independent re-transcription produced nonsense and every score collapsed.
+- Options: do nothing (publish broken scores) · fix per-turn recording tonight (rejected: player/recorder rework, ~1 h, deadline) · score the spoken text: cascade = text sent to TTS, voice-to-voice = the model's own output transcript (chosen)
+- Choice · Why: scored text over broken audio to get valid, same-method quality numbers for both modes, accepting that the voice-to-voice transcript can differ slightly from its audio.
+- Cost accepted: TTS pronunciation errors are not scored · Reversibility: Type 2 · Confidence: med
+- Revisit if: per-turn recording is fixed (re-enable FR-027 re-transcription) · Evidence: eval/report.md first run (0/10 faithful on garbled audio while the spoken text was faithful) · Interview line: "When my measuring tool broke, I said so and measured the closest fair thing instead of publishing nonsense."
+- Review: Topic Data · Weight ●●○ · One-liner: Quality scored on the spoken text; recording fix deferred.
