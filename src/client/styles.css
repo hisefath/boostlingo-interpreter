@@ -22,6 +22,7 @@
   );
   --orb-idle-shade: rgba(60, 46, 100, 0.38);
   --orb-glow: rgba(190, 160, 255, 0.45);
+  --orb-glow-base: #bea0ff;
   --page-glow-1: rgba(178, 150, 255, 0.14);
   --page-glow-2: rgba(140, 170, 255, 0.07);
   --pink: #f4b4dc;
@@ -498,10 +499,10 @@ main {
 .orb:not([data-state="idle"]) {
   /* slight glow, breathing with --level */
   box-shadow:
-    inset -10px -16px 40px rgba(70, 40, 140, 0.35),
+    inset -10px -16px 40px var(--orb-idle-shade),
     inset 10px 12px 28px rgba(255, 255, 255, 0.35),
     0 0 calc(28px + var(--level) * 46px) calc(var(--level) * 6px)
-      rgba(190, 160, 255, calc(0.2 + var(--level) * 0.28)),
+      color-mix(in srgb, var(--orb-glow-base) calc(20% + var(--level) * 28%), transparent),
     0 24px 60px rgba(0, 0, 0, 0.45);
 }
 .orb[data-state="listening"] {
@@ -1285,7 +1286,46 @@ button.primary.live {
   );
   --orb-idle-shade: rgba(40, 80, 58, 0.38);
   --orb-glow: rgba(140, 230, 180, 0.45);
+  --orb-glow-base: #8ce6b4;
   --page-glow-1: rgba(120, 220, 160, 0.13);
   --page-glow-2: rgba(110, 210, 200, 0.07);
   --t-cascade: #8fe6b4;
+}
+
+/* ---- the orb is never "off": at rest it drifts slowly with a soft breathing glow (Siri-like); states speed it up -- */
+.orb[data-state="idle"] {
+  --speed: 28s;
+  animation: orb-breathe 4.8s ease-in-out infinite alternate;
+}
+.orb[data-state="idle"] .orb-swirl {
+  opacity: 0.92;
+  animation-play-state: running;
+}
+.orb[data-state="idle"] .orb-blobs {
+  opacity: 0.85;
+  animation-play-state: running;
+}
+.orb[data-state="idle"] .orb-tint {
+  opacity: 0.35;
+}
+@keyframes orb-breathe {
+  from {
+    box-shadow:
+      inset -14px -20px 44px var(--orb-idle-shade),
+      inset 12px 14px 30px rgba(255, 255, 255, 0.4),
+      0 0 22px color-mix(in srgb, var(--orb-glow-base) 16%, transparent),
+      0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+  to {
+    box-shadow:
+      inset -14px -20px 44px var(--orb-idle-shade),
+      inset 12px 14px 30px rgba(255, 255, 255, 0.45),
+      0 0 46px 4px color-mix(in srgb, var(--orb-glow-base) 34%, transparent),
+      0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb[data-state="idle"] {
+    animation: none;
+  }
 }
