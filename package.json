@@ -1,0 +1,32 @@
+{
+  "name": "boostlingo-interpreter",
+  "version": "1.0.0",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev:server": "tsx watch --env-file=.env src/server/index.ts",
+    "dev:client": "vite",
+    "dev": "npm run dev:server & npm run dev:client",
+    "build": "vite build",
+    "lint": "make lint",
+    "types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "type": "module",
+  "dependencies": {
+    "@deepgram/sdk": "^5.15.0",
+    "openai": "^7.39.0",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "private": true
+}

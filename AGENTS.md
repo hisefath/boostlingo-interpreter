@@ -1,16 +1,16 @@
 # AGENTS.md — Boostlingo AI Interpreter Workbench
 
-A browser workbench that interprets live speech two ways (OpenAI Realtime voice-to-voice vs. a streaming STT → translation → TTS cascade) and measures latency, quality and cost so Boostlingo can pick an architecture. Built with software-factory-kit 0.1 (spec-driven, one milestone
+A browser workbench that interprets live speech two ways (OpenAI Realtime voice-to-voice vs. a streaming STT → translation → TTS cascade) and measures latency, quality and cost so Boostlingo can pick an architecture. Built with software-factory-kit 0.2 (spec-driven, one milestone
 per merge request). Every harness (Claude Code, Codex, Cursor, Antigravity) reads this file.
 
 ## Commands
 | Purpose | Command |
 |---|---|
-| Setup | `<e.g. composer install && cp .env.example .env && php artisan key:generate>` |
-| Run locally | `<e.g. php artisan serve>` |
+| Setup | `npm install` then fill `.env` (copied from `.env.example`; names only, never commit values) |
+| Run locally | `npm run dev` → http://localhost:5173 (server on :8787) |
 | **All checks (the one green/red gate)** | `make check` |
-| Tests only | `<e.g. php artisan test>` |
-| Lint / format | `<e.g. vendor/bin/pint --test>` |
+| Tests only | `npx vitest run` |
+| Lint / format | `make lint` (check) · `npx prettier --write src tests scripts/eval` (fix) |
 | Deploy | see `docs/runbooks/deploy.md` (human-only) |
 
 ## Where things live
@@ -55,4 +55,6 @@ test output, questions). Templates: `specs/_templates/task.md`, `specs/_template
 - Canonical remote: Gauntlet GitLab (`origin`); GitHub is a push mirror (no PRs there).
 
 ## Project specifics
-<Stack, conventions, gotchas, test data. Keep this file under ~100 lines: one line per rule, pointers not essays.>
+- TypeScript everywhere (D22): `src/shared` contracts, `src/server` Node (ws), `src/client` browser (Vite). One package.
+- Stage contracts live in `src/shared/contracts.ts`; a vendor adapter goes in `src/server/providers/<stage>/<vendor>.ts` + one line in `src/server/providers/registry.ts`.
+- Tests use fakes only, never the network or real keys. Vendor keys come from `.env` via `tsx --env-file`.

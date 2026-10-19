@@ -9,3 +9,5 @@ docs/demo/raw/
 !.env.example
 node_modules/
 dist/
+eval/results/
+eval/clips/
