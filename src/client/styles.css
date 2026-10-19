@@ -1329,3 +1329,14 @@ button.primary.live {
     animation: none;
   }
 }
+
+/* the language control may shrink on phones (it forced a 420 px page width at 375 px) */
+.select-ctl {
+  min-width: 0;
+  max-width: 100%;
+}
+.select-ctl select {
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
