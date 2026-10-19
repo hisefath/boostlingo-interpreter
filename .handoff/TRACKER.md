@@ -60,3 +60,6 @@ several harnesses read it and the repo is public.
 2026-10-18 23:05 CDT DISPATCH M4-T001 harness=claude-subagent why=one skill, disjoint Owns (src/server), parallel
 2026-10-18 23:05 CDT DISPATCH M4-T002 harness=claude-subagent why=one skill, disjoint Owns (src/client), parallel
 2026-10-18 23:05 CDT DISPATCH M4-T003 harness=claude-subagent why=one skill, disjoint Owns (scripts/eval), parallel
+2026-10-18 23:11 CDT RESULT M4-T003 status=human_review harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:11 CDT VERIFY M4-T003 93e6f33 scope-guard OK; vitest tests/eval 17/17; prettier OK → squashed
+2026-10-18 23:11 CDT FAIL M4-eval make-clips: OpenAI insufficient_quota (no billing credit) → human
