@@ -1,7 +1,7 @@
 ---
 id: R06
 question: "Usage: typical interpretation session length (OPI/VRI average minutes), peak hours, concurrency, share of Spanish among US interpretation requests."
-asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions-for-gather-evidence
+asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions
 unblocks: "stability target and cost-per-session framing"
 answered_when: "not stated in the prompt review or supervisor task; taken as: a cited average session length, peak-hour pattern, concurrency figure and US Spanish share"
 status: partial

@@ -34,7 +34,7 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 
 ### D1 Full track, planned in one plan-product session  [status: accepted (auto, Type 2)]
 - 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: sharpen-brief (Claude Code, claude-opus-5-5) · specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2
-- Context: new greenfield partner project, no PRD, graded; v0.2 folds GI/G0/G1 into the Intent check (GI).
+- Context: new greenfield partner project, no PRD, graded; v0.2 folds the planning checkpoints into the Intent check (GI).
 - Options: do nothing (no build, no submission) · Standard (rejected: no PRD to start from) · Fix (rejected: not a bug) · Full (chosen).
 - Choice · Why: in a new graded product with no PRD, facing a 15–20 h appetite, we chose Full over Standard to get a defensible brief, research and PRD, accepting ~2–3 h of planning.
 - Cost accepted: planning hours · Reversibility: Type 2 · Confidence: high

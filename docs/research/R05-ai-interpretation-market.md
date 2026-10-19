@@ -1,7 +1,7 @@
 ---
 id: R05
 question: "Market: who already offers AI (machine) live interpretation (e.g. Boostlingo AI, Wordly, KUDO AI, Interprefy, Microsoft/Google speech translation), to which customers, at what price per minute vs human interpreters (~$/min for VRI/OPI), and market size for language services/interpreting."
-asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions-for-gather-evidence
+asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions
 unblocks: "write-up's cost framing and the North Star"
 answered_when: "not stated in the prompt review; supervisor task 2026-10-14 asks: show inference working (Formula/Assumptions/Range) for any size; taken as: competitors, human and AI per-minute prices, and market size each cited"
 status: partial

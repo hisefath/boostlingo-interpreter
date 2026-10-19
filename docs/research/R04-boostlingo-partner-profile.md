@@ -1,7 +1,7 @@
 ---
 id: R04
 question: "Who is Boostlingo: products (incl. any AI interpretation/translation product, e.g. \"Boostlingo AI Pro\"), customers, tech stack (job posts: .NET/C#? TypeScript?), and what engineering roles they hire for."
-asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions-for-gather-evidence
+asked_in: specs/M1-interpreter-tradeoffs/prompt-review.md#research-questions
 unblocks: "hiring-partner lens, stack Type 1 decision"
 answered_when: "Boostlingo's own site/job posts cited"
 status: answered

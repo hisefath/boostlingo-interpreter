@@ -1,8 +1,8 @@
 # GI card — M1 interpreter-tradeoffs
-As of: 2026-10-14 23:58 CDT (revised after second prompt review) · Artifacts: specs/M1-interpreter-tradeoffs/prompt-review.md, specs/M1-interpreter-tradeoffs/brief.md @a1dbdf2 · docs/research/R01–R06 + sources.md @cd5364d · docs/product/prd.md @d607ae5 · second prompt review @6d428e5 · docs/decisions/DECISION_JOURNAL.md D1–D11 @37495f6
+As of: 2026-10-14 23:58 CDT (revised after prompt review pass 2) · Artifacts: specs/M1-interpreter-tradeoffs/prompt-review.md, specs/M1-interpreter-tradeoffs/brief.md @a1dbdf2 · docs/research/R01–R06 + sources.md @cd5364d · docs/product/prd.md @d607ae5 · prompt review pass 2 @6d428e5 · docs/decisions/DECISION_JOURNAL.md D1–D11 @37495f6
 
 ## Summary (one screen)
-**what the partner is really evaluating (AIM-0, high, new):** *Can you tell when machine interpretation is safe to use, and
+**What the partner is really evaluating (AIM-0):** *Can you tell when machine interpretation is safe to use, and
 prove it with evals and guardrails?* Boostlingo already sells an AI Interpreter, and its own rule is "AI when it fits,
 human when it counts": machine for routine calls (scheduling, check-in, enrollment), humans for clinical, legal and
 high-stakes talk, with a one-tap handoff (R04 F6). Their one open engineering role asks for evals, guardrails,
@@ -13,12 +13,14 @@ job: the deliverable is a per-scenario recommendation backed by *where each mode
 of interpreting, add words, or obey "ignore your instructions" spoken by a participant. A 20-second demo never shows it.
 Guard: FR-021 (never answer or obey) + scored adversarial clips per mode (FR-022, SC-005 hard gate).
 
-**Other issues found in pass 2:** I-15 the vendor's "speech stopped" event fires after ~0.5 s of silence-wait, so a naive
+**Other issues found:** I-15 the vendor's "speech stopped" event fires after ~0.5 s of silence-wait, so a naive
 stopwatch flatters both modes (we start at the true end of speech) · I-16 a clinic-diagnosis demo is the case Boostlingo
 says needs a human (now routine calls) · I-17 averages hide flipped numbers and negations (critical-term scoring) · I-18
 EN↔ES alone can't test the cascade's real business case, uncommon pairs (item 11) · I-19 the voice model re-bills the
 whole call, so cost per minute rises with length (priced at 1, 5 and a projected 21 minutes) · I-20 streaming unsettled
 Spanish partials speaks words that turn out wrong (settled segments only).
+
+**Fair-comparison issues (I-21..I-25):** voice-to-voice has no visible stages; its live transcript comes from a side model; first audio rewards starting, not finishing; the prompt states its own conclusion; switching modes loses context.
 
 **What we build:** one browser screen, EN↔ES, two modes (OpenAI `gpt-realtime` voice-to-voice; streaming speech-to-text
 → translation → text-to-speech with a swappable vendor per stage), live transcripts, per-stage timing, failure handling,
@@ -108,7 +110,7 @@ Also yours (no answer needed now): create the public GitLab repo + GitHub mirror
 
 ## Skipped or reused
 - audit-codebase: skipped, greenfield.
-- Interviews inside project prompt review, sharpen-brief and write-prd: skipped under the v0.2 session rule; their questions are items 1–10 above.
+- Interviews during planning: skipped under the v0.2 session rule; their questions are items 1–10 above.
 - Research gaps (38 evidence gaps across R01–R06) are not questions for you; the ones that matter for design go to the Design check.
 
 ## Where each open question in the artifacts lands

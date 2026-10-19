@@ -104,7 +104,7 @@ As a conversation pair, I want to be told when the microphone is blocked or a ve
 
 As Priya, I want both approaches run on the same fixed set of recorded utterances with delay, quality, faithfulness, critical-term accuracy and cost reported, so that the written recommendation says which approach fits which scenario and where a human must take over.
 
-- Why this priority: the what the partner is really evaluating (prompt review AIM-1); REQ-08.
+- Why this priority: what the partner is really evaluating (prompt review AIM-1); REQ-08.
 - Independent test: run the evaluation once; a report shows per-mode p50/p95 delay per stage, word error rate, translation score, faithfulness rate, critical-term accuracy and cost per minute by session length; the write-up cites it.
 - Requirements: FR-017, FR-018, FR-019, FR-022, FR-023, FR-024 · Examples: AE-014, AE-015, AE-016, AE-021, AE-022, AE-023
 
@@ -151,6 +151,10 @@ As a conversation pair, I want a five-minute back-and-forth to stay connected an
 - **FR-023** [Event] (US-5) When an evaluation run finishes, the system shall report per mode the exact-match accuracy of critical terms (numbers, dates, doses, names and negations).
 - **FR-024** [Event] (US-5) When an evaluation run finishes, the system shall report cost per minute for each mode at 1-minute and 5-minute session lengths with a 21-minute projection.
 - **FR-025** [Unwanted] (US-2) If a partial transcript is still changing, then the system shall not speak a translation of its unsettled words.
+- **FR-026** [State] (US-1) While in voice-to-voice mode, the system shall show only the timing points the vendor exposes and label the other stages as not observable.
+- **FR-027** [Event] (US-5) When an evaluation run finishes, the system shall score both modes' spoken output with one independent recogniser against the reference translations.
+- **FR-028** [Event] (US-1) When a turn's interpreted audio finishes, the system shall show the time from speech end to the end of that audio.
+- **FR-029** [Event] (US-3) When the mode is switched mid-session, the system shall give the new mode the text of the recent turns as context.
 
 ## Non-functional requirements
 
@@ -201,6 +205,10 @@ Rejected as vanity: total minutes interpreted (only rises; nothing to fix); numb
 - **AE-022** (FR-023) Given the clip "Take 20 milligrams twice a day, no aspirin, starting March 3", When it is interpreted in each mode, Then the report marks 20, twice, no, aspirin and March 3 as matched or missed.
 - **AE-023** (FR-024) Given the five-minute soak runs, When the report is produced, Then it shows cost per minute at 1 and 5 minutes and a 21-minute projection with its formula.
 - **AE-024** (FR-025) Given a three-stage turn where the partial "No tengo" later becomes "No tengo alergias", When the turn is processed, Then no audio is spoken for "No tengo" before the segment settles.
+- **AE-025** (FR-026) Given a voice-to-voice turn, When its timing shows, Then it lists speech end, first source text, first audio and total, and shows hearing, translating and speaking as "not observable in this mode".
+- **AE-026** (FR-027) Given the 40-clip run, When the report is produced, Then both modes' audio was transcribed by the same recogniser and scored against the same reference translations.
+- **AE-027** (FR-028) Given AE-001, When the Spanish audio ends, Then the turn shows both "to first audio" and "to end of audio", such as 1,140 ms and 2,900 ms.
+- **AE-028** (FR-029) Given three voice-to-voice turns about a Thursday appointment, When Priya switches to three-stage mode and Ana says "Does that time still work?", Then the translation keeps the Thursday context.
 
 ## Edge cases
 
@@ -255,9 +263,9 @@ Answered from sources: Problem → brief Problem, R04 · Job stories → brief J
 | M1 Research | Approved brief + cited research + this PRD (one planning session, v0.2) | none (docs only) | GI approval | Reviewer reads the brief, every R note and this PRD |
 | M2 Product | Folded into M1 under v0.2 (one session) | none (docs only) | GI approval | Same as M1 |
 | M3 Design | Approved HLD, LLD, contracts, diagrams | none (docs only) | GD approval | Reviewer reads every design doc from the docs index |
-| M4 Tracer bullet | Voice-to-voice turn end to end with transcripts, timing and failure handling | FR-001, FR-002, FR-005, FR-006, FR-007, FR-010, FR-011, FR-015, FR-020, FR-021 | AE-001, AE-002, AE-005, AE-008, AE-012, AE-013, AE-019, AE-020 | Dr. Lee speaks English and hears Spanish with both transcripts and the delay shown |
-| M5 Three-stage mode | Streaming three-stage mode, mode and pair switching, vendor swap | FR-003, FR-004, FR-008, FR-009, FR-012, FR-013, FR-014, FR-016, FR-025 | AE-003, AE-004, AE-006, AE-007, AE-009, AE-010, AE-011, AE-017 | Priya flips modes mid-conversation and sees overlapping stages |
-| M6 Evaluation and write-up | Fixed-set evaluation, soak run, comparison write-up | FR-017, FR-018, FR-019, FR-022, FR-023, FR-024 | AE-014, AE-015, AE-016, AE-018, AE-021, AE-022, AE-023, SC-001..SC-005 | Priya reads a report with both modes' delay, quality and cost and a recommendation |
+| M4 Tracer bullet | Voice-to-voice turn end to end with transcripts, timing and failure handling | FR-001, FR-002, FR-005, FR-006, FR-007, FR-010, FR-011, FR-015, FR-020, FR-021, FR-026, FR-028 | AE-001, AE-002, AE-005, AE-008, AE-012, AE-013, AE-019, AE-020, AE-025, AE-027 | Dr. Lee speaks English and hears Spanish with both transcripts and the delay shown |
+| M5 Three-stage mode | Streaming three-stage mode, mode and pair switching, vendor swap | FR-003, FR-004, FR-008, FR-009, FR-012, FR-013, FR-014, FR-016, FR-025, FR-029 | AE-003, AE-004, AE-006, AE-007, AE-009, AE-010, AE-011, AE-017, AE-028 | Priya flips modes mid-conversation and sees overlapping stages |
+| M6 Evaluation and write-up | Fixed-set evaluation, soak run, comparison write-up | FR-017, FR-018, FR-019, FR-022, FR-023, FR-024, FR-027 | AE-014, AE-015, AE-016, AE-018, AE-021, AE-022, AE-023, AE-026, SC-001..SC-005 | Priya reads a report with both modes' delay, quality and cost and a recommendation |
 | Later | Not in this appetite | none | — | — |
 
 ## Constraints
@@ -305,7 +313,8 @@ Answered from sources: Problem → brief Problem, R04 · Job stories → brief J
 | Date | Change | Ids affected | Gate |
 |---|---|---|---|
 | 2026-10-14 23:30 CDT | First draft | all | G1 |
-| 2026-10-14 23:56 CDT | Revise after second prompt review: routine-call scenario, faithfulness and critical-term evals, true speech-end clock, stable-segment rule, cost by session length | US-1, US-2, US-5, FR-004, FR-021..FR-025, NFR-009, SC-001, SC-005, AE-019..AE-024, A-7, RISK-6 | G1 |
+| 2026-10-14 23:56 CDT | Revise after a second review of the project prompt against the partner research: routine-call scenario, faithfulness and critical-term evals, true speech-end clock, stable-segment rule, cost by session length | US-1, US-2, US-5, FR-004, FR-021..FR-025, NFR-009, SC-001, SC-005, AE-019..AE-024, A-7, RISK-6 | G1 |
+| 2026-10-18 22:40 CDT | Revise after reviewing the project prompt for fairness of the cross-mode comparison (prompt review I-21..I-25) | FR-026..FR-029, AE-025..AE-028 | G1 |
 
 ## Clarifications
 

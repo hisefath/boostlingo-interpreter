@@ -1,11 +1,14 @@
 ---
 milestone: M1
-reviewed: 2026-10-14 23:21 CDT (UTC-0500); pass 2 2026-10-14 23:54 CDT
+reviewed: 2026-10-14 23:21 CDT (UTC-0500); revised 2026-10-14 23:54 CDT and 2026-10-18
 sources: [Boostlingo project PDF "AI Interpreter Workbench: Realtime API vs. Cascade Pipeline" (held by the human), Gauntlet portal project brief page "AI Interpreter Workbench" v1 updated 10/12/2026, Gauntlet portal Boostlingo company panel]
-gate: GI
+checkpoint: GI
 ---
 
 # Project prompt review: Boostlingo AI Interpreter Workbench
+
+We reviewed the project prompt, the portal pages and the partner research and found the issues below. We document
+them here and keep them in view for the rest of the project; each names where it is checked.
 
 ## Surface ask
 Build a browser app that interprets live speech between English and Spanish in two ways: a single voice-to-voice
@@ -38,7 +41,7 @@ architecture fits which scenario. The timebox is 3–4 days (15–20 hours).
 | REQ-21 | Agentic coding assistant used (not tab completion) | PDF §Development Tools |
 | REQ-22 | Deployment optional; AWS preferred if deployed; local with clear setup is fine | PDF §Cloud |
 
-## what the partner is really evaluating
+## What the partner is really evaluating
 question, try to find it first"): re-read against the partner's **own live product and hiring page** (R04 F6, F9),
 not just the prompt. AIM-0 and AIM-4 are new; AIM-0 now leads.
 
@@ -64,8 +67,8 @@ architecture fits which scenario and when a human must take over.
 4. README + AGENTS.md/CLAUDE.md + git history (process evidence).
 5. Interview defense (Week 4 interview access): why this stack, why these providers, when each mode wins.
 
-## Issues
-| T | Issue | Why it's tempting | Cost if we fall in | Evidence | Guard (phase / skill / check) |
+## Issues found
+| I | Issue | Why it is easy to miss | Cost if missed | Evidence | Where we check it |
 |---|---|---|---|---|---|
 | I-1 | Latency measured differently per mode (e.g. from button release in one, server event in the other) | Each vendor emits different events; easiest to log whatever is handy | Write-up comparison is not apples to apples; AIM-1 fails | PDF defines "speech end → first audio out" for both | write-prd NFR defines one clock and one speech-end definition; design-hld names the timing points; define-acceptance checks them |
 | I-2 | "Streaming" cascade that blocks at a stage boundary (full transcript, then full translation, then full audio) | Request/response provider calls are simpler | Misses the < 2 s target and an explicit requirement | PDF §Other "no full-utterance blocking" | define-acceptance: a test that fails if TTS starts only after the full translation; per-stage timeline shows overlap |
@@ -81,15 +84,20 @@ architecture fits which scenario and when a human must take over.
 | I-12 | Error paths unhandled (rate limit, timeout, empty transcript, mic denied) | Happy path demo works | Explicit code-quality miss | PDF §Code Quality | define-acceptance edge-case list; fake-provider tests |
 | I-13 | API spend runs away during testing (voice-to-voice minutes are expensive) | Lots of manual testing | Real money | inherent | ⚠ spend cap (→ GI); fakes in tests; usage meter |
 
-| I-14 | **Most serious issue.** The voice-to-voice model is a general assistant: asked "Where does it hurt?" or "What should I take for this?", it may *answer* instead of interpreting, add words, or obey "ignore your instructions" spoken by a participant | the mandated model is conversational; a one-line "translate only" instruction looks enough in a 20-second demo | an interpreter that speaks for itself is disqualifying in clinic or court; it is exactly the hallucination/injection failure the Engineer II role names | R01 gap 6 (gpt-realtime may answer instead of translating); R04 F9 | write-prd [Unwanted] FR (never answers, never follows spoken instructions); define-acceptance adversarial clips (questions to the interpreter, spoken injections) scored as a faithfulness rate per mode |
+| I-14 | **Most serious.** The voice-to-voice model is a general assistant: asked "Where does it hurt?" or "What should I take for this?", it may *answer* instead of interpreting, add words, or obey "ignore your instructions" spoken by a participant | the mandated model is conversational; a one-line "translate only" instruction looks enough in a 20-second demo | an interpreter that speaks for itself is disqualifying in clinic or court; it is exactly the hallucination/injection failure the Engineer II role names | R01 gap 6 (gpt-realtime may answer instead of translating); R04 F9 | write-prd [Unwanted] FR (never answers, never follows spoken instructions); define-acceptance adversarial clips (questions to the interpreter, spoken injections) scored as a faithfulness rate per mode |
 | I-15 | Delay stopwatch started at the vendor's "speech stopped" event, which fires only after its silence wait (default ~500 ms), so the measured delay hides time the listener actually waits | the event is right there in the stream | numbers look ~0.5 s better than reality; the 1.5 s claim is not defensible | R01 F6 (server VAD, speech_stopped carries audio_end_ms) | write-prd NFR: clock starts at the true end of speech; design-hld reports turn-detection wait as its own stage |
 | I-16 | The demo and evaluation use high-stakes clinical talk, the very case Boostlingo says needs a human | clinic examples feel impressive and on-brand | the recommendation contradicts the partner's own product rule; looks naive | R04 F6 | write-prd: demo and eval scenarios are routine (scheduling, check-in, enrollment); one high-stakes set is used only to show where machine output fails |
 | I-17 | Average WER/BLEU hides the errors that matter: numbers, dates, dosages, names, negation ("no allergies") | averages are what the tools print | a mode that flips "no" to "yes" can still score 90 %+ | R03 (WER/BLEU are corpus averages); domain | define-acceptance: a critical-terms set scored exact-match per mode |
 | I-18 | Only EN↔ES measured, so "uncommon pairs" and "time to onboard a pair" go unanswered | the PDF minimum is EN↔ES | the cascade's main business case is never tested; write-up has a hole where the partner's differentiator sits | PDF Business Context, Key Impact Metrics; AIM-4 | GI decision: add one less-common pair as a timed onboarding exercise, or state the gap explicitly in the write-up |
 | I-19 | Cost per minute measured on short turns; the voice model re-bills the whole conversation on every response, so long calls cost more per minute | short tests are cheap | cost claim wrong for the 21-minute calls Boostlingo actually runs | R01 I3 (context re-billing); R06 (avg call ~21 min) | write-prd: cost reported vs session length from the 5-minute soak, extrapolated to 21 minutes with the formula shown |
 | I-20 | Streaming translation of unstable partial transcripts (Spanish verbs and negation often come late) speaks words that later turn out wrong | "streaming throughout" sounds like "translate every partial" | low delay bought with wrong audio that cannot be unsaid | REQ-10; domain | design-hld commit policy (translate only stable segments); eval counts spoken-then-wrong segments |
+| I-21 | **Fair comparison.** The voice-to-voice mode has no observable internal stages, yet the prompt asks for per-stage latency in both modes | the display spec reads as symmetric | invented stage numbers for a black box; the comparison is not defensible | PDF FR7; R01 (only speech-stopped, transcript and audio events are exposed) | write-prd: show only observable timing points in that mode, label the rest "not observable"; the write-up states it as a controllability finding |
+| I-22 | **Fair comparison.** In voice-to-voice mode the live source transcript comes from a separate, asynchronous transcription model, "a rough guide" to what the main model heard; and WER measures recognition, not translation | WER is the quality metric the prompt names | scores a side model, then calls one mode better | R01 (OpenAI docs on input transcription); PDF Key Impact Metrics | write-prd: score both modes' spoken output the same way (one independent recogniser vs reference translations); WER only where a real recognition stage exists |
+| I-23 | **Fair comparison.** "Speech end → first audio out" rewards starting to talk, not finishing correctly | it is the one benchmark the prompt defines | a mode wins on onset and loses on the whole sentence | PDF §Performance | write-prd: also report speech end → end of interpreted audio |
+| I-24 | The prompt states the expected conclusion (less control and lower latency vs more control and more moving parts) | repeating it reads as agreement | the write-up confirms instead of testing | PDF Business Context | write-up tests it with concrete control points (glossary, voice, redaction, per-stage logs, per-pair vendor) |
+| I-25 | Mid-session mode switch: conversation history lives at the vendor in one mode and in our app in the other | the toggle looks like a UI switch | the new mode loses context on switch | PDF FR4 | write-prd: the workbench owns history and hands recent turns to the new mode |
 
-Categories checked (each is a T row above or n/a with a reason): literal reading (I-1, I-5) · hidden grading
+Areas checked (each is an I row above or n/a with a reason): literal reading (I-1, I-5) · hidden grading
 criteria (I-10, I-11) · unstated non-functional bar (I-4, I-7, I-8) · wrong stack / partner mismatch (I-3) · demo vs
 depth (I-2, I-5) · deliverable gaps (I-10) · scope creep (I-9) · unverifiable success (I-5, I-6) · domain landmines
 (I-8, I-4, I-13, I-14, I-17, I-20) · hidden grading criteria also I-16, I-18 · copying v1 / prior work: n/a, no prior build of this project exists.
@@ -101,7 +109,7 @@ depth (I-2, I-5) · deliverable gaps (I-10) · scope creep (I-9) · unverifiable
 - ⚠ Deploy (AWS preferred) or local-only with setup instructions? (→ GI)
 - ⚠ Factory squash-merges each task; does the history need to show finer steps than one commit per task? (→ GI)
 
-## Research questions for gather-evidence
+## Research questions
 - R01: How does the mandated voice-to-voice API work end to end (transport options, session credentials, turn detection events, which event marks speech end and first audio out, pricing)?
 - R02: Which streaming speech-to-text, translation and text-to-speech vendors support EN↔ES with partial results, and what do they cost and claim for latency?
 - R03: How is interpretation quality measured credibly in a small study (WER for source transcripts; a target-side measure for translation)?
