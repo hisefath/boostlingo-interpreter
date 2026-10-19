@@ -63,3 +63,7 @@ several harnesses read it and the repo is public.
 2026-10-18 23:11 CDT RESULT M4-T003 status=human_review harness=claude-subagent timeout=no tree=clean
 2026-10-18 23:11 CDT VERIFY M4-T003 93e6f33 scope-guard OK; vitest tests/eval 17/17; prettier OK → squashed
 2026-10-18 23:11 CDT FAIL M4-eval make-clips: OpenAI insufficient_quota (no billing credit) → human
+2026-10-18 23:13 CDT RESULT M4-T001 status=done harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:13 CDT RESULT M4-T002 status=human_review harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:13 CDT VERIFY M4 481819e make check → OK (51 tests); scope-guard OK T001, T002
+2026-10-18 23:14 CDT VERIFY M4 app starts; /api/config, /api/eval-clips (36), /api/realtime-session 200; OpenAI still 429 no credits
