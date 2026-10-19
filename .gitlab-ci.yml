@@ -20,4 +20,5 @@ check:
   tags: [macbook-shell]
   script:
     - export PATH="/opt/homebrew/bin:$PATH" # Homebrew tools; the runner service starts with a short PATH
+    - npm ci --no-audit --no-fund
     - make check
