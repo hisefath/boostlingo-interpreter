@@ -79,3 +79,5 @@ several harnesses read it and the repo is public.
 2026-10-19 01:24 CDT ROUTE M5 deploy b67ab03 to Railway (human: "also deploy it to railway")
 2026-10-19 01:26 CDT VERIFY M5 Railway deploy SUCCESS; https://app-production-7e47.up.railway.app/api/version = b67ab03 = HEAD; / and /api/config 401 without code; //a:99999/ → 400, process alive
 2026-10-19 01:30 CDT DISPATCH M5-T005..T007 harness=workflow why=close audit gaps REQ-10, REQ-12/13, REQ-19 in parallel (disjoint Owns)
+2026-10-19 01:32 CDT DISPATCH M5-T008 harness=workflow why=UI polish: header, terminal highlighting, dev-only eval/soak buttons
+2026-10-19 01:39 CDT DISPATCH M5-T009 harness=workflow why=Run demo: scripted multi-turn conversation, prod + dev
