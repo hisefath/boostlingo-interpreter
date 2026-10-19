@@ -2,12 +2,12 @@
 // in Session). Every number shown comes from the turn's timing points; a mode never shows a metric it cannot see.
 /// <reference types="vite/client" />
 import type { Lang, Mode, TimingPoint } from "../shared/contracts.ts";
+import { dashHtml } from "./dash.ts";
 import { runDemo } from "./demo.ts";
 import { runEval, runSoak } from "./eval.ts";
 import {
   cascadeLayers,
   MODE_LABEL,
-  modeSummary,
   orbState,
   resultReady,
   rmsLevel,
@@ -16,7 +16,7 @@ import {
   type Tone,
 } from "./lib.ts";
 import { Session, type Turn } from "./session.ts";
-import { headerLine, resultLine, SUMMARY_NOTES, summaryRow, timingLine, type Tok } from "./term.ts";
+import { headerLine, resultLine, timingLine, type Tok } from "./term.ts";
 import { CascadeTransport } from "./transports/cascade.ts";
 import { RealtimeTransport } from "./transports/realtime.ts";
 
@@ -122,35 +122,6 @@ function logTurn(t: Turn): void {
     logToks(resultLine(Date.now(), t.mode, t.seq, t.state, t.timings, t.reason), t.seq, true);
     if (t.state === "failed") flashError();
   }
-}
-
-const num = (v: string) => `<td class="num${v === "—" ? " tk-unit" : ""}">${v}</td>`;
-
-function renderSummary(): void {
-  const body = (["realtime", "cascade"] as Mode[])
-    .map((m) => summaryRow(modeSummary(session.turns, m)))
-    .map((r) => {
-      const stages =
-        typeof r.stages === "string"
-          ? `<span class="tk-comment">${r.stages}</span>`
-          : r.stages
-              .map((x) => `<span class="sum-stage"><span class="tk-vendor">${x.name}</span> ${x.ms}</span>`)
-              .join("") + `<span class="tk-unit">ms</span>`;
-      return `<tbody><tr><th scope="row" class="tk-${r.mode}">${r.label}</th>${num(r.turns)}${[
-        ...r.firstAudio,
-        ...r.audioEnd,
-      ]
-        .map(num)
-        .join("")}</tr>
-        <tr class="stages"><th scope="row" class="tk-vendor">stage p50</th><td colspan="5">${stages}</td></tr></tbody>`;
-    })
-    .join("");
-  $("summary").innerHTML = `<table class="sum">
-    <thead>
-      <tr><td></td><td></td><th scope="colgroup" colspan="2">first audio</th><th scope="colgroup" colspan="2">end of audio</th></tr>
-      <tr><th scope="col">mode</th><th scope="col" class="num">turns</th><th scope="col" class="num">p50</th><th scope="col" class="num">p95</th><th scope="col" class="num">p50</th><th scope="col" class="num">p95 <span class="tk-unit">ms</span></th></tr>
-    </thead>${body}</table>
-    ${SUMMARY_NOTES.map((n) => `<p class="tk-comment">${esc(n)}</p>`).join("")}`;
 }
 
 // ---- orb ---------------------------------------------------------------------------------------------------
@@ -303,7 +274,7 @@ function render(): void {
   if (stick) turnsEl.scrollTop = turnsEl.scrollHeight;
 
   turns.forEach(logTurn);
-  renderSummary();
+  $("summary").innerHTML = dashHtml(session.turns);
   renderPipeline(cur);
 
   startBtn.textContent = session.live ? "Stop" : "Start";

@@ -1,10 +1,10 @@
 // Metrics terminal formatting (pure, no DOM). Each line is a list of tokens the UI renders as coloured spans;
 // fixed-width monospace columns keep every line aligned with the header, "sep" tokens are plain spaces.
 import type { Mode, TimingPoint, TurnState } from "../shared/contracts.ts";
+import { P50_TARGET_MS } from "./dash.ts";
 import {
   MODE_LABEL,
   summarizeTimings,
-  TARGET_MS,
   vendorLabel,
   type ModeSummary,
   type Pct,
@@ -118,7 +118,7 @@ export function timingLine(
   });
 }
 
-/** One line per settled turn: verdict against the first-audio target, failures with their reason. */
+/** One line per settled turn: verdict against the mode's first-audio target, failures with their reason. */
 export function resultLine(
   wallMs: number,
   mode: Mode,
@@ -137,12 +137,13 @@ export function resultLine(
   if (state === "cut") return line({ ...base, ...fa, verdict: "✂", note: "cut off", tone: "warn" });
   if (s.toFirstAudio === null)
     return line({ ...base, verdict: "✓", note: "done (no first-audio timing)", tone: "muted" });
-  const ok = s.toFirstAudio < TARGET_MS;
+  const target = P50_TARGET_MS[mode];
+  const ok = s.toFirstAudio < target;
   return line({
     ...base,
     ...fa,
     verdict: ok ? "✓" : "✗",
-    note: `target ${TARGET_MS} ms${end}`,
+    note: `target ${target} ms${end}`,
     tone: ok ? "ok" : "bad",
   });
 }
@@ -172,8 +173,3 @@ export function summaryRow(s: ModeSummary): SummaryRow {
       : "n/a (not observable)",
   };
 }
-
-export const SUMMARY_NOTES = [
-  "# comparable across modes: speech end → first audio, speech end → end of audio (voice-to-voice speech end is approximate)",
-  "# cascade only: per-stage timings, source WER · voice-to-voice: stages not observable",
-];
