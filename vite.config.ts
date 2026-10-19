@@ -10,5 +10,5 @@ export default defineConfig({
       "/cascade": { target: "ws://localhost:8787", ws: true },
     },
   },
-  build: { outDir: "../../dist" },
+  build: { outDir: "../../dist", emptyOutDir: true },
 });
