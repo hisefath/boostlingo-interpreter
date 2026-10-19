@@ -13,6 +13,7 @@ LLD); `slice-tasks` adds each implementation milestone's row at G4; the supervis
 
 | id | goal | tasks | D-ids | MR | status | gate SHAs | merge SHA | main-check SHA | tag |
 |---|---|---|---|---|---|---|---|---|---|
-| M1 | Research: brief + cited research (docs only) | — | — | — | planned | — | — | — | — |
-| M2 | Product: PRD + clarifications (docs only) | — | — | — | planned | — | — | — | — |
-| M3 | Design: HLD, LLD, DB design, API contract, diagrams (docs only) | — | — | — | planned | — | — | — | — |
+| M1 | Plan product: prompt review, brief, research R01–R06, PRD (docs only; v0.2 folds M2 into it) | — | D1–D21 | — | in-review | GI@3c0eba5 | — | — | — |
+| M2 | Folded into M1 (v0.2 session) | — | — | — | done | — | — | — | — |
+| M3 | Design: HLD, LLD, stage contracts (docs only; on the M1 branch) | — | D22–D25 | — | in-review | GD@5fcc9c7 | — | — | — |
+| M4 | Workbench: both modes, transcripts, timing, failure handling, eval, write-up | T001–T003 | — | — | in-review | GT "works" | — | — | — |
