@@ -156,7 +156,16 @@ describe("public mode (ACCESS_CODE)", () => {
     const cookie = r.headers.get("set-cookie") ?? "";
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/Secure/);
-    const v = await fetch(`http://${pbase}/api/version`, { headers: { cookie: cookie.split(";")[0] } });
+    // the cookie alone opens a protected route; a forged one does not
+    const ok = await fetch(`http://${pbase}/api/config`, { headers: { cookie: cookie.split(";")[0] } });
+    expect(ok.status).toBe(200);
+    const forged = await fetch(`http://${pbase}/api/config`, { headers: { cookie: "wb_auth=deadbeef" } });
+    expect(forged.status).toBe(401);
+  });
+
+  it("/api/version stays open for health checks and reveals only the commit id", async () => {
+    const v = await fetch(`http://${pbase}/api/version`);
+    expect(v.status).toBe(200);
     expect(await v.json()).toEqual({ sha: "abc1234" });
   });
 
