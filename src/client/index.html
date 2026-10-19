@@ -6,6 +6,7 @@
     <meta name="color-scheme" content="dark" />
     <title>Interpreter Workbench</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./construction.css" />
   </head>
   <body>
     <header class="top">
@@ -94,14 +95,14 @@
         <fieldset class="segmented">
           <legend class="sr-only">Architecture</legend>
           <label class="seg">
-            <input type="radio" name="mode" value="realtime" checked />
-            <span class="seg-title">Voice-to-voice</span>
-            <span class="seg-desc">One model hears and speaks. Fast, but a sealed box.</span>
-          </label>
-          <label class="seg">
             <input type="radio" name="mode" value="cascade" />
             <span class="seg-title">Cascade</span>
             <span class="seg-desc">Speech-to-text → translate → text-to-speech, each stage timed.</span>
+          </label>
+          <label class="seg">
+            <input type="radio" name="mode" value="realtime" checked />
+            <span class="seg-title">Voice-to-voice</span>
+            <span class="seg-desc">One model hears and speaks. Fast, but a sealed box.</span>
           </label>
         </fieldset>
 
@@ -151,27 +152,293 @@
         </section>
       </div>
       <footer class="sd-footer">
+        <!-- decorative construction site; farther layers are darker and greyer (atmospheric perspective) -->
+        <svg class="cs-scene" viewBox="0 0 980 300" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="cs-haze" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" class="cs-st-bg" stop-opacity="0" />
+              <stop offset="1" class="cs-st-bg" stop-opacity="0.75" />
+            </linearGradient>
+            <radialGradient id="cs-glow" cx="0.5" cy="0.6" r="0.5">
+              <stop offset="0" class="cs-st-lit" stop-opacity="0.16" />
+              <stop offset="1" class="cs-st-lit" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="cs-shadow" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="#000" stop-opacity="0.55" />
+              <stop offset="1" stop-color="#000" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="cs-ground" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" class="cs-st-ground" />
+              <stop offset="1" class="cs-st-bg" />
+            </linearGradient>
+            <!-- mid layer: lit face vs shadow face -->
+            <linearGradient id="cs-mid-h" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" class="cs-st-mid-lit" />
+              <stop offset="1" class="cs-st-mid-dk" />
+            </linearGradient>
+            <linearGradient id="cs-mid-v" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" class="cs-st-mid-lit" />
+              <stop offset="1" class="cs-st-mid-dk" />
+            </linearGradient>
+            <linearGradient id="cs-cone-g" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" class="cs-st-cone-lit" />
+              <stop offset="1" class="cs-st-cone-dk" />
+            </linearGradient>
+            <pattern id="cs-win" width="10" height="12" patternUnits="userSpaceOnUse">
+              <rect x="4" y="4" width="2" height="3" class="cs-win" />
+            </pattern>
+            <pattern
+              id="cs-stripes"
+              width="12"
+              height="12"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
+              <rect width="6" height="12" class="cs-stripe" />
+            </pattern>
+            <g id="cs-cone">
+              <ellipse cx="0" cy="1" rx="14" ry="2.5" fill="url(#cs-shadow)" />
+              <path d="M-6 0 L-1.6 -20 h3.2 L6 0 z" fill="url(#cs-cone-g)" />
+              <path d="M-3.9 -9.5 h7.8 l0.7 3 h-9.2 z" class="cs-cone-band" />
+              <rect x="-9" y="-1.5" width="18" height="2.5" rx="1" class="cs-cone-base" />
+            </g>
+          </defs>
+
+          <!-- layer 1 (farthest): skyline, a distant crane, a scaffold grid -->
+          <g class="cs-l1">
+            <path
+              class="cs-far"
+              d="M0 180h60V262H0zM55 150h45V262H55zM96 195h70V262H96zM160 140h40V262H160zM196 170h80V262H196zM272 128h50V262H272zM318 185h64V262H318zM378 160h90V262H378zM462 135h56V262H462zM514 175h70V262H514zM580 150h48V262H580zM624 190h84V262H624zM704 120h52V262H704zM752 160h110V262H752zM858 140h46V262H858zM900 175h80V262H900z"
+            />
+            <path
+              fill="url(#cs-win)"
+              d="M55 150h45V262H55zM160 140h40V262H160zM272 128h50V262H272zM462 135h56V262H462zM704 120h52V262H704zM858 140h46V262H858z"
+            />
+            <!-- distant tower crane -->
+            <path
+              class="cs-far-line"
+              d="M197 262V40M203 262V40M197 40l6 0M200 40V24M120 40H332M150 46H332M200 24L126 40M200 24L320 40"
+            />
+            <path
+              class="cs-far-line"
+              d="M197 60l6 10M203 60l-6 10M197 90l6 10M203 90l-6 10M197 120l6 10M203 120l-6 10"
+            />
+            <rect x="120" y="40" width="14" height="9" class="cs-far" />
+            <!-- scaffold grid -->
+            <path
+              class="cs-far-line"
+              d="M752 160V262M763 160V262M774 160V262M785 160V262M796 160V262M807 160V262M818 160V262M829 160V262M840 160V262M851 160V262M862 160V262M752 170H862M752 180H862M752 190H862M752 200H862M752 210H862M752 220H862M752 230H862M752 240H862M752 250H862M752 160l22 30M774 160l22 30M796 160l22 30M818 200l22 30M840 200l22 30"
+            />
+          </g>
+          <rect y="110" width="980" height="156" fill="url(#cs-haze)" />
+
+          <!-- layer 2 (far): a nearer, lower row of buildings -->
+          <g class="cs-l2">
+            <path
+              class="cs-far2"
+              d="M0 214h92V264H0zM86 228h58V264H86zM150 236h40V264H150zM338 222h74V264H338zM408 234h46V264H408zM540 226h64V264H540zM600 216h84V264H600zM690 232h40V264H690zM860 212h124V264H860zM930 226h50V264H930z"
+            />
+            <path fill="url(#cs-win)" d="M0 214h92V264H0zM600 216h84V264H600zM860 212h124V264H860z" />
+            <path class="cs-far2-line" d="M20 214v-8h12v8M620 216v-6h10v6M890 212v-10h14v10M368 222v-7h8v7" />
+          </g>
+          <rect y="200" width="980" height="68" fill="url(#cs-haze)" />
+
+          <!-- layer 3 (middle): building frame, steel beams, cement mixer -->
+          <g class="cs-l3">
+            <rect x="80" y="258" width="820" height="10" fill="url(#cs-ground)" opacity="0.6" />
+            <!-- building frame: back columns (shadow), right side face, front columns, slabs -->
+            <g class="cs-back">
+              <rect x="148" y="154" width="4" height="110" />
+              <rect x="190" y="154" width="4" height="110" />
+              <rect x="232" y="154" width="4" height="110" />
+              <rect x="274" y="184" width="4" height="80" />
+              <rect x="316" y="184" width="4" height="80" />
+            </g>
+            <path
+              class="cs-side"
+              d="M302 234l18 -10v5l-18 10zM302 204l18 -10v5l-18 10zM302 174l18 -10v5l-18 10zM218 144l18 -10v5l-18 10z"
+            />
+            <g fill="url(#cs-mid-h)">
+              <rect x="130" y="144" width="5" height="120" />
+              <rect x="172" y="144" width="5" height="120" />
+              <rect x="214" y="144" width="5" height="120" />
+              <rect x="256" y="174" width="5" height="90" />
+              <rect x="297" y="174" width="5" height="90" />
+            </g>
+            <g fill="url(#cs-mid-v)">
+              <rect x="128" y="234" width="174" height="5" />
+              <rect x="128" y="204" width="174" height="5" />
+              <rect x="128" y="174" width="174" height="5" />
+              <rect x="128" y="144" width="90" height="5" />
+            </g>
+            <path
+              class="cs-mid-line"
+              d="M258 174V156M262 174V160M299 174V152M303 174V158M177 209l37 25M214 209l-37 25"
+            />
+            <ellipse cx="225" cy="265" rx="110" ry="4" fill="url(#cs-shadow)" />
+
+            <!-- stack of steel I-beams on timber dunnage -->
+            <ellipse cx="702" cy="265" rx="64" ry="3.5" fill="url(#cs-shadow)" />
+            <g>
+              <rect x="660" y="258" width="6" height="6" class="cs-back" />
+              <rect x="738" y="258" width="6" height="6" class="cs-back" />
+              <rect x="652" y="250" width="100" height="2" class="cs-mid-lit" />
+              <rect x="652" y="252" width="100" height="4" class="cs-mid-dk" />
+              <rect x="652" y="256" width="100" height="2" class="cs-mid" />
+              <rect x="664" y="244" width="6" height="6" class="cs-back" />
+              <rect x="734" y="244" width="6" height="6" class="cs-back" />
+              <rect x="658" y="236" width="96" height="2" class="cs-mid-lit" />
+              <rect x="658" y="238" width="96" height="4" class="cs-mid-dk" />
+              <rect x="658" y="242" width="96" height="2" class="cs-mid" />
+              <rect x="668" y="230" width="6" height="6" class="cs-back" />
+              <rect x="728" y="230" width="6" height="6" class="cs-back" />
+              <rect x="650" y="222" width="92" height="2" class="cs-mid-lit" />
+              <rect x="650" y="224" width="92" height="4" class="cs-mid-dk" />
+              <rect x="650" y="228" width="92" height="2" class="cs-mid" />
+              <path
+                class="cs-mid-lit"
+                d="M752 250h6v2h-2v4h2v2h-6v-2h2v-4h-2zM754 236h6v2h-2v4h2v2h-6v-2h2v-4h-2zM742 222h6v2h-2v4h2v2h-6v-2h2v-4h-2z"
+              />
+            </g>
+
+            <!-- cement mixer truck -->
+            <ellipse cx="828" cy="265" rx="64" ry="3.5" fill="url(#cs-shadow)" />
+            <g>
+              <rect x="772" y="246" width="110" height="7" rx="1" class="cs-mid-dk" />
+              <path d="M854 246V230q0 -4 4 -4h14l12 12v8z" fill="url(#cs-mid-h)" />
+              <path d="M860 230h10l8 8h-18z" class="cs-glass" />
+              <ellipse
+                cx="812"
+                cy="231"
+                rx="34"
+                ry="15"
+                transform="rotate(-12 812 231)"
+                fill="url(#cs-mid-v)"
+              />
+              <path class="cs-drum-line" d="M792 222q10 14 4 22M808 216q10 16 4 28M824 214q10 16 4 26" />
+              <path d="M846 222l8 -6v6z" class="cs-mid-dk" />
+              <circle cx="788" cy="256" r="7" class="cs-tire" />
+              <circle cx="806" cy="256" r="7" class="cs-tire" />
+              <circle cx="868" cy="256" r="7" class="cs-tire" />
+              <circle cx="788" cy="256" r="2.4" class="cs-mid-lit" />
+              <circle cx="806" cy="256" r="2.4" class="cs-mid-lit" />
+              <circle cx="868" cy="256" r="2.4" class="cs-mid-lit" />
+            </g>
+          </g>
+          <rect y="236" width="980" height="36" fill="url(#cs-haze)" opacity="0.45" />
+
+          <!-- layer 4 (near): glow behind the hero crane, ground, barrier, cones -->
+          <g class="cs-l4">
+            <ellipse cx="490" cy="196" rx="300" ry="130" fill="url(#cs-glow)" />
+            <rect y="268" width="980" height="32" fill="url(#cs-ground)" />
+            <path class="cs-ground-edge" d="M40 268.5H940" />
+            <path
+              class="cs-ground-lines"
+              d="M238 270L-280 300M274 270L-170 300M310 270L-60 300M346 270L50 300M382 270L160 300M418 270L270 300M454 270L380 300M490 270L490 300M526 270L600 300M562 270L710 300M598 270L820 300M634 270L930 300M670 270L1040 300M706 270L1150 300M742 270L1260 300"
+            />
+            <ellipse cx="490" cy="270" rx="150" ry="6" fill="url(#cs-shadow)" />
+
+            <!-- barrier with diagonal stripes -->
+            <ellipse cx="296" cy="284" rx="56" ry="4" fill="url(#cs-shadow)" />
+            <path class="cs-leg" d="M260 258V283M332 258V283M252 283h16M324 283h16" />
+            <rect x="248" y="246" width="96" height="13" rx="2" class="cs-board" />
+            <rect x="250" y="248" width="92" height="9" rx="1" fill="url(#cs-stripes)" />
+            <rect x="248" y="246" width="96" height="2" rx="1" class="cs-board-lit" />
+
+            <use href="#cs-cone" x="222" y="286" />
+            <use href="#cs-cone" x="640" y="287" />
+            <use href="#cs-cone" x="668" y="281" />
+          </g>
+
+          <!-- subtle life: aviation light on the distant crane, drifting dust -->
+          <circle cx="200" cy="23" r="1.6" class="cs-beacon cs-l1" />
+          <g class="cs-dust">
+            <circle cx="300" cy="200" r="1.2" />
+            <circle cx="420" cy="170" r="0.9" />
+            <circle cx="560" cy="215" r="1.4" />
+            <circle cx="650" cy="180" r="1" />
+            <circle cx="740" cy="205" r="1.2" />
+            <circle cx="380" cy="235" r="1" />
+          </g>
+        </svg>
         <a
           class="sd-wrap"
           href="/architecture.html"
           aria-label="System design: architecture, diagrams and scale walkthrough"
         >
-          <svg class="sd-crane" viewBox="0 0 260 100" aria-hidden="true">
-            <!-- mast (lattice), cab, jib, counter-jib, counterweight -->
-            <rect x="36" y="14" width="8" height="86" class="sd-steel" />
+          <svg class="sd-crane" viewBox="0 0 260 100" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="cs-h-steel" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" class="cs-st-lit" />
+                <stop offset="1" class="cs-st-shade" />
+              </linearGradient>
+              <linearGradient id="cs-h-steel-v" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="cs-st-lit" />
+                <stop offset="1" class="cs-st-shade" />
+              </linearGradient>
+              <linearGradient id="cs-h-weight" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="cs-st-weight-lit" />
+                <stop offset="1" class="cs-st-weight-dk" />
+              </linearGradient>
+            </defs>
+            <!-- mast, back face (shadow side, offset up-right) -->
+            <g class="cs-hero-back" transform="translate(3 -2)">
+              <path d="M34 16V100M46 16V100" />
+              <path
+                d="M34 20h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12"
+              />
+              <path
+                d="M34 20l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8"
+              />
+            </g>
+            <!-- tie lines from the apex -->
+            <path d="M40 -14L4 10.5M40 -14L130 7.1M40 -14L236 9.8" class="sd-tie" />
+            <!-- counter-jib with bracing, counterweight blocks -->
+            <rect x="4" y="13" width="30" height="1.6" fill="url(#cs-h-steel-v)" />
+            <path d="M4 10.5L34 8.5M34 14 L28 8.9 L22 14 L16 9.7 L10 14 L4 10.5" class="sd-lattice" />
+            <rect x="6" y="14.6" width="16" height="4" rx="0.6" fill="url(#cs-h-weight)" />
+            <rect x="6" y="19.1" width="16" height="4" rx="0.6" fill="url(#cs-h-weight)" />
+            <rect x="6" y="23.6" width="16" height="4" rx="0.6" fill="url(#cs-h-weight)" />
+            <!-- jib: chords and diagonal bracing -->
+            <rect x="46" y="13" width="198" height="1.6" fill="url(#cs-h-steel-v)" />
+            <path d="M46 5L244 10V14" class="cs-chord" />
             <path
-              d="M36 22 L44 30 L36 38 L44 46 L36 54 L44 62 L36 70 L44 78 L36 86 L44 94"
+              d="M46 14 L55 5.2 L64 14 L73 5.7 L82 14 L91 6.1 L100 14 L109 6.6 L118 14 L127 7 L136 14 L145 7.5 L154 14 L163 8 L172 14 L181 8.4 L190 14 L199 8.9 L208 14 L217 9.3 L226 14 L235 9.8 L244 14"
               class="sd-lattice"
             />
-            <rect x="30" y="2" width="20" height="12" rx="2" class="sd-cab" />
-            <rect x="8" y="10" width="236" height="4" rx="1" class="sd-steel" />
-            <path d="M40 2 L14 10 M40 2 L120 10 M40 2 L230 10" class="sd-tie" />
-            <rect x="8" y="14" width="16" height="10" rx="1" class="sd-weight" />
-            <!-- trolley above the Design half (x = 195) -->
-            <rect x="188" y="14" width="14" height="4" rx="1" class="sd-steel" />
-            <!-- cable (scaled) and hook (moved) -->
+            <!-- mast, front face: chords, bars, X-bracing -->
+            <rect x="33.4" y="16" width="1.8" height="84" fill="url(#cs-h-steel)" />
+            <rect x="44.8" y="16" width="1.8" height="84" fill="url(#cs-h-steel)" />
+            <path
+              d="M34 20h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12m-12 8h12"
+              class="cs-bar"
+            />
+            <path
+              d="M34 20l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8l12 8m0 -8l-12 8"
+              class="sd-lattice"
+            />
+            <rect x="29" y="97" width="22" height="3" rx="1" fill="url(#cs-h-steel-v)" />
+            <!-- slewing ring, tower head, operator cab -->
+            <rect x="31" y="12" width="18" height="4" rx="1" fill="url(#cs-h-steel-v)" />
+            <path
+              d="M35 12L40 -14L45 12M36.2 6h7.6M37.4 0h5.2M36.2 6L42.6 0M37.4 0L41.6 -6"
+              class="cs-chord"
+            />
+            <rect x="47" y="14.6" width="12" height="9" rx="1.5" class="sd-cab" />
+            <rect x="49" y="16" width="8" height="4.6" rx="0.8" class="cs-cab-glass" />
+            <!-- trolley above the Design half (x = 195), with wheels on the bottom chord -->
+            <circle cx="191" cy="14" r="1.4" class="cs-wheel" />
+            <circle cx="199" cy="14" r="1.4" class="cs-wheel" />
+            <rect x="188" y="15" width="14" height="3.4" rx="0.8" fill="url(#cs-h-steel-v)" />
+            <!-- cable (scaled) and hook block + hook (moved) -->
             <rect x="194.5" y="18" width="1" height="8" class="sd-cable" />
-            <g class="sd-hook"><path d="M195 26 v3 a3 3 0 1 1 -3 3" class="sd-hookline" /></g>
+            <g class="sd-hook">
+              <rect x="192" y="23" width="6" height="4" rx="1" fill="url(#cs-h-weight)" />
+              <path d="M195 26 v3 a3 3 0 1 1 -3 3" class="sd-hookline" />
+            </g>
+            <!-- aviation lights -->
+            <circle cx="40" cy="-15" r="1.5" class="cs-beacon" />
+            <circle cx="244" cy="9" r="1.2" class="cs-beacon cs-beacon-2" />
           </svg>
           <span class="sd-btn">
             <span class="sd-half sd-system">System</span>

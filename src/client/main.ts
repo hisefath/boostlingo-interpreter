@@ -189,6 +189,7 @@ const STATUS_TEXT = { waiting: "waiting", active: "working", done: "done", faile
 function renderPipeline(cur: Turn | undefined): void {
   const el = $("pipeline");
   el.dataset.mode = session.mode;
+  document.documentElement.dataset.mode = session.mode; // mode theme: voice-to-voice purple, cascade green
   if (session.mode === "cascade") {
     const layers = cascadeLayers(cur);
     const vendorOf = { stt: vendors.stt, translate: vendors.translate, tts: vendors.tts };
