@@ -24,9 +24,10 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 - ●○○ D17 — Third model only if time remains.
 - ●○○ D19 — Barge-in stops playback.
 
-### Data (1)
+### Data (2)
 
 - ●●○ D5 — Score both modes on the same public FLEURS EN/ES set.
+- ●●○ D24 — Same synthetic clips for both modes; limitation stated.
 
 ### Security (2)
 
@@ -37,11 +38,12 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 - ●●● D12 — Spend cap $30; tests use fakes.
 
-### Infrastructure (4)
+### Infrastructure (5)
 
 - ●●● D22 — TypeScript server and browser; .NET gap explained.
 - ●●○ D13 — OpenAI + Deepgram + ElevenLabs.
 - ●●○ D14 — Local-only; hosting decided later.
+- ●●○ D25 — WebRTC direct for voice-to-voice; WS for the cascade.
 - ●○○ D20 — Stack decided at the Design check.
 
 ### Process (3)
@@ -60,6 +62,8 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ### 2026-10-18
 
+- D25 · Infrastructure · ●●○ — WebRTC direct for voice-to-voice; WS for the cascade.
+- D24 · Data · ●●○ — Same synthetic clips for both modes; limitation stated.
 - D23 · Product · ●●○ — Ship all required functions; shrink the evaluation.
 - D22 · Infrastructure · ●●● — TypeScript server and browser; .NET gap explained.
 - D21 · Product · ●●○ — One extra pair, 2 h, in M6.

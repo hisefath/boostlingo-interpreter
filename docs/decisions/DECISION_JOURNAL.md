@@ -238,3 +238,21 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 - Cost accepted: smaller evaluation; D17 and D21 deferred · Reversibility: Type 2 two-way · Confidence: med
 - Revisit if: time remains after the write-up · Evidence: PRD Appetite · GD 2026-10-18 22:55 CDT: "keep full size" (read as approving the proposed cut list) · Interview line: "I cut evidence volume, never a required function."
 - Review: Topic Product · Weight ●●○ · One-liner: Ship all required functions; shrink the evaluation.
+
+### D24 Synthetic evaluation clips replace FLEURS tonight  [status: accepted (auto, Type 2); supersedes D5]
+- 2026-10-18 22:59 CDT · plan-design · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: design-lld (Claude Code, claude-opus-5-5) · docs/architecture/lld.md@3dcf524 §7
+- Context and forces: D23 (4-hour build); D5 needs a dataset download and id join (R03 gap).
+- Options: do nothing (no eval) · FLEURS subset (rejected tonight: download + join time) · our own routine-call sentences synthesised once with OpenAI TTS, with our reference translations (chosen)
+- Choice · Why: we chose synthetic clips to get a same-input eval for both modes in minutes, accepting cleaner-than-real speech (stated in the write-up).
+- Cost accepted: optimistic WER · Reversibility: Type 2 · Confidence: med
+- Revisit if: time remains (swap in FLEURS clips; same runner) · Evidence: LLD §7 · Interview line: "Both modes heard identical audio; it was synthetic, so real-world error rates will be higher."
+- Review: Topic Data · Weight ●●○ · One-liner: Same synthetic clips for both modes; limitation stated.
+
+### D25 Voice-to-voice runs browser-direct over WebRTC; cascade runs through our server  [status: accepted (auto, Type 2)]
+- 2026-10-18 22:59 CDT · plan-design · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: design-hld (Claude Code, claude-opus-5-5) · docs/architecture/hld.md@3dcf524 §1
+- Context and forces: NFR-001, NFR-004; R01 (WebRTC + client secrets for browsers).
+- Options: do nothing · relay voice-to-voice through our server over WebSocket (rejected: extra hop skews its latency) · browser-direct WebRTC with short-lived secret (chosen)
+- Choice · Why: each mode runs the way it would in production, accepting two transport shapes behind one interface.
+- Cost accepted: two transports · Reversibility: Type 2 · Confidence: high
+- Revisit if: the eval needs server-side capture of voice-to-voice events · Evidence: R01 F1 · Interview line: "Each mode got its natural transport, so neither paid for the other's plumbing."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: WebRTC direct for voice-to-voice; WS for the cascade.
