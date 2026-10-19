@@ -10,10 +10,10 @@ code {
   font-family: var(--mono);
   font-size: 0.86em;
 }
-.back {
+.back-link {
   display: inline-flex;
   align-items: center;
-  height: var(--ctl-h);
+  height: var(--control-height);
   padding: 0 16px;
   border-radius: 12px;
   font-size: 0.85rem;
@@ -24,10 +24,10 @@ code {
   border: 1px solid var(--glass-line);
   transition: border-color 0.2s;
 }
-.back:hover {
+.back-link:hover {
   border-color: rgba(196, 178, 255, 0.5);
 }
-.defs {
+.svg-definitions {
   position: absolute;
   width: 0;
   height: 0;
@@ -35,11 +35,11 @@ code {
 }
 
 /* ---- hero ---------------------------------------------------------------------------------------------------- */
-.arch {
+.architecture-page {
   display: grid;
   gap: 18px;
 }
-.arch > * {
+.architecture-page > * {
   min-width: 0;
 }
 .hero {
@@ -62,7 +62,7 @@ code {
   background-clip: text;
   color: transparent;
 }
-.lede {
+.lead-paragraph {
   max-width: 76ch;
   font-size: 1rem;
   color: #d9d6e6;
@@ -84,31 +84,31 @@ code {
   background: var(--glass);
   border: 1px solid var(--glass-line);
 }
-.stat-k {
+.stat-label {
   font-size: 0.78rem;
   color: var(--muted);
 }
-.stat-v {
+.stat-value {
   font: 600 1.15rem/1.4 var(--mono);
   color: var(--muted);
 }
-.stat-v .v2v {
+.stat-value .voice-to-voice {
   color: var(--pink);
 }
-.stat-v .cas {
+.stat-value .cascade {
   color: var(--accent-2);
 }
-.stat-n {
+.stat-note {
   font-size: 0.75rem;
   color: var(--muted);
 }
-.toc {
+.table-of-contents {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 18px;
 }
-.toc a {
+.table-of-contents a {
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.8rem;
@@ -117,7 +117,7 @@ code {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--glass-line);
 }
-.toc a:hover {
+.table-of-contents a:hover {
   border-color: rgba(196, 178, 255, 0.5);
 }
 
@@ -141,7 +141,7 @@ code {
   flex-basis: 100%;
   font-size: 0.88rem;
 }
-.num {
+.section-number {
   font: 700 0.78rem var(--mono);
   color: var(--accent);
 }
@@ -172,7 +172,7 @@ figcaption {
 }
 
 /* ---- SVG diagram styling (every colour is a theme token) ----------------------------------------------------- */
-.dg {
+.diagram-svg {
   font-family:
     system-ui,
     -apple-system,
@@ -180,257 +180,257 @@ figcaption {
     Roboto,
     sans-serif;
 }
-.dg text {
+.diagram-svg text {
   fill: var(--fg);
   font-size: 14px;
   font-weight: 600;
 }
-.dg .c {
+.diagram-svg .anchor-middle {
   text-anchor: middle;
 }
-.dg .e {
+.diagram-svg .anchor-end {
   text-anchor: end;
 }
-.dg .t-big {
+.diagram-svg .text-large {
   font-size: 15px;
 }
-.dg .t-sub {
+.diagram-svg .text-subtitle {
   fill: var(--muted);
   font-size: 12px;
   font-weight: 400;
 }
-.dg .t-mono,
-.dg .t-lbl,
-.dg .t-kick,
-.dg .t-span {
+.diagram-svg .text-mono,
+.diagram-svg .text-label,
+.diagram-svg .text-kicker,
+.diagram-svg .text-span-label {
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 500;
 }
-.dg .t-mono {
+.diagram-svg .text-mono {
   fill: var(--muted);
 }
-.dg .t-lbl {
+.diagram-svg .text-label {
   fill: #d4d0e6;
 }
-.dg .t-kick {
+.diagram-svg .text-kicker {
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   fill: var(--accent);
 }
-.dg .t-span {
+.diagram-svg .text-span-label {
   font-size: 10.5px;
   fill: var(--fg);
 }
-.dg .t-acc {
+.diagram-svg .text-accent {
   fill: var(--accent);
   font-weight: 600;
 }
-.dg .t-ok {
+.diagram-svg .text-ok {
   fill: var(--ok);
 }
-.dg .t-bad {
+.diagram-svg .text-bad {
   fill: var(--bad);
 }
-.dg .t-warn {
+.diagram-svg .text-warn {
   fill: var(--warn);
 }
-.dg .t-muted {
+.diagram-svg .text-muted {
   fill: var(--muted);
 }
-.dg .t-ok,
-.dg .t-bad {
+.diagram-svg .text-ok,
+.diagram-svg .text-bad {
   font-size: 13px;
 }
 
-.dg .zone {
+.diagram-svg .zone {
   fill: rgba(255, 255, 255, 0.02);
   stroke: var(--glass-line);
   stroke-dasharray: 6 6;
 }
-.dg .box,
-.dg .pill,
-.dg .st {
+.diagram-svg .box,
+.diagram-svg .pill,
+.diagram-svg .state-pill {
   fill: var(--surface);
   stroke: var(--surface-line);
   stroke-width: 1.2;
 }
-.dg .box.v2v {
+.diagram-svg .box.voice-to-voice {
   stroke: var(--pink);
   stroke-opacity: 0.55;
 }
-.dg .box.cas {
+.diagram-svg .box.cascade {
   stroke: var(--accent-2);
   stroke-opacity: 0.55;
 }
-.dg .box.ext {
+.diagram-svg .box.external {
   stroke: var(--accent);
   stroke-dasharray: 4 3;
 }
-.dg .gate {
+.diagram-svg .gate {
   fill: rgba(255, 210, 122, 0.06);
   stroke: var(--warn);
   stroke-opacity: 0.6;
   stroke-dasharray: 4 4;
 }
-.dg .stage-box {
-  fill: url(#g-stage);
+.diagram-svg .stage-box {
+  fill: url(#stage-gradient);
   stroke: var(--accent);
   stroke-opacity: 0.55;
   stroke-width: 1.2;
 }
-.gs-a {
+.stage-gradient-start {
   stop-color: var(--pink);
   stop-opacity: 0.18;
 }
-.gs-b {
+.stage-gradient-end {
   stop-color: var(--accent-2);
   stop-opacity: 0.18;
 }
-.dg .callout {
+.diagram-svg .callout {
   fill: rgba(196, 178, 255, 0.08);
   stroke: var(--accent);
   stroke-opacity: 0.4;
 }
 
-.dg .edge {
+.diagram-svg .edge {
   fill: none;
   stroke-width: 1.6;
 }
-.dg .edge.v2v {
+.diagram-svg .edge.voice-to-voice {
   stroke: var(--pink);
 }
-.dg .edge.cas,
-.dg .edge.acc {
+.diagram-svg .edge.cascade,
+.diagram-svg .edge.accent {
   stroke: var(--accent-2);
 }
-.dg .edge.ok {
+.diagram-svg .edge.ok {
   stroke: var(--ok);
 }
-.dg .edge.bad {
+.diagram-svg .edge.bad {
   stroke: var(--bad);
 }
-.dg .edge.warn {
+.diagram-svg .edge.warn {
   stroke: var(--warn);
 }
-.dg .edge.mut {
+.diagram-svg .edge.subdued {
   stroke: var(--muted);
   stroke-opacity: 0.7;
 }
-.dg .edge.dash {
+.diagram-svg .edge.dashed {
   stroke-dasharray: 3 4;
 }
-.m-pink {
+.arrowhead-fill-pink {
   fill: var(--pink);
 }
-.m-acc {
+.arrowhead-fill-accent {
   fill: var(--accent-2);
 }
-.m-mut {
+.arrowhead-fill-subdued {
   fill: var(--muted);
 }
-.m-bad {
+.arrowhead-fill-bad {
   fill: var(--bad);
 }
-.m-warn {
+.arrowhead-fill-warn {
   fill: var(--warn);
 }
 
 /* state machine */
-.dg .start {
+.diagram-svg .start {
   fill: var(--accent);
 }
-.dg .st {
+.diagram-svg .state-pill {
   stroke: var(--accent);
   stroke-opacity: 0.6;
 }
-.dg .st.ok {
+.diagram-svg .state-pill.ok {
   stroke: var(--ok);
 }
-.dg .st.bad {
+.diagram-svg .state-pill.bad {
   stroke: var(--bad);
 }
-.dg .st.warn {
+.diagram-svg .state-pill.warn {
   stroke: var(--warn);
 }
-.dg .st.mut {
+.diagram-svg .state-pill.subdued {
   stroke: var(--muted);
   stroke-dasharray: 4 4;
 }
 
 /* turn bars */
-.dg .bar {
+.diagram-svg .bar {
   fill-opacity: 0.85;
 }
-.dg .bar.stt {
+.diagram-svg .bar.stt {
   fill: var(--accent-2);
 }
-.dg .bar.mt {
+.diagram-svg .bar.translate {
   fill: var(--accent);
 }
-.dg .bar.tts {
+.diagram-svg .bar.tts {
   fill: var(--pink);
 }
-.dg .bar.bad {
+.diagram-svg .bar.bad {
   fill: var(--bad);
 }
 
 /* timelines */
-.dg .lane {
+.diagram-svg .lane {
   stroke: rgba(255, 255, 255, 0.2);
   stroke-width: 2;
 }
-.dg .guide {
+.diagram-svg .guide {
   stroke: rgba(255, 255, 255, 0.16);
   stroke-dasharray: 2 5;
 }
-.dg .tick {
+.diagram-svg .tick {
   stroke: rgba(255, 255, 255, 0.28);
 }
-.dg .pt.v2v {
+.diagram-svg .timing-point.voice-to-voice {
   fill: var(--pink);
 }
-.dg .pt.cas {
+.diagram-svg .timing-point.cascade {
   fill: var(--accent-2);
 }
-.dg .pt.est {
+.diagram-svg .timing-point.estimated {
   fill: var(--bg);
   stroke: var(--pink);
   stroke-width: 2;
   stroke-dasharray: 2 2;
 }
-.dg .seal {
+.diagram-svg .sealed-region {
   fill: url(#hatch);
   stroke: var(--surface-line);
 }
-.hatch-bg {
+.hatch-background {
   fill: var(--surface);
 }
 .hatch-line {
   stroke: rgba(255, 255, 255, 0.07);
   stroke-width: 4;
 }
-.dg .play.v2v {
+.diagram-svg .playback.voice-to-voice {
   fill: var(--pink);
   fill-opacity: 0.35;
 }
-.dg .span {
+.diagram-svg .span {
   fill-opacity: 0.24;
 }
-.dg .span.wait {
+.diagram-svg .span.turn-wait {
   fill: var(--warn);
 }
-.dg .span.mt {
+.diagram-svg .span.translate {
   fill: var(--accent);
 }
-.dg .span.tts {
+.diagram-svg .span.tts {
   fill: var(--pink);
 }
-.dg .span.net {
+.diagram-svg .span.network {
   fill: var(--accent-2);
 }
-.dg .span.out {
+.diagram-svg .span.speaking {
   fill: var(--ok);
 }
 
@@ -457,7 +457,7 @@ figcaption {
   margin: 0 0 6px;
   font-size: 0.95rem;
 }
-.cn {
+.contract-number {
   display: grid;
   place-items: center;
   width: 22px;
@@ -467,7 +467,7 @@ figcaption {
   color: #17142a;
   background: linear-gradient(135deg, #f2c6e6, var(--accent) 50%, var(--accent-2));
 }
-.sig {
+.signature {
   display: block;
   margin-bottom: 10px;
   color: var(--accent-2);
@@ -500,7 +500,7 @@ figcaption {
   padding: 0;
   list-style: none;
 }
-.card-k {
+.card-label {
   font: 700 0.66rem/1.4 var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -567,7 +567,7 @@ figcaption {
 .decisions p {
   font-size: 0.88rem;
 }
-.dn {
+.decision-id {
   justify-self: start;
   padding: 1px 8px;
   border-radius: 999px;
@@ -583,11 +583,11 @@ figcaption {
 .decisions a:hover {
   text-decoration: underline;
 }
-.foot {
+.page-footer {
   padding: 8px 0 0;
   line-height: 1.8;
 }
-.foot a + a:last-child {
+.page-footer a + a:last-child {
   margin-left: 12px;
 }
 
@@ -615,7 +615,7 @@ figcaption {
   .decisions a {
     grid-column: 2;
   }
-  .top .tools {
+  .top-bar .tools {
     width: auto; /* styles.css stretches the tools row on phones; one link does not need it */
   }
 }

@@ -1,6 +1,6 @@
 // Session store (lld §5): owns mode, pair and the conversation history; transports are swapped under it.
-import type { Lang, Mode, TimingPoint, TurnText, TurnUpdate } from "../shared/contracts.ts";
-import { isTerminalState, type Timings } from "./lib.ts";
+import type { LanguageCode, Mode, TimingPoint, TurnText, TurnUpdate } from "../shared/contracts.ts";
+import { isFinishedState, type Timings } from "./timing-and-audio-helpers.ts";
 
 export interface Turn extends TurnUpdate {
   timings: Timings;
@@ -11,16 +11,16 @@ export interface Turn extends TurnUpdate {
 export type TurnPatch = Partial<TurnUpdate> & { turnId: string };
 
 export interface TransportEvents {
-  turn(u: TurnPatch): void;
-  /** t is browser time (performance.now()) */
-  timing(turnId: string, point: TimingPoint, t: number, vendor?: string): void;
-  notice(msg: string): void;
+  turn(patch: TurnPatch): void;
+  /** atMs is browser time (performance.now()) */
+  timing(turnId: string, point: TimingPoint, atMs: number, vendor?: string): void;
+  notice(message: string): void;
   /** turnId set when the error belongs to a turn; otherwise shown on the latest turn */
-  error(msg: string, turnId?: string): void;
+  error(message: string, turnId?: string): void;
 }
 
 export interface Transport {
-  start(input: MediaStream, context: TurnText[], pair: [Lang, Lang]): Promise<void>;
+  start(input: MediaStream, context: TurnText[], pair: [LanguageCode, LanguageCode]): Promise<void>;
   stop(): void;
   /** interpreted audio as a stream (eval recording); null until available */
   output(): MediaStream | null;
@@ -29,20 +29,21 @@ export interface Transport {
 
 export type TransportFactory = (mode: Mode, events: TransportEvents) => Transport;
 
-export const isTerminal = (t: Turn) => isTerminalState(t.state);
+export const isTurnFinished = (turn: Turn) => isFinishedState(turn.state);
 
 export class Session {
   mode: Mode = "realtime";
-  pair: [Lang, Lang] = ["en", "es"];
+  pair: [LanguageCode, LanguageCode] = ["en", "es"];
   turns: Turn[] = [];
   live = false;
   echoGuard = true;
   private transport: Transport | null = null;
   private input: MediaStream | null = null;
-  private gen = 0;
+  /** bumped on every start/stop, so events from a replaced transport are ignored */
+  private generation = 0;
 
   constructor(
-    private make: TransportFactory,
+    private createTransport: TransportFactory,
     private onChange: (notice?: string, isError?: boolean) => void,
   ) {}
 
@@ -61,40 +62,41 @@ export class Session {
   async start(input: MediaStream): Promise<void> {
     this.input = input;
     this.live = true;
-    const gen = ++this.gen;
+    const generation = ++this.generation;
     const mode = this.mode;
-    const key = (id: string) => `${gen}:${id}`;
-    const current = () => gen === this.gen;
-    const t = this.make(mode, {
-      turn: (u) => current() && this.upsert({ ...u, turnId: key(u.turnId) }, mode),
-      timing: (id, point, at, vendor) => {
-        if (!current()) return;
-        const turn = this.upsert({ turnId: key(id) }, mode);
-        turn.timings[point] = at;
+    const scopedTurnId = (id: string) => `${generation}:${id}`;
+    const isCurrentGeneration = () => generation === this.generation;
+    const transport = this.createTransport(mode, {
+      turn: (patch) =>
+        isCurrentGeneration() && this.upsertTurn({ ...patch, turnId: scopedTurnId(patch.turnId) }, mode),
+      timing: (id, point, atMs, vendor) => {
+        if (!isCurrentGeneration()) return;
+        const turn = this.upsertTurn({ turnId: scopedTurnId(id) }, mode);
+        turn.timings[point] = atMs;
         if (vendor) turn.vendors[point] = vendor;
         this.onChange();
       },
-      notice: (msg) => current() && this.onChange(msg),
-      error: (msg, id) => {
-        if (!current()) return;
-        const turn = id ? this.upsert({ turnId: key(id) }, mode) : this.turns.at(-1);
-        if (turn) turn.error = msg;
-        this.onChange(msg, true);
+      notice: (message) => isCurrentGeneration() && this.onChange(message),
+      error: (message, id) => {
+        if (!isCurrentGeneration()) return;
+        const turn = id ? this.upsertTurn({ turnId: scopedTurnId(id) }, mode) : this.turns.at(-1);
+        if (turn) turn.error = message;
+        this.onChange(message, true);
       },
     });
-    this.transport = t;
-    t.setEchoGuard(this.echoGuard);
+    this.transport = transport;
+    transport.setEchoGuard(this.echoGuard);
     this.onChange();
     try {
-      await t.start(input, this.context(), this.pair);
+      await transport.start(input, this.context(), this.pair);
     } catch (e) {
-      if (current()) this.stop();
+      if (isCurrentGeneration()) this.stop();
       throw e;
     }
   }
 
   stop(): void {
-    this.gen++;
+    this.generation++;
     this.transport?.stop();
     this.transport = null;
     this.live = false;
@@ -116,8 +118,8 @@ export class Session {
     this.transport?.setEchoGuard(on);
   }
 
-  private upsert(u: TurnPatch, mode: Mode): Turn {
-    let turn = this.turns.find((t) => t.turnId === u.turnId);
+  private upsertTurn(patch: TurnPatch, mode: Mode): Turn {
+    let turn = this.turns.find((t) => t.turnId === patch.turnId);
     if (!turn) {
       turn = {
         seq: this.turns.length,
@@ -127,12 +129,12 @@ export class Session {
         to: this.pair[1],
         timings: {},
         vendors: {},
-        ...u,
+        ...patch,
       } as Turn;
       this.turns.push(turn);
     } else {
-      for (const [k, v] of Object.entries(u))
-        if (v !== undefined) (turn as unknown as Record<string, unknown>)[k] = v;
+      for (const [key, value] of Object.entries(patch))
+        if (value !== undefined) (turn as unknown as Record<string, unknown>)[key] = value;
     }
     this.onChange();
     return turn;

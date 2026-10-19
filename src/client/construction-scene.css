@@ -2,14 +2,14 @@
    Four layers, farthest first. Each farther layer mixes the theme accent toward the dark background (greyer, darker,
    fainter) and a haze gradient sits between layers, so depth comes from atmospheric perspective. All colours derive
    from --accent / --accent-2 / --bg, so the scene follows whatever theme the page is in. */
-footer.sd-footer {
-  --cs-far: color-mix(in srgb, var(--accent-2) 9%, #1a1b26);
-  --cs-far-line: color-mix(in srgb, var(--accent-2) 16%, #2a2b38);
-  --cs-far2: color-mix(in srgb, var(--accent-2) 16%, #252632);
-  --cs-mid: color-mix(in srgb, var(--accent-2) 32%, #2e2f3d);
-  --cs-mid-lit: color-mix(in srgb, var(--accent-2) 50%, #3b3c4e);
-  --cs-mid-dk: color-mix(in srgb, var(--accent-2) 18%, #1f2029);
-  --cs-mid-back: color-mix(in srgb, var(--accent-2) 10%, #17181f);
+footer.system-design-footer {
+  --construction-scene-farthest: color-mix(in srgb, var(--accent-2) 9%, #1a1b26);
+  --construction-scene-farthest-line: color-mix(in srgb, var(--accent-2) 16%, #2a2b38);
+  --construction-scene-far: color-mix(in srgb, var(--accent-2) 16%, #252632);
+  --construction-scene-middle: color-mix(in srgb, var(--accent-2) 32%, #2e2f3d);
+  --construction-scene-middle-lit: color-mix(in srgb, var(--accent-2) 50%, #3b3c4e);
+  --construction-scene-middle-dark: color-mix(in srgb, var(--accent-2) 18%, #1f2029);
+  --construction-scene-middle-back: color-mix(in srgb, var(--accent-2) 10%, #17181f);
   position: relative;
   display: block;
   height: 300px;
@@ -17,7 +17,7 @@ footer.sd-footer {
   padding: 0;
   overflow: hidden;
 }
-.cs-scene {
+.construction-scene {
   position: absolute;
   left: 50%;
   bottom: 0;
@@ -29,7 +29,7 @@ footer.sd-footer {
   mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
 }
 /* the link stands on the scene's ground line (scene y = 270, i.e. 30 px above the bottom) */
-.sd-footer .sd-wrap {
+.system-design-footer .system-design-link {
   position: absolute;
   left: 50%;
   bottom: 30px;
@@ -37,181 +37,181 @@ footer.sd-footer {
 }
 
 /* gradient stops */
-.cs-st-bg {
+.construction-scene-stop-background {
   stop-color: var(--bg);
 }
-.cs-st-lit {
+.construction-scene-stop-lit {
   stop-color: var(--accent);
 }
-.cs-st-shade {
+.construction-scene-stop-shade {
   stop-color: color-mix(in srgb, var(--accent-2) 55%, #2a2b38);
 }
-.cs-st-ground {
+.construction-scene-stop-ground {
   stop-color: color-mix(in srgb, var(--accent-2) 14%, #1c1d27);
 }
-.cs-st-mid-lit {
-  stop-color: var(--cs-mid-lit);
+.construction-scene-stop-middle-lit {
+  stop-color: var(--construction-scene-middle-lit);
 }
-.cs-st-mid-dk {
-  stop-color: var(--cs-mid-dk);
+.construction-scene-stop-middle-dark {
+  stop-color: var(--construction-scene-middle-dark);
 }
 /* cones in the UI palette (follow the mode: lavender/periwinkle or green) */
-.cs-st-cone-lit {
+.construction-scene-stop-cone-lit {
   stop-color: color-mix(in srgb, var(--accent) 88%, #fff);
 }
-.cs-st-cone-dk {
+.construction-scene-stop-cone-dark {
   stop-color: color-mix(in srgb, var(--accent-2) 48%, #2a2b38);
 }
-.cs-st-weight-lit {
+.construction-scene-stop-weight-lit {
   stop-color: color-mix(in srgb, var(--accent-2) 55%, #3a3b4c);
 }
-.cs-st-weight-dk {
+.construction-scene-stop-weight-dark {
   stop-color: color-mix(in srgb, var(--accent-2) 22%, #1a1b26);
 }
 
 /* layer 1, farthest: faint, darkest, greyest */
-.cs-l1 {
+.construction-scene-layer-farthest {
   opacity: 0.55;
 }
-.cs-far {
-  fill: var(--cs-far);
+.construction-scene-farthest-fill {
+  fill: var(--construction-scene-farthest);
 }
-.cs-far-line {
+.construction-scene-farthest-line {
   fill: none;
-  stroke: var(--cs-far-line);
+  stroke: var(--construction-scene-farthest-line);
   stroke-width: 1.2;
 }
-.cs-win {
+.construction-scene-window {
   fill: color-mix(in srgb, var(--accent) 35%, #3a3b4c);
   opacity: 0.5;
 }
 /* layer 2 */
-.cs-l2 {
+.construction-scene-layer-far {
   opacity: 0.8;
 }
-.cs-far2 {
-  fill: var(--cs-far2);
+.construction-scene-far-fill {
+  fill: var(--construction-scene-far);
 }
-.cs-far2-line {
+.construction-scene-far-line {
   fill: none;
-  stroke: var(--cs-far2);
+  stroke: var(--construction-scene-far);
   stroke-width: 2;
 }
 /* layer 3, middle: lit and shadow faces */
-.cs-back {
-  fill: var(--cs-mid-back);
+.construction-scene-back-face {
+  fill: var(--construction-scene-middle-back);
 }
-.cs-side,
-.cs-mid-dk {
-  fill: var(--cs-mid-dk);
+.construction-scene-side-face,
+.construction-scene-middle-dark {
+  fill: var(--construction-scene-middle-dark);
 }
-.cs-mid {
-  fill: var(--cs-mid);
+.construction-scene-middle-fill {
+  fill: var(--construction-scene-middle);
 }
-.cs-mid-lit {
-  fill: var(--cs-mid-lit);
+.construction-scene-middle-lit {
+  fill: var(--construction-scene-middle-lit);
 }
-.cs-mid-line,
-.cs-drum-line {
+.construction-scene-middle-line,
+.construction-scene-truck-drum-line {
   fill: none;
-  stroke: var(--cs-mid-lit);
+  stroke: var(--construction-scene-middle-lit);
   stroke-width: 1.2;
   stroke-linecap: round;
 }
-.cs-drum-line {
-  stroke: var(--cs-mid-dk);
+.construction-scene-truck-drum-line {
+  stroke: var(--construction-scene-middle-dark);
   stroke-width: 2;
 }
-.cs-glass {
+.construction-scene-truck-glass {
   fill: color-mix(in srgb, var(--accent) 30%, #2a2b38);
 }
-.cs-tire {
+.construction-scene-truck-tire {
   fill: #14151c;
-  stroke: var(--cs-mid);
+  stroke: var(--construction-scene-middle);
 }
 /* layer 4, near: full theme colour */
-.cs-ground-edge {
+.construction-scene-ground-edge {
   fill: none;
   stroke: var(--accent-2);
   stroke-opacity: 0.3;
 }
-.cs-ground-lines {
+.construction-scene-ground-lines {
   fill: none;
   stroke: var(--accent-2);
   stroke-opacity: 0.07;
 }
-.cs-board {
+.construction-scene-barrier-board {
   fill: color-mix(in srgb, var(--accent-2) 30%, #23242f);
 }
-.cs-board-lit {
+.construction-scene-barrier-board-lit {
   fill: var(--accent);
   opacity: 0.55;
 }
-.cs-stripe {
+.construction-scene-barrier-stripe {
   fill: var(--accent);
   opacity: 0.85;
 }
-.cs-leg {
+.construction-scene-barrier-leg {
   fill: none;
   stroke: color-mix(in srgb, var(--accent-2) 50%, #2a2b38);
   stroke-width: 3;
   stroke-linecap: round;
 }
-.cs-cone-band {
+.construction-scene-cone-band {
   fill: var(--fg);
   opacity: 0.85;
 }
-.cs-cone-base {
+.construction-scene-cone-base {
   fill: color-mix(in srgb, var(--accent-2) 32%, #23242f);
 }
 
 /* hero crane details (keeps the trolley, cable and hook geometry the lift animation depends on) */
-.cs-hero-back path {
+.construction-scene-crane-back-face path {
   fill: none;
   stroke: color-mix(in srgb, var(--accent-2) 45%, #2a2b38);
   stroke-width: 0.7;
 }
-.cs-hero-back path:first-child {
+.construction-scene-crane-back-face path:first-child {
   stroke-width: 1.6;
 }
-.cs-chord {
+.construction-scene-crane-chord {
   fill: none;
   stroke: var(--accent-2);
   stroke-width: 1.2;
   stroke-linejoin: round;
 }
-.cs-bar {
+.construction-scene-crane-bar {
   fill: none;
   stroke: var(--accent-2);
   stroke-width: 0.8;
 }
-.sd-crane .sd-lattice {
+.system-design-crane .system-design-lattice {
   stroke-width: 0.7;
   opacity: 0.85;
 }
-.sd-crane .sd-tie {
+.system-design-crane .system-design-tie-line {
   stroke-width: 0.6;
   opacity: 0.55;
 }
-.cs-cab-glass {
+.construction-scene-crane-cab-glass {
   fill: color-mix(in srgb, #fff 65%, var(--accent-2));
   opacity: 0.85;
 }
-.cs-wheel {
+.construction-scene-crane-wheel {
   fill: #1a1b26;
   stroke: var(--accent-2);
   stroke-width: 0.8;
 }
 
 /* subtle life */
-.cs-beacon {
+.construction-scene-beacon {
   fill: var(--accent);
-  animation: cs-blink 1.8s steps(1) infinite;
+  animation: construction-scene-blink 1.8s steps(1) infinite;
 }
-.cs-beacon-2 {
+.construction-scene-beacon-delayed {
   animation-delay: 0.9s;
 }
-@keyframes cs-blink {
+@keyframes construction-scene-blink {
   0% {
     opacity: 1;
   }
@@ -219,40 +219,40 @@ footer.sd-footer {
     opacity: 0.2;
   }
 }
-.cs-dust circle {
+.construction-scene-dust circle {
   fill: var(--accent);
   opacity: 0.35;
-  animation: cs-drift 14s ease-in-out infinite alternate;
+  animation: construction-scene-drift 14s ease-in-out infinite alternate;
 }
-.cs-dust circle:nth-child(2n) {
+.construction-scene-dust circle:nth-child(2n) {
   animation-duration: 19s;
   animation-direction: alternate-reverse;
 }
-.cs-dust circle:nth-child(3n) {
+.construction-scene-dust circle:nth-child(3n) {
   animation-duration: 23s;
 }
-@keyframes cs-drift {
+@keyframes construction-scene-drift {
   to {
     transform: translate(28px, -12px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cs-beacon,
-  .cs-dust circle {
+  .construction-scene-beacon,
+  .construction-scene-dust circle {
     animation: none;
   }
 }
 
 /* phones: drop the far layers; the scene is cropped, never scaled, so nothing overflows */
 @media (max-width: 640px) {
-  .cs-l1,
-  .cs-l2 {
+  .construction-scene-layer-farthest,
+  .construction-scene-layer-far {
     display: none;
   }
 }
 
 /* ---- clickable site signs in the scene: Architecture (over the building frame), System demo (over the beams) ---- */
-footer.sd-footer .cs-sign {
+footer.system-design-footer .construction-scene-sign {
   position: absolute;
   bottom: 42px; /* short posts stand on the ground line (button bottom = 30 px) */
   z-index: 2;
@@ -279,8 +279,8 @@ footer.sd-footer .cs-sign {
     border-color 0.2s ease;
 }
 /* two posts down to the ground */
-footer.sd-footer .cs-sign::before,
-footer.sd-footer .cs-sign::after {
+footer.system-design-footer .construction-scene-sign::before,
+footer.system-design-footer .construction-scene-sign::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -289,83 +289,83 @@ footer.sd-footer .cs-sign::after {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent-2) 55%, #2a2b38), #1a1b26);
   border-radius: 0 0 2px 2px;
 }
-footer.sd-footer .cs-sign::before {
+footer.system-design-footer .construction-scene-sign::before {
   left: 22%;
 }
-footer.sd-footer .cs-sign::after {
+footer.system-design-footer .construction-scene-sign::after {
   right: 22%;
 }
 /* entrance signs at the two edges of the site: left of the building, right of the truck (they cover neither) */
-footer.sd-footer .cs-sign-arch {
+footer.system-design-footer .construction-scene-sign-architecture {
   left: max(12px, calc(50% - 532px));
 }
-footer.sd-footer .cs-sign-demo {
+footer.system-design-footer .construction-scene-sign-system-demo {
   right: max(12px, calc(50% - 532px));
 }
-.cs-sign-kicker {
+.construction-scene-sign-kicker {
   font-size: 0.62rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.cs-sign-title {
+.construction-scene-sign-title {
   font-size: 0.86rem;
   font-weight: 650;
   color: var(--accent);
 }
-footer.sd-footer .cs-sign:hover,
-footer.sd-footer .cs-sign:focus-visible {
+footer.system-design-footer .construction-scene-sign:hover,
+footer.system-design-footer .construction-scene-sign:focus-visible {
   transform: translateY(-3px);
   border-color: var(--accent);
   box-shadow: 0 16px 30px -12px color-mix(in srgb, var(--accent) 85%, transparent);
 }
-footer.sd-footer .cs-sign:focus-visible {
+footer.system-design-footer .construction-scene-sign:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 @media (max-width: 640px) {
   /* not enough ground on phones: signs float at the top corners, no posts */
-  footer.sd-footer .cs-sign {
+  footer.system-design-footer .construction-scene-sign {
     bottom: auto;
     top: 14px;
     min-width: 0;
     padding: 5px 10px 6px;
   }
-  footer.sd-footer .cs-sign::before,
-  footer.sd-footer .cs-sign::after {
+  footer.system-design-footer .construction-scene-sign::before,
+  footer.system-design-footer .construction-scene-sign::after {
     display: none;
   }
-  footer.sd-footer .cs-sign-arch {
+  footer.system-design-footer .construction-scene-sign-architecture {
     left: 12px;
   }
-  footer.sd-footer .cs-sign-demo {
+  footer.system-design-footer .construction-scene-sign-system-demo {
     left: auto;
     right: 12px;
   }
-  .cs-sign-kicker {
+  .construction-scene-sign-kicker {
     display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  footer.sd-footer .cs-sign {
+  footer.system-design-footer .construction-scene-sign {
     transition: none;
   }
 }
 
 /* narrower desktops: the site edges are too tight for ground signs without covering the building or truck */
 @media (min-width: 641px) and (max-width: 1100px) {
-  footer.sd-footer .cs-sign {
+  footer.system-design-footer .construction-scene-sign {
     bottom: auto;
     top: 14px;
   }
-  footer.sd-footer .cs-sign::before,
-  footer.sd-footer .cs-sign::after {
+  footer.system-design-footer .construction-scene-sign::before,
+  footer.system-design-footer .construction-scene-sign::after {
     display: none;
   }
-  footer.sd-footer .cs-sign-arch {
+  footer.system-design-footer .construction-scene-sign-architecture {
     left: 16px;
   }
-  footer.sd-footer .cs-sign-demo {
+  footer.system-design-footer .construction-scene-sign-system-demo {
     right: 16px;
   }
 }

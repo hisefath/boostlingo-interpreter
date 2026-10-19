@@ -1,10 +1,10 @@
-// M5-T011: the browser's guessLang (voice-to-voice turn labels) picks within the session's pair.
+// M5-T011: the browser's guessLanguageWithDefaults (voice-to-voice turn labels) picks within the session's pair.
 import { describe, expect, it } from "vitest";
-import type { Lang } from "../../src/shared/contracts.ts";
-import { guessLang, otherLang } from "../../src/client/lib.ts";
+import type { LanguageCode } from "../../src/shared/contracts.ts";
+import { guessLanguageWithDefaults, otherLanguage } from "../../src/client/timing-and-audio-helpers.ts";
 
-describe("client guessLang within a pair", () => {
-  const cases: [Lang, string, Lang][] = [
+describe("client guessLanguageWithDefaults within a pair", () => {
+  const cases: [LanguageCode, string, LanguageCode][] = [
     ["es", "¿Dónde le duele?", "es"],
     ["fr", "Où avez-vous mal ?", "fr"],
     ["fr", "Je suis allergique à la pénicilline", "fr"],
@@ -14,19 +14,19 @@ describe("client guessLang within a pair", () => {
     ["pt", "What is your date of birth?", "en"],
   ];
   it.each(cases)("en-%s: %s -> %s", (other, text, want) => {
-    const pair: [Lang, Lang] = ["en", other];
-    const from = guessLang(text, pair[0], pair);
+    const pair: [LanguageCode, LanguageCode] = ["en", other];
+    const from = guessLanguageWithDefaults(text, pair[0], pair);
     expect(from).toBe(want);
-    expect(otherLang(pair, from)).toBe(want === "en" ? other : "en");
+    expect(otherLanguage(pair, from)).toBe(want === "en" ? other : "en");
   });
 
   it("never labels a turn with a language outside the pair", () => {
-    expect(guessLang("¿Dónde le duele?", "en", ["en", "zh"])).toBe("en");
-    expect(guessLang("我胸口疼", "en", ["en", "es"])).toBe("en");
+    expect(guessLanguageWithDefaults("¿Dónde le duele?", "en", ["en", "zh"])).toBe("en");
+    expect(guessLanguageWithDefaults("我胸口疼", "en", ["en", "es"])).toBe("en");
   });
 
   it("keeps the en-es default when no pair is given", () => {
-    expect(guessLang("tengo dolor en el pecho")).toBe("es");
-    expect(guessLang("", "es")).toBe("es");
+    expect(guessLanguageWithDefaults("tengo dolor en el pecho")).toBe("es");
+    expect(guessLanguageWithDefaults("", "es")).toBe("es");
   });
 });

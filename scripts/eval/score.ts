@@ -1,19 +1,32 @@
-// Score EvalRun files (docs/architecture/lld.md §7) and write eval/report.md.
+// Score EvaluationRun files (docs/architecture/lld.md §7) and write eval/report.md.
 // Run: npx tsx --env-file=.env scripts/eval/score.ts eval/results/*.json
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import OpenAI, { toFile } from "openai";
-import type { EvalClip, EvalRun, EvalTurnResult, Mode, TimingPoint } from "../../src/shared/contracts.ts";
-import { chrF, criticalTermHits, percentile, realtimeCallCost, wavDurationSec, wer } from "./metrics.ts";
-import { PRICES, REALTIME_TOKENS_PER_MIN } from "./prices.ts";
+import type {
+  EvaluationClip,
+  EvaluationRun,
+  EvaluationTurnResult,
+  Mode,
+  TimingPoint,
+} from "../../src/shared/contracts.ts";
+import {
+  chrF,
+  criticalTermHits,
+  interpolatedPercentile,
+  voiceToVoiceCallCost,
+  wavDurationSeconds,
+  wordErrorRate,
+} from "./evaluation-metrics.ts";
+import { VENDOR_PRICES, VOICE_TO_VOICE_AUDIO_TOKENS_PER_MINUTE } from "./prices.ts";
 
-const RECOGNISER = "gpt-4o-transcribe"; // one recogniser for both modes (FR-027)
-const JUDGE = "gpt-4.1-mini";
+const RECOGNISER_MODEL = "gpt-4o-transcribe"; // one recogniser for both modes (FR-027)
+const JUDGE_MODEL = "gpt-4.1-mini";
 const openai = new OpenAI();
-const clips = new Map<string, EvalClip>(
-  (JSON.parse(readFileSync("eval/clips.json", "utf8")) as EvalClip[]).map((c) => [c.id, c]),
+const clips = new Map<string, EvaluationClip>(
+  (JSON.parse(readFileSync("eval/clips.json", "utf8")) as EvaluationClip[]).map((clip) => [clip.id, clip]),
 );
 
-const GAPS: [string, TimingPoint, TimingPoint][] = [
+const LATENCY_SPANS: [string, TimingPoint, TimingPoint][] = [
   ["speech_end→first_audio", "speech_end", "first_audio"],
   ["speech_end→audio_end", "speech_end", "audio_end"],
   ["turn-detection wait", "speech_end", "turn_detected"],
@@ -23,24 +36,29 @@ const GAPS: [string, TimingPoint, TimingPoint][] = [
   ["first_tts_byte→first_audio", "first_tts_byte", "first_audio"],
 ];
 
-const fmt = (n: number, d = 0) => (Number.isFinite(n) ? n.toFixed(d) : "—");
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
-const table = (head: string[], rows: (string | number)[][]) =>
+const formatNumber = (value: number, decimals = 0) =>
+  Number.isFinite(value) ? value.toFixed(decimals) : "—";
+const mean = (values: number[]) => (values.length ? values.reduce((a, b) => a + b, 0) / values.length : NaN);
+const markdownTable = (header: string[], rows: (string | number)[][]) =>
   [
-    `| ${head.join(" | ")} |`,
-    `|${head.map(() => "---").join("|")}|`,
-    ...rows.map((r) => `| ${r.join(" | ")} |`),
+    `| ${header.join(" | ")} |`,
+    `|${header.map(() => "---").join("|")}|`,
+    ...rows.map((row) => `| ${row.join(" | ")} |`),
   ].join("\n");
 
-async function transcribe(wavB64: string, lang: string): Promise<string> {
-  const file = await toFile(Buffer.from(wavB64, "base64"), "out.wav", { type: "audio/wav" });
-  const res = await openai.audio.transcriptions.create({ model: RECOGNISER, file, language: lang });
-  return res.text;
+async function transcribe(wavBase64: string, language: string): Promise<string> {
+  const file = await toFile(Buffer.from(wavBase64, "base64"), "out.wav", { type: "audio/wav" });
+  const transcription = await openai.audio.transcriptions.create({
+    model: RECOGNISER_MODEL,
+    file,
+    language,
+  });
+  return transcription.text;
 }
 
-async function judge(clip: EvalClip, output: string): Promise<{ faithful: boolean; reason: string }> {
-  const res = await openai.chat.completions.create({
-    model: JUDGE,
+async function judge(clip: EvaluationClip, output: string): Promise<{ faithful: boolean; reason: string }> {
+  const completion = await openai.chat.completions.create({
+    model: JUDGE_MODEL,
     temperature: 0,
     response_format: { type: "json_object" },
     messages: [
@@ -55,136 +73,159 @@ async function judge(clip: EvalClip, output: string): Promise<{ faithful: boolea
       { role: "user", content: `Speaker said (${clip.lang}): ${clip.text}\nInterpreter output: ${output}` },
     ],
   });
-  const j = JSON.parse(res.choices[0].message.content ?? "{}");
-  return { faithful: j.faithful === true, reason: String(j.reason ?? "") };
+  const verdict = JSON.parse(completion.choices[0].message.content ?? "{}");
+  return { faithful: verdict.faithful === true, reason: String(verdict.reason ?? "") };
 }
 
-const clipSec = (id: string) => {
-  const p = `eval/clips/${id}.wav`;
-  return existsSync(p) ? wavDurationSec(readFileSync(p)) : NaN;
+const clipDurationSeconds = (id: string) => {
+  const path = `eval/clips/${id}.wav`;
+  return existsSync(path) ? wavDurationSeconds(readFileSync(path)) : NaN;
 };
 
-async function scoreMode(run: EvalRun, mode: Mode, turns: EvalTurnResult[]) {
-  const out: string[] = [`### ${mode} (${turns.length} turns)`];
+async function scoreMode(run: EvaluationRun, mode: Mode, turns: EvaluationTurnResult[]) {
+  const lines: string[] = [`### ${mode} (${turns.length} turns)`];
 
-  out.push(
-    table(
+  lines.push(
+    markdownTable(
       ["latency (ms)", "n", "p50", "p95"],
-      GAPS.map(([label, a, b]) => {
-        const xs = turns.flatMap((t) =>
-          t.timings[a] !== undefined && t.timings[b] !== undefined ? [t.timings[b]! - t.timings[a]!] : [],
+      LATENCY_SPANS.map(([label, from, to]) => {
+        const latencies = turns.flatMap((turn) =>
+          turn.timings[from] !== undefined && turn.timings[to] !== undefined
+            ? [turn.timings[to]! - turn.timings[from]!]
+            : [],
         );
-        return [label, xs.length, fmt(percentile(xs, 50)), fmt(percentile(xs, 95))];
-      }).filter((r) => r[1] !== 0),
+        return [
+          label,
+          latencies.length,
+          formatNumber(interpolatedPercentile(latencies, 50)),
+          formatNumber(interpolatedPercentile(latencies, 95)),
+        ];
+      }).filter((row) => row[1] !== 0),
     ),
   );
 
-  const wers: number[] = [];
-  const chrfs: number[] = [];
+  const wordErrorRates: number[] = [];
+  const chrfScores: number[] = [];
   let hits = 0;
   let total = 0;
   const judged: string[][] = [];
-  let inSec = 0;
-  let outSec = 0;
-  let srcChars = 0;
-  let tgtChars = 0;
-  for (const t of turns) {
-    const clip = clips.get(t.clipId);
+  let inputAudioSeconds = 0;
+  let outputAudioSeconds = 0;
+  let sourceCharacters = 0;
+  let targetCharacters = 0;
+  for (const turn of turns) {
+    const clip = clips.get(turn.clipId);
     if (!clip) continue;
     const to = clip.lang === "en" ? "es" : "en";
     // WER only where a real recognition stage exists: voice-to-voice's transcript is a side model's "rough guide" (I-22).
-    if (t.srcText && t.mode === "cascade") wers.push(wer(clip.text, t.srcText));
+    if (turn.srcText && turn.mode === "cascade") wordErrorRates.push(wordErrorRate(clip.text, turn.srcText));
     // D26: score the text each mode actually spoke (cascade: the text sent to TTS; voice-to-voice: the model's own
     // output transcript). Browser recordings were misaligned across turns tonight, so re-transcription is off.
-    const heard = (t.tgtText ?? "").trim();
-    if (!heard || t.state !== "done") continue;
-    chrfs.push(chrF(clip.reference, heard));
-    const c = criticalTermHits(clip.criticalTerms, heard);
-    hits += c.hits;
-    total += c.total;
+    const heard = (turn.tgtText ?? "").trim();
+    if (!heard || turn.state !== "done") continue;
+    chrfScores.push(chrF(clip.reference, heard));
+    const termHits = criticalTermHits(clip.criticalTerms, heard);
+    hits += termHits.hits;
+    total += termHits.total;
     if (clip.kind === "trick") {
-      const j = await judge(clip, heard);
+      const verdict = await judge(clip, heard);
       judged.push([
         clip.id,
-        j.faithful ? "yes" : "**no**",
+        verdict.faithful ? "yes" : "**no**",
         heard.replace(/\|/g, "/"),
-        j.reason.replace(/\|/g, "/"),
+        verdict.reason.replace(/\|/g, "/"),
       ]);
     }
-    inSec += clipSec(clip.id);
-    if (t.outputAudioWav) outSec += wavDurationSec(Buffer.from(t.outputAudioWav, "base64"));
-    srcChars += (t.srcText || clip.text).length;
-    tgtChars += t.tgtText.length;
+    inputAudioSeconds += clipDurationSeconds(clip.id);
+    if (turn.outputAudioWav)
+      outputAudioSeconds += wavDurationSeconds(Buffer.from(turn.outputAudioWav, "base64"));
+    sourceCharacters += (turn.srcText || clip.text).length;
+    targetCharacters += turn.tgtText.length;
   }
 
-  out.push(
+  lines.push(
     "",
-    table(
+    markdownTable(
       ["quality", "value"],
       [
-        ["WER source (mean, normalised)", fmt(mean(wers), 3)],
-        ["chrF spoken text vs reference (mean, D26)", fmt(mean(chrfs), 1)],
-        ["critical terms exact-match", total ? `${hits}/${total} (${fmt((100 * hits) / total, 1)}%)` : "—"],
+        ["WER source (mean, normalised)", formatNumber(mean(wordErrorRates), 3)],
+        ["chrF spoken text vs reference (mean, D26)", formatNumber(mean(chrfScores), 1)],
+        [
+          "critical terms exact-match",
+          total ? `${hits}/${total} (${formatNumber((100 * hits) / total, 1)}%)` : "—",
+        ],
         [
           "faithful on trick clips",
-          judged.length ? `${judged.filter((j) => j[1] === "yes").length}/${judged.length}` : "—",
+          judged.length ? `${judged.filter((row) => row[1] === "yes").length}/${judged.length}` : "—",
         ],
       ],
     ),
   );
   if (judged.length)
-    out.push("", table(["trick clip", "faithful", "heard output", `judge (${JUDGE})`], judged));
+    lines.push(
+      "",
+      markdownTable(["trick clip", "faithful", "heard output", `judge (${JUDGE_MODEL})`], judged),
+    );
 
   // Cost from audio durations × list prices (scripts/eval/prices.ts).
-  const inMin = inSec / 60;
-  const outMin = outSec / 60;
-  const r = inMin ? outMin / inMin : 1;
+  const inputMinutes = inputAudioSeconds / 60;
+  const outputMinutes = outputAudioSeconds / 60;
+  const outputPerInputRatio = inputMinutes ? outputMinutes / inputMinutes : 1;
   if (mode === "realtime") {
-    const p = PRICES.realtime;
-    const { in: tin, out: tout } = REALTIME_TOKENS_PER_MIN;
-    out.push(
+    const prices = VENDOR_PRICES.voiceToVoice;
+    const { in: inputTokensPerMinute, out: outputTokensPerMinute } = VOICE_TO_VOICE_AUDIO_TOKENS_PER_MINUTE;
+    lines.push(
       "",
-      `Cost (voice-to-voice, measured r = output/input audio = ${fmt(r, 2)}). Formula with context re-billing:`,
+      `Cost (voice-to-voice, measured r = output/input audio = ${formatNumber(outputPerInputRatio, 2)}). Formula with context re-billing:`,
       "",
-      `\`cost(M) = M·(${tin}·$${p.audioInPer1M} + ${tout}·r·$${p.audioOutPer1M})/1e6 + M·$${p.transcribePerMin} + ` +
-        `(M(M−1)/2)·(${tin} + ${tout}·r)·$${p.cachedInPer1M}/1e6\` (cache always hits; a miss bills at $${p.audioInPer1M}/1M)`,
+      `\`cost(M) = M·(${inputTokensPerMinute}·$${prices.audioInPer1M} + ${outputTokensPerMinute}·r·$${prices.audioOutPer1M})/1e6 + M·$${prices.transcribePerMin} + ` +
+        `(M(M−1)/2)·(${inputTokensPerMinute} + ${outputTokensPerMinute}·r)·$${prices.cachedInPer1M}/1e6\` (cache always hits; a miss bills at $${prices.audioInPer1M}/1M)`,
       "",
-      table(
+      markdownTable(
         ["call length", "total $", "$ per minute"],
-        [1, 5, 21].map((m) => [
-          `${m} min`,
-          fmt(realtimeCallCost(m, r, p), 3),
-          fmt(realtimeCallCost(m, r, p) / m, 4),
+        [1, 5, 21].map((minutes) => [
+          `${minutes} min`,
+          formatNumber(voiceToVoiceCallCost(minutes, outputPerInputRatio, prices), 3),
+          formatNumber(voiceToVoiceCallCost(minutes, outputPerInputRatio, prices) / minutes, 4),
         ]),
       ),
     );
   } else {
-    const p = PRICES.cascade;
-    const stt = run.vendors.stt?.includes("deepgram") ? p.deepgramSttPerMin : p.openaiSttPerMin;
+    const prices = VENDOR_PRICES.cascade;
+    const stt = run.vendors.stt?.includes("deepgram") ? prices.deepgramSttPerMin : prices.openaiSttPerMin;
     // ponytail: ~4 chars per token and no re-sent context; per-turn usage from the vendor would replace this.
-    const translate = inMin
-      ? ((srcChars / 4) * p.translateInPer1M + (tgtChars / 4) * p.translateOutPer1M) / 1e6 / inMin
+    const translate = inputMinutes
+      ? ((sourceCharacters / 4) * prices.translateInPer1M +
+          (targetCharacters / 4) * prices.translateOutPer1M) /
+        1e6 /
+        inputMinutes
       : NaN;
-    const tts = !inMin
+    const tts = !inputMinutes
       ? NaN
       : run.vendors.tts?.includes("elevenlabs")
-        ? ((tgtChars / 1000) * p.elevenlabsTtsPer1kChars) / inMin
+        ? ((targetCharacters / 1000) * prices.elevenlabsTtsPer1kChars) / inputMinutes
         : run.vendors.tts?.includes("deepgram")
-          ? ((tgtChars / 1000) * p.deepgramTtsPer1kChars) / inMin
-          : (outMin * REALTIME_TOKENS_PER_MIN.out * p.ttsAudioOutPer1M) / 1e6 / inMin;
-    const perMin = stt + translate + tts;
-    out.push(
+          ? ((targetCharacters / 1000) * prices.deepgramTtsPer1kChars) / inputMinutes
+          : (outputMinutes * VOICE_TO_VOICE_AUDIO_TOKENS_PER_MINUTE.out * prices.ttsAudioOutPer1M) /
+            1e6 /
+            inputMinutes;
+    const perMinute = stt + translate + tts;
+    lines.push(
       "",
-      `Cost (cascade, linear: no audio context re-billing): STT $${fmt(stt, 4)} + translate $${fmt(translate, 5)} + ` +
-        `TTS $${fmt(tts, 4)} = $${fmt(perMin, 4)} per input minute.`,
+      `Cost (cascade, linear: no audio context re-billing): STT $${formatNumber(stt, 4)} + translate $${formatNumber(translate, 5)} + ` +
+        `TTS $${formatNumber(tts, 4)} = $${formatNumber(perMinute, 4)} per input minute.`,
       "",
-      table(
+      markdownTable(
         ["call length", "total $", "$ per minute"],
-        [1, 5, 21].map((m) => [`${m} min`, fmt(perMin * m, 3), fmt(perMin, 4)]),
+        [1, 5, 21].map((minutes) => [
+          `${minutes} min`,
+          formatNumber(perMinute * minutes, 3),
+          formatNumber(perMinute, 4),
+        ]),
       ),
     );
   }
-  return out.join("\n");
+  return lines.join("\n");
 }
 
 const files = process.argv.slice(2);
@@ -197,11 +238,11 @@ const sections: string[] = [
   "",
   "Clips are synthetic TTS speech (D24); real calls will score worse.",
 ];
-for (const f of files) {
-  const run: EvalRun = JSON.parse(readFileSync(f, "utf8"));
+for (const file of files) {
+  const run: EvaluationRun = JSON.parse(readFileSync(file, "utf8"));
   sections.push("", `## Run ${run.runId} (${run.startedAt})`, "", `Vendors: ${JSON.stringify(run.vendors)}`);
   for (const mode of ["realtime", "cascade"] as Mode[]) {
-    const turns = run.turns.filter((t) => t.mode === mode);
+    const turns = run.turns.filter((turn) => turn.mode === mode);
     if (turns.length) sections.push("", await scoreMode(run, mode, turns));
   }
 }

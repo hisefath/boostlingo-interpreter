@@ -46,6 +46,7 @@ several harnesses read it and the repo is public.
 | 2026-10-19 02:40 CDT | merge + push + deploy (pills, scene signs) | milestone/m6-polish | "once your finished, commit merge and deploy" |
 | 2026-10-19 02:45 CDT | commit + merge + deploy all | main@45aafc8 | "nice, commit merge and deploy all of this" |
 | 2026-10-19 11:27 CDT | merge + push + deploy M7 (Bangla) | milestone/m7-bangla@e568f04 | "yes, merge to main, push and redeploy with Bangla" |
+| 2026-10-19 12:53 CDT | merge M8 rename (no deploy) | milestone/m8-clear-names@ab47806 | "rename all the files and variables and functions, anything needed, so that things are very very clear. so if sim.ts was meant to mean simulation, make sure its spelled out. merge this. no deploy needed for now" |
 
 ## Log
 
@@ -94,3 +95,7 @@ several harnesses read it and the repo is public.
 2026-10-19 02:26 CDT ROUTE M6 polish (human): crane spacing + construction scene; mode themes green/purple. DISPATCH M6-T014 scene
 2026-10-19 02:37 CDT VERIFY M6 merged main 00c4892 pushed GitLab+GitHub; Railway SUCCESS
 2026-10-19 02:45 CDT VERIFY M6 main 45aafc8 pushed; Railway SUCCESS
+2026-10-19 11:29 CDT VERIFY M7 main 5bb097f pushed GitLab+GitHub; Railway SUCCESS /api/version 5bb097f
+2026-10-19 12:53 CDT ROUTE M8 human: rename files/variables/functions for clarity ("merge this. no deploy needed"); DISPATCH workflow inventory→apply→verify
+2026-10-19 14:05 CDT RESULT M8-T015 status=done harness=claude-workflow timeout=no tree=clean
+2026-10-19 14:08 CDT VERIFY M8-T015 m8/t015-rename@0841a79 verifier PASS (minified-AST equality on 32 files; 4 minor notes); make check → 182 passed OK; vite build OK; dist preview of 3 pages + both walkthroughs, no JS errors

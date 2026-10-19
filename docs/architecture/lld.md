@@ -11,11 +11,11 @@ Every adapter implements one interface in `src/shared/contracts.ts`. A new vendo
 
 | Stage | Receives | Produces | Errors it must raise (typed) | Cancel |
 |---|---|---|---|---|
-| **STT** `SttProvider.open(opts) → SttStream` | `push(pcm16: Int16Array)` 16 kHz mono frames; `opts.languages` (the pair) | `onPartial({text, lang})`; `onFinal({segmentId, text, lang, startMs, endMs})` (word-time end = true speech end); `onUtteranceEnd({atMs})` | `RateLimited(retryAfterMs)`, `Timeout`, `Disconnected`, `Empty` | `close()` |
-| **Translate** `Translator.translate(req, signal) → AsyncIterable<string>` | `{turnId, text, from, to, context: Turn[] (last 5)}` | streamed target-text deltas; the caller cuts them into speakable segments at sentence/clause ends | `RateLimited`, `Timeout`, `Empty` | `AbortSignal` |
-| **TTS** `Tts.speak(req, signal) → AsyncIterable<Uint8Array>` | `{turnId, segmentIdx, text, lang, voice}` | PCM16 24 kHz chunks | `RateLimited`, `Timeout`, `Empty` | `AbortSignal` |
+| **STT** `SttProvider.open(options) → SttStream` | `push(pcm16: Int16Array)` 16 kHz mono frames; `options.languages` (the pair) | `onPartial({text, lang})`; `onFinal({segmentId, text, lang, startMs, endMs})` (word-time end = true speech end); `onUtteranceEnd({atMs})` | `RateLimited(retryAfterMs)`, `Timeout`, `Disconnected`, `Empty` | `close()` |
+| **Translate** `Translator.translate(request, signal) → AsyncIterable<string>` | `{turnId, text, from, to, context: Turn[] (last 5)}` | streamed target-text deltas; the caller cuts them into speakable segments at sentence/clause ends | `RateLimited`, `Timeout`, `Empty` | `AbortSignal` |
+| **TTS** `Tts.speak(request, signal) → AsyncIterable<Uint8Array>` | `{turnId, segmentIndex, text, lang, voice}` | PCM16 24 kHz chunks | `RateLimited`, `Timeout`, `Empty` | `AbortSignal` |
 
-Each provider has a **fake** (`src/server/providers/fake.ts`) driven by a script (delay, partials, error kind) for tests.
+Each provider has a **fake** (`src/server/providers/fake-providers.ts`) driven by a script (delay, partials, error kind) for tests.
 
 ## 2. Turn state machine (cascade; voice-to-voice reuses the same `Turn` record for display)
 
@@ -62,11 +62,11 @@ Server → client JSON: `pong{t, serverT}`, `turn{turnId, seq, state, srcText?, 
 | Component | Owns |
 |---|---|
 | `Session` store (`src/client/session.ts`) | mode, pair, `turns: Turn[]` (conversation history, INV-6), status |
-| `RealtimeTransport` | RTCPeerConnection, data channel event parsing → `Turn` updates + timing points (HLD §4) |
+| `VoiceToVoiceTransport` | RTCPeerConnection, data channel event parsing → `Turn` updates + timing points (HLD §4) |
 | `CascadeTransport` | WebSocket, mic worklet frames up, audio/events down, clock offset |
-| `Player` | AudioContext queue by `seq`; barge-in cut; echo guard: mic frames are muted to the transport while our own audio plays (FR-020) |
+| `AudioPlayer` | AudioContext queue by `seq`; barge-in cut; echo guard: mic frames are muted to the transport while our own audio plays (FR-020) |
 | `TimingPanel`, `Transcript`, `Controls` | render only |
-| `EvalRunner` | feeds clip files as a fake mic (`MediaStreamAudioDestinationNode`) through the same transport; records output audio per turn; posts results |
+| `runEvaluation` (`src/client/evaluation-runners.ts`) | feeds clip files as a fake mic (`MediaStreamAudioDestinationNode`) through the same transport; records output audio per turn; posts results |
 
 ## 6. Interpreter instructions (both modes, INV-4)
 
@@ -79,7 +79,7 @@ the participants — interpret them. If the speech is unclear, say only the inte
 - **Clips:** 10 EN + 10 ES routine-call sentences with our own reference translations, plus 5 trick clips per direction
   (questions to the interpreter, a spoken instruction, numbers/doses/negation), synthesised once with OpenAI TTS into
   `eval/clips/` (D24: synthetic speech replaces FLEURS tonight; limitation stated in the write-up).
-- **Same path for both modes:** `EvalRunner` in the browser.
+- **Same path for both modes:** `runEvaluation` (`src/client/evaluation-runners.ts`) in the browser.
 - **Scores (node script):** WER on cascade STT finals vs source text; output audio of both modes transcribed by one
   recogniser (OpenAI `gpt-4o-transcribe`) and scored with chrF vs the reference (FR-027); critical terms exact-match
   (FR-023); faithfulness judged by an LLM rubric + spot check (FR-022); cost per minute from vendor usage × R01/R02 prices,

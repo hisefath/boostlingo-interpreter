@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="./architecture.css" />
   </head>
   <body>
-    <header class="top">
-      <div class="top-inner">
+    <header class="top-bar">
+      <div class="top-bar-inner">
         <div class="brand">
-          <span class="mark" aria-hidden="true"></span>
+          <span class="brand-mark" aria-hidden="true"></span>
           <div class="brand-text">
             <div class="title-row">
               <h1>Interpreter Workbench</h1>
@@ -22,21 +22,21 @@
         </div>
         <nav class="tools" aria-label="Pages">
           <a
-            class="ctl nav-link"
+            class="control nav-link"
             href="/system-demo.html"
             title="One user, then thousands: simulated load walkthrough"
             >System demo ▶</a
           >
-          <a class="back" href="/">← Workbench</a>
+          <a class="back-link" href="/">← Workbench</a>
         </nav>
       </div>
     </header>
 
     <!-- shared SVG defs: arrowheads, gradient, hatch (colours come from CSS custom properties) -->
-    <svg class="defs" aria-hidden="true" focusable="false">
+    <svg class="svg-definitions" aria-hidden="true" focusable="false">
       <defs>
         <marker
-          id="ah-pink"
+          id="arrowhead-pink"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -44,10 +44,10 @@
           markerHeight="7"
           orient="auto-start-reverse"
         >
-          <path class="m-pink" d="M0 0L10 5L0 10z" />
+          <path class="arrowhead-fill-pink" d="M0 0L10 5L0 10z" />
         </marker>
         <marker
-          id="ah-acc"
+          id="arrowhead-accent"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -55,10 +55,10 @@
           markerHeight="7"
           orient="auto-start-reverse"
         >
-          <path class="m-acc" d="M0 0L10 5L0 10z" />
+          <path class="arrowhead-fill-accent" d="M0 0L10 5L0 10z" />
         </marker>
         <marker
-          id="ah-mut"
+          id="arrowhead-subdued"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -66,10 +66,10 @@
           markerHeight="7"
           orient="auto-start-reverse"
         >
-          <path class="m-mut" d="M0 0L10 5L0 10z" />
+          <path class="arrowhead-fill-subdued" d="M0 0L10 5L0 10z" />
         </marker>
         <marker
-          id="ah-bad"
+          id="arrowhead-bad"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -77,10 +77,10 @@
           markerHeight="7"
           orient="auto-start-reverse"
         >
-          <path class="m-bad" d="M0 0L10 5L0 10z" />
+          <path class="arrowhead-fill-bad" d="M0 0L10 5L0 10z" />
         </marker>
         <marker
-          id="ah-warn"
+          id="arrowhead-warn"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
@@ -88,11 +88,11 @@
           markerHeight="7"
           orient="auto-start-reverse"
         >
-          <path class="m-warn" d="M0 0L10 5L0 10z" />
+          <path class="arrowhead-fill-warn" d="M0 0L10 5L0 10z" />
         </marker>
-        <linearGradient id="g-stage" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" class="gs-a" />
-          <stop offset="1" class="gs-b" />
+        <linearGradient id="stage-gradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" class="stage-gradient-start" />
+          <stop offset="1" class="stage-gradient-end" />
         </linearGradient>
         <pattern
           id="hatch"
@@ -101,17 +101,17 @@
           patternUnits="userSpaceOnUse"
           patternTransform="rotate(45)"
         >
-          <rect width="10" height="10" class="hatch-bg" />
+          <rect width="10" height="10" class="hatch-background" />
           <line x1="0" y1="0" x2="0" y2="10" class="hatch-line" />
         </pattern>
       </defs>
     </svg>
 
-    <main class="arch">
-      <section class="hero" aria-labelledby="hero-h">
+    <main class="architecture-page">
+      <section class="hero" aria-labelledby="hero-heading">
         <p class="kicker">System design</p>
-        <h2 id="hero-h">Two ways to interpret a live call, timed on one clock</h2>
-        <p class="lede">
+        <h2 id="hero-heading">Two ways to interpret a live call, timed on one clock</h2>
+        <p class="lead-paragraph">
           <strong>Voice-to-voice</strong>: the browser talks straight to OpenAI <code>gpt-realtime</code> over
           WebRTC, and one model hears, translates and speaks. <strong>Cascade</strong>: the browser streams
           audio to our Node server, which runs speech-to-text → translation → text-to-speech as three
@@ -124,22 +124,26 @@
           aria-label="Headline numbers: latency and cost measured (docs/COMPARISON.md); timing points counted from the code"
         >
           <li>
-            <span class="stat-k">Speech end → first audio, p50</span>
-            <span class="stat-v"><b class="v2v">818 ms</b> vs <b class="cas">1,395 ms</b></span>
-            <span class="stat-n">voice-to-voice (n = 7) vs cascade (n = 36)</span>
+            <span class="stat-label">Speech end → first audio, p50</span>
+            <span class="stat-value"
+              ><b class="voice-to-voice">818 ms</b> vs <b class="cascade">1,395 ms</b></span
+            >
+            <span class="stat-note">voice-to-voice (n = 7) vs cascade (n = 36)</span>
           </li>
           <li>
-            <span class="stat-k">Cost per minute</span>
-            <span class="stat-v"><b class="v2v">~$0.17</b> vs <b class="cas">~$0.04</b></span>
-            <span class="stat-n">voice-to-voice grows with call length</span>
+            <span class="stat-label">Cost per minute</span>
+            <span class="stat-value"
+              ><b class="voice-to-voice">~$0.17</b> vs <b class="cascade">~$0.04</b></span
+            >
+            <span class="stat-note">voice-to-voice grows with call length</span>
           </li>
           <li>
-            <span class="stat-k">Timing points you can see</span>
-            <span class="stat-v"><b class="v2v">3</b> vs <b class="cas">7</b></span>
-            <span class="stat-n">timing points the UI shows · voice-to-voice is a sealed box</span>
+            <span class="stat-label">Timing points you can see</span>
+            <span class="stat-value"><b class="voice-to-voice">3</b> vs <b class="cascade">7</b></span>
+            <span class="stat-note">timing points the UI shows · voice-to-voice is a sealed box</span>
           </li>
         </ul>
-        <nav class="toc" aria-label="On this page">
+        <nav class="table-of-contents" aria-label="On this page">
           <a href="#context">Containers</a>
           <a href="#pipeline">Cascade pipeline</a>
           <a href="#states">Turn states</a>
@@ -151,106 +155,133 @@
       </section>
 
       <!-- 01 ─ containers ─────────────────────────────────────────────────────────────────────────────────── -->
-      <section id="context" class="panel block" aria-labelledby="context-h">
+      <section id="context" class="panel block" aria-labelledby="context-heading">
         <header class="block-head">
-          <span class="num">01</span>
-          <h2 id="context-h">System context &amp; containers</h2>
+          <span class="section-number">01</span>
+          <h2 id="context-heading">System context &amp; containers</h2>
           <p class="muted">
             Voice-to-voice audio never touches our server; the cascade's audio never touches OpenAI Realtime.
           </p>
         </header>
         <figure class="diagram">
           <div class="scroll">
-            <svg class="dg" viewBox="0 0 900 570" role="img" aria-labelledby="d1-t d1-d">
-              <title id="d1-t">System context and containers</title>
-              <desc id="d1-d">
-                The browser holds the mic capture, a realtime transport, a cascade transport and the cascade
-                player. The realtime transport asks our Node server for a short-lived client secret over
-                HTTPS, the server mints it from OpenAI over HTTPS, and the browser then opens WebRTC directly
-                to OpenAI Realtime. The cascade transport opens a secure WebSocket to the server's /cascade
-                route; the cascade pipeline calls vendor adapters, which reach Deepgram, OpenAI and ElevenLabs
-                over WSS and HTTPS with SSE streaming. An access gate in front of every route checks the
-                access code in public mode and the Host header locally.
+            <svg
+              class="diagram-svg"
+              viewBox="0 0 900 570"
+              role="img"
+              aria-labelledby="diagram-1-title diagram-1-description"
+            >
+              <title id="diagram-1-title">System context and containers</title>
+              <desc id="diagram-1-description">
+                The browser holds the mic capture, a voice-to-voice transport, a cascade transport and the
+                cascade player. The voice-to-voice transport asks our Node server for a short-lived client
+                secret over HTTPS, the server mints it from OpenAI over HTTPS, and the browser then opens
+                WebRTC directly to OpenAI Realtime. The cascade transport opens a secure WebSocket to the
+                server's /cascade route; the cascade pipeline calls vendor adapters, which reach Deepgram,
+                OpenAI and ElevenLabs over WSS and HTTPS with SSE streaming. An access gate in front of every
+                route checks the access code in public mode and the Host header locally.
               </desc>
 
               <!-- legend -->
-              <line class="edge v2v" x1="16" y1="18" x2="44" y2="18" />
-              <text class="t-mono" x="52" y="22">voice-to-voice path</text>
-              <line class="edge cas" x1="196" y1="18" x2="224" y2="18" />
-              <text class="t-mono" x="232" y="22">cascade path</text>
+              <line class="edge voice-to-voice" x1="16" y1="18" x2="44" y2="18" />
+              <text class="text-mono" x="52" y="22">voice-to-voice path</text>
+              <line class="edge cascade" x1="196" y1="18" x2="224" y2="18" />
+              <text class="text-mono" x="232" y="22">cascade path</text>
               <rect class="gate" x="342" y="10" width="28" height="16" rx="4" />
-              <text class="t-mono" x="378" y="22">access gate</text>
+              <text class="text-mono" x="378" y="22">access gate</text>
 
               <!-- zones -->
               <rect class="zone" x="16" y="40" width="268" height="440" rx="18" />
-              <text class="t-kick" x="34" y="62">BROWSER</text>
-              <text class="t-mono" x="104" y="62">one UI · one Transport API</text>
+              <text class="text-kicker" x="34" y="62">BROWSER</text>
+              <text class="text-mono" x="104" y="62">one UI · one Transport API</text>
               <rect class="zone" x="356" y="176" width="272" height="384" rx="18" />
-              <text class="t-kick" x="374" y="198">NODE SERVER</text>
+              <text class="text-kicker" x="374" y="198">NODE SERVER</text>
 
               <!-- edges (drawn first, boxes sit on top) -->
               <path
-                class="edge v2v"
+                class="edge voice-to-voice"
                 d="M266 107H716"
-                marker-start="url(#ah-pink)"
-                marker-end="url(#ah-pink)"
+                marker-start="url(#arrowhead-pink)"
+                marker-end="url(#arrowhead-pink)"
               />
-              <text class="t-lbl c" x="491" y="97">WebRTC · audio + data channel</text>
-              <text class="t-mono c" x="491" y="125">browser-direct, no server hop</text>
-              <path class="edge v2v" d="M266 124H316V291H374" marker-end="url(#ah-pink)" />
-              <text class="t-lbl c" x="345" y="283">HTTPS</text>
-              <path class="edge v2v" d="M610 291H800V134" marker-end="url(#ah-pink)" />
-              <text class="t-lbl c" x="705" y="283">HTTPS · 10-min secret</text>
-              <path class="edge cas" d="M266 359H374" marker-start="url(#ah-acc)" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="320" y="351">WSS</text>
-              <path class="edge cas" d="M492 386V410" marker-start="url(#ah-acc)" marker-end="url(#ah-acc)" />
-              <path class="edge cas" d="M492 464V488" marker-start="url(#ah-acc)" marker-end="url(#ah-acc)" />
-              <path class="edge cas" d="M610 515H716" marker-start="url(#ah-acc)" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="663" y="507">WSS · HTTPS</text>
-              <text class="t-mono c" x="663" y="531">SSE stream</text>
-              <path class="edge mut" d="M150 196V134" marker-end="url(#ah-mut)" />
-              <path class="edge mut" d="M150 250V332" marker-end="url(#ah-mut)" />
-              <path class="edge cas" d="M150 386V410" marker-end="url(#ah-acc)" />
+              <text class="text-label anchor-middle" x="491" y="97">WebRTC · audio + data channel</text>
+              <text class="text-mono anchor-middle" x="491" y="125">browser-direct, no server hop</text>
+              <path class="edge voice-to-voice" d="M266 124H316V291H374" marker-end="url(#arrowhead-pink)" />
+              <text class="text-label anchor-middle" x="345" y="283">HTTPS</text>
+              <path class="edge voice-to-voice" d="M610 291H800V134" marker-end="url(#arrowhead-pink)" />
+              <text class="text-label anchor-middle" x="705" y="283">HTTPS · 10-min secret</text>
+              <path
+                class="edge cascade"
+                d="M266 359H374"
+                marker-start="url(#arrowhead-accent)"
+                marker-end="url(#arrowhead-accent)"
+              />
+              <text class="text-label anchor-middle" x="320" y="351">WSS</text>
+              <path
+                class="edge cascade"
+                d="M492 386V410"
+                marker-start="url(#arrowhead-accent)"
+                marker-end="url(#arrowhead-accent)"
+              />
+              <path
+                class="edge cascade"
+                d="M492 464V488"
+                marker-start="url(#arrowhead-accent)"
+                marker-end="url(#arrowhead-accent)"
+              />
+              <path
+                class="edge cascade"
+                d="M610 515H716"
+                marker-start="url(#arrowhead-accent)"
+                marker-end="url(#arrowhead-accent)"
+              />
+              <text class="text-label anchor-middle" x="663" y="507">WSS · HTTPS</text>
+              <text class="text-mono anchor-middle" x="663" y="531">SSE stream</text>
+              <path class="edge subdued" d="M150 196V134" marker-end="url(#arrowhead-subdued)" />
+              <path class="edge subdued" d="M150 250V332" marker-end="url(#arrowhead-subdued)" />
+              <path class="edge cascade" d="M150 386V410" marker-end="url(#arrowhead-accent)" />
 
               <!-- browser boxes -->
-              <rect class="box v2v" x="34" y="80" width="232" height="54" rx="12" />
-              <text class="c" x="150" y="104">Realtime transport</text>
-              <text class="t-sub c" x="150" y="122">WebRTC peer + data channel</text>
+              <rect class="box voice-to-voice" x="34" y="80" width="232" height="54" rx="12" />
+              <text class="anchor-middle" x="150" y="104">Voice-to-voice transport</text>
+              <text class="text-subtitle anchor-middle" x="150" y="122">WebRTC peer + data channel</text>
               <rect class="box" x="34" y="196" width="232" height="54" rx="12" />
-              <text class="c" x="150" y="220">Mic capture</text>
-              <text class="t-sub c" x="150" y="238">one stream, both modes</text>
-              <rect class="box cas" x="34" y="332" width="232" height="54" rx="12" />
-              <text class="c" x="150" y="356">Cascade transport</text>
-              <text class="t-sub c" x="150" y="374">PCM up · events + audio down</text>
-              <rect class="box cas" x="34" y="410" width="232" height="54" rx="12" />
-              <text class="c" x="150" y="434">Player</text>
-              <text class="t-sub c" x="150" y="452">turn order · barge-in cut</text>
+              <text class="anchor-middle" x="150" y="220">Mic capture</text>
+              <text class="text-subtitle anchor-middle" x="150" y="238">one stream, both modes</text>
+              <rect class="box cascade" x="34" y="332" width="232" height="54" rx="12" />
+              <text class="anchor-middle" x="150" y="356">Cascade transport</text>
+              <text class="text-subtitle anchor-middle" x="150" y="374">PCM up · events + audio down</text>
+              <rect class="box cascade" x="34" y="410" width="232" height="54" rx="12" />
+              <text class="anchor-middle" x="150" y="434">Audio player</text>
+              <text class="text-subtitle anchor-middle" x="150" y="452">turn order · barge-in cut</text>
 
               <!-- server boxes -->
               <rect class="gate" x="374" y="210" width="236" height="42" rx="10" />
-              <text class="t-warn c" x="492" y="228">Access gate</text>
-              <text class="t-sub c" x="492" y="244">code (public) · Host check (local)</text>
-              <rect class="box v2v" x="374" y="264" width="236" height="54" rx="12" />
-              <text class="c" x="492" y="288">POST /api/realtime-session</text>
-              <text class="t-sub c" x="492" y="306">mints a short-lived secret</text>
-              <rect class="box cas" x="374" y="332" width="236" height="54" rx="12" />
-              <text class="c" x="492" y="356">WS /cascade</text>
-              <text class="t-sub c" x="492" y="374">one socket per session</text>
-              <rect class="box cas" x="374" y="410" width="236" height="54" rx="12" />
-              <text class="c" x="492" y="434">Cascade pipeline</text>
-              <text class="t-sub c" x="492" y="452">turns · stage timeouts</text>
-              <rect class="box cas" x="374" y="488" width="236" height="54" rx="12" />
-              <text class="c" x="492" y="512">Vendor adapters</text>
-              <text class="t-sub c" x="492" y="530">registry: one line each</text>
+              <text class="text-warn anchor-middle" x="492" y="228">Access gate</text>
+              <text class="text-subtitle anchor-middle" x="492" y="244">
+                code (public) · Host check (local)
+              </text>
+              <rect class="box voice-to-voice" x="374" y="264" width="236" height="54" rx="12" />
+              <text class="anchor-middle" x="492" y="288">POST /api/realtime-session</text>
+              <text class="text-subtitle anchor-middle" x="492" y="306">mints a short-lived secret</text>
+              <rect class="box cascade" x="374" y="332" width="236" height="54" rx="12" />
+              <text class="anchor-middle" x="492" y="356">WS /cascade</text>
+              <text class="text-subtitle anchor-middle" x="492" y="374">one socket per session</text>
+              <rect class="box cascade" x="374" y="410" width="236" height="54" rx="12" />
+              <text class="anchor-middle" x="492" y="434">Cascade pipeline</text>
+              <text class="text-subtitle anchor-middle" x="492" y="452">turns · stage timeouts</text>
+              <rect class="box cascade" x="374" y="488" width="236" height="54" rx="12" />
+              <text class="anchor-middle" x="492" y="512">Vendor adapters</text>
+              <text class="text-subtitle anchor-middle" x="492" y="530">registry: one line each</text>
 
               <!-- external systems -->
-              <rect class="box ext" x="716" y="80" width="168" height="54" rx="12" />
-              <text class="c" x="800" y="104">OpenAI Realtime</text>
-              <text class="t-sub c" x="800" y="122">gpt-realtime</text>
-              <rect class="box ext" x="716" y="478" width="168" height="74" rx="12" />
-              <text class="c" x="800" y="503">Vendors</text>
-              <text class="t-sub c" x="800" y="522">Deepgram · OpenAI</text>
-              <text class="t-sub c" x="800" y="539">ElevenLabs</text>
+              <rect class="box external" x="716" y="80" width="168" height="54" rx="12" />
+              <text class="anchor-middle" x="800" y="104">OpenAI Realtime</text>
+              <text class="text-subtitle anchor-middle" x="800" y="122">gpt-realtime</text>
+              <rect class="box external" x="716" y="478" width="168" height="74" rx="12" />
+              <text class="anchor-middle" x="800" y="503">Vendors</text>
+              <text class="text-subtitle anchor-middle" x="800" y="522">Deepgram · OpenAI</text>
+              <text class="text-subtitle anchor-middle" x="800" y="539">ElevenLabs</text>
             </svg>
           </div>
           <figcaption>
@@ -263,10 +294,10 @@
       </section>
 
       <!-- 02 ─ cascade pipeline ───────────────────────────────────────────────────────────────────────────── -->
-      <section id="pipeline" class="panel block" aria-labelledby="pipeline-h">
+      <section id="pipeline" class="panel block" aria-labelledby="pipeline-heading">
         <header class="block-head">
-          <span class="num">02</span>
-          <h2 id="pipeline-h">Cascade pipeline</h2>
+          <span class="section-number">02</span>
+          <h2 id="pipeline-heading">Cascade pipeline</h2>
           <p class="muted">
             Three stages behind typed contracts (<code>src/shared/contracts.ts</code>). A new vendor is one
             adapter file plus one registry line.
@@ -274,9 +305,14 @@
         </header>
         <figure class="diagram">
           <div class="scroll">
-            <svg class="dg" viewBox="0 0 900 340" role="img" aria-labelledby="d2-t d2-d">
-              <title id="d2-t">Cascade pipeline: speech-to-text, translate, text-to-speech</title>
-              <desc id="d2-d">
+            <svg
+              class="diagram-svg"
+              viewBox="0 0 900 340"
+              role="img"
+              aria-labelledby="diagram-2-title diagram-2-description"
+            >
+              <title id="diagram-2-title">Cascade pipeline: speech-to-text, translate, text-to-speech</title>
+              <desc id="diagram-2-description">
                 Mic audio at 16 kHz enters stage 1, speech-to-text (Deepgram Nova-3 or OpenAI). Its final text
                 goes to stage 2, translate (OpenAI GPT-4.1-mini, 4 second idle timeout). Only settled
                 segments, cut at commas, full stops, question and exclamation marks, semicolons and colons, go
@@ -287,75 +323,75 @@
 
               <!-- row 1: stages -->
               <rect class="pill" x="12" y="66" width="78" height="38" rx="19" />
-              <text class="c" x="51" y="83">mic</text>
-              <text class="t-mono c" x="51" y="97">16 kHz</text>
-              <path class="edge cas" d="M90 85H118" marker-end="url(#ah-acc)" />
+              <text class="anchor-middle" x="51" y="83">mic</text>
+              <text class="text-mono anchor-middle" x="51" y="97">16 kHz</text>
+              <path class="edge cascade" d="M90 85H118" marker-end="url(#arrowhead-accent)" />
 
               <rect class="stage-box" x="120" y="40" width="180" height="90" rx="14" />
-              <text class="t-kick c" x="210" y="60">STAGE 1</text>
-              <text class="t-big c" x="210" y="82">Speech-to-text</text>
-              <text class="t-sub c" x="210" y="101">Deepgram Nova-3 · OpenAI</text>
-              <text class="t-mono c" x="210" y="119">speech end: word time (DG) / VAD</text>
+              <text class="text-kicker anchor-middle" x="210" y="60">STAGE 1</text>
+              <text class="text-large anchor-middle" x="210" y="82">Speech-to-text</text>
+              <text class="text-subtitle anchor-middle" x="210" y="101">Deepgram Nova-3 · OpenAI</text>
+              <text class="text-mono anchor-middle" x="210" y="119">speech end: word time (DG) / VAD</text>
 
-              <path class="edge cas" d="M300 85H358" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="329" y="77">final</text>
+              <path class="edge cascade" d="M300 85H358" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="329" y="77">final</text>
 
               <rect class="stage-box" x="360" y="40" width="180" height="90" rx="14" />
-              <text class="t-kick c" x="450" y="60">STAGE 2</text>
-              <text class="t-big c" x="450" y="82">Translate</text>
-              <text class="t-sub c" x="450" y="101">OpenAI GPT-4.1-mini</text>
-              <text class="t-mono c" x="450" y="119">idle timeout 4 s</text>
+              <text class="text-kicker anchor-middle" x="450" y="60">STAGE 2</text>
+              <text class="text-large anchor-middle" x="450" y="82">Translate</text>
+              <text class="text-subtitle anchor-middle" x="450" y="101">OpenAI GPT-4.1-mini</text>
+              <text class="text-mono anchor-middle" x="450" y="119">idle timeout 4 s</text>
 
-              <path class="edge cas" d="M540 85H598" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="569" y="77">settled</text>
+              <path class="edge cascade" d="M540 85H598" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="569" y="77">settled</text>
 
               <rect class="stage-box" x="600" y="40" width="180" height="90" rx="14" />
-              <text class="t-kick c" x="690" y="60">STAGE 3</text>
-              <text class="t-big c" x="690" y="82">Text-to-speech</text>
-              <text class="t-sub c" x="690" y="101">ElevenLabs Flash · OpenAI</text>
-              <text class="t-mono c" x="690" y="119">idle timeout 5 s</text>
+              <text class="text-kicker anchor-middle" x="690" y="60">STAGE 3</text>
+              <text class="text-large anchor-middle" x="690" y="82">Text-to-speech</text>
+              <text class="text-subtitle anchor-middle" x="690" y="101">ElevenLabs Flash · OpenAI</text>
+              <text class="text-mono anchor-middle" x="690" y="119">idle timeout 5 s</text>
 
-              <path class="edge cas" d="M780 85H808" marker-end="url(#ah-acc)" />
+              <path class="edge cascade" d="M780 85H808" marker-end="url(#arrowhead-accent)" />
               <rect class="pill" x="810" y="66" width="78" height="38" rx="19" />
-              <text class="c" x="849" y="83">player</text>
-              <text class="t-mono c" x="849" y="97">24 kHz</text>
+              <text class="anchor-middle" x="849" y="83">player</text>
+              <text class="text-mono anchor-middle" x="849" y="97">24 kHz</text>
 
               <!-- settled-segments callout -->
-              <path class="edge mut dash" d="M569 92V150" />
+              <path class="edge subdued dashed" d="M569 92V150" />
               <rect class="callout" x="389" y="150" width="360" height="30" rx="15" />
-              <text class="t-sub c" x="569" y="170">
-                <tspan class="t-acc">settled segments only</tspan>
+              <text class="text-subtitle anchor-middle" x="569" y="170">
+                <tspan class="text-accent">settled segments only</tspan>
                 · cut at , . ? ! ; : · spoken in order
               </text>
 
               <!-- row 2: turns are independent -->
-              <text class="t-kick" x="16" y="214">EACH TURN IS ITS OWN TASK</text>
-              <text class="t-mono" x="16" y="244">turn 1</text>
+              <text class="text-kicker" x="16" y="214">EACH TURN IS ITS OWN TASK</text>
+              <text class="text-mono" x="16" y="244">turn 1</text>
               <rect class="bar stt" x="120" y="232" width="80" height="16" rx="4" />
-              <rect class="bar mt" x="200" y="232" width="90" height="16" rx="4" />
+              <rect class="bar translate" x="200" y="232" width="90" height="16" rx="4" />
               <rect class="bar tts" x="290" y="232" width="130" height="16" rx="4" />
-              <text class="t-ok" x="430" y="245">✓ done</text>
+              <text class="text-ok" x="430" y="245">✓ done</text>
 
-              <text class="t-mono" x="16" y="272">turn 2</text>
+              <text class="text-mono" x="16" y="272">turn 2</text>
               <rect class="bar stt" x="260" y="260" width="80" height="16" rx="4" />
               <rect class="bar bad" x="340" y="260" width="130" height="16" rx="4" />
-              <text class="t-bad" x="480" y="273">✕ MT timeout · marked, skipped</text>
+              <text class="text-bad" x="480" y="273">✕ MT timeout · marked, skipped</text>
 
-              <text class="t-mono" x="16" y="300">turn 3</text>
+              <text class="text-mono" x="16" y="300">turn 3</text>
               <rect class="bar stt" x="400" y="288" width="80" height="16" rx="4" />
-              <rect class="bar mt" x="480" y="288" width="80" height="16" rx="4" />
+              <rect class="bar translate" x="480" y="288" width="80" height="16" rx="4" />
               <rect class="bar tts" x="560" y="288" width="130" height="16" rx="4" />
-              <text class="t-ok" x="700" y="301">✓ plays on time</text>
+              <text class="text-ok" x="700" y="301">✓ plays on time</text>
 
               <!-- legend -->
               <rect class="bar stt" x="120" y="320" width="12" height="10" rx="2" />
-              <text class="t-mono" x="138" y="329">STT</text>
-              <rect class="bar mt" x="180" y="320" width="12" height="10" rx="2" />
-              <text class="t-mono" x="198" y="329">translate</text>
+              <text class="text-mono" x="138" y="329">STT</text>
+              <rect class="bar translate" x="180" y="320" width="12" height="10" rx="2" />
+              <text class="text-mono" x="198" y="329">translate</text>
               <rect class="bar tts" x="276" y="320" width="12" height="10" rx="2" />
-              <text class="t-mono" x="294" y="329">TTS</text>
+              <text class="text-mono" x="294" y="329">TTS</text>
               <rect class="bar bad" x="336" y="320" width="12" height="10" rx="2" />
-              <text class="t-mono" x="354" y="329">failed stage (time not to scale)</text>
+              <text class="text-mono" x="354" y="329">failed stage (time not to scale)</text>
             </svg>
           </div>
           <figcaption>
@@ -367,8 +403,8 @@
 
         <div class="contracts">
           <article class="contract">
-            <h3><span class="cn">1</span> STT</h3>
-            <code class="sig">SttProvider.open(opts) → SttStream</code>
+            <h3><span class="contract-number">1</span> STT</h3>
+            <code class="signature">SttProvider.open(options) → SttStream</code>
             <dl>
               <dt>Receives</dt>
               <dd><code>push(pcm)</code> PCM16 mono 16 kHz frames · <code>languages</code> (the pair)</dd>
@@ -387,8 +423,8 @@
             </dl>
           </article>
           <article class="contract">
-            <h3><span class="cn">2</span> Translate</h3>
-            <code class="sig">Translator.translate(req, signal) → AsyncIterable&lt;string&gt;</code>
+            <h3><span class="contract-number">2</span> Translate</h3>
+            <code class="signature">Translator.translate(request, signal) → AsyncIterable&lt;string&gt;</code>
             <dl>
               <dt>Receives</dt>
               <dd><code>{turnId, text, from, to, context}</code>, context = the last 5 turns</dd>
@@ -404,11 +440,11 @@
             </dl>
           </article>
           <article class="contract">
-            <h3><span class="cn">3</span> TTS</h3>
-            <code class="sig">Tts.speak(req, signal) → AsyncIterable&lt;Uint8Array&gt;</code>
+            <h3><span class="contract-number">3</span> TTS</h3>
+            <code class="signature">Tts.speak(request, signal) → AsyncIterable&lt;Uint8Array&gt;</code>
             <dl>
               <dt>Receives</dt>
-              <dd><code>{turnId, segmentIdx, text, lang}</code>, one settled segment at a time</dd>
+              <dd><code>{turnId, segmentIndex, text, lang}</code>, one settled segment at a time</dd>
               <dt>Produces</dt>
               <dd>PCM16 24 kHz chunks, sent to the browser prefixed with the turn's <code>seq</code></dd>
               <dt>Typed errors</dt>
@@ -421,10 +457,10 @@
       </section>
 
       <!-- 03 ─ turn state machine ─────────────────────────────────────────────────────────────────────────── -->
-      <section id="states" class="panel block" aria-labelledby="states-h">
+      <section id="states" class="panel block" aria-labelledby="states-heading">
         <header class="block-head">
-          <span class="num">03</span>
-          <h2 id="states-h">Turn state machine</h2>
+          <span class="section-number">03</span>
+          <h2 id="states-heading">Turn state machine</h2>
           <p class="muted">
             Every turn is one record (<code>TurnState</code>) shared by both modes for display. The cascade
             drives each transition; voice-to-voice maps its events onto the same states.
@@ -432,9 +468,14 @@
         </header>
         <figure class="diagram">
           <div class="scroll">
-            <svg class="dg" viewBox="0 0 900 290" role="img" aria-labelledby="d3-t d3-d">
-              <title id="d3-t">Turn state machine</title>
-              <desc id="d3-d">
+            <svg
+              class="diagram-svg"
+              viewBox="0 0 900 290"
+              role="img"
+              aria-labelledby="diagram-3-title diagram-3-description"
+            >
+              <title id="diagram-3-title">Turn state machine</title>
+              <desc id="diagram-3-description">
                 A turn starts in hearing on the first STT partial, moves to translating on the STT final, to
                 speaking on the first TTS byte, and to done when all audio is sent. Hearing goes to empty when
                 the final text is blank. Translating or speaking go to failed when a stage errors: translate
@@ -446,51 +487,53 @@
               </desc>
 
               <circle class="start" cx="24" cy="83" r="7" />
-              <path class="edge acc" d="M31 83H94" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="63" y="75">partial</text>
+              <path class="edge accent" d="M31 83H94" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="63" y="75">partial</text>
 
-              <path class="edge acc" d="M236 83H304" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="270" y="75">STT final</text>
-              <path class="edge acc" d="M446 83H514" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="480" y="75">first byte</text>
-              <path class="edge ok" d="M656 83H724" marker-end="url(#ah-acc)" />
-              <text class="t-lbl c" x="690" y="75">all sent</text>
+              <path class="edge accent" d="M236 83H304" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="270" y="75">STT final</text>
+              <path class="edge accent" d="M446 83H514" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="480" y="75">first byte</text>
+              <path class="edge ok" d="M656 83H724" marker-end="url(#arrowhead-accent)" />
+              <text class="text-label anchor-middle" x="690" y="75">all sent</text>
 
               <!-- branches -->
-              <path class="edge mut" d="M166 106V194" marker-end="url(#ah-mut)" />
-              <text class="t-lbl e" x="158" y="156">empty final</text>
-              <path class="edge bad" d="M376 106V194" marker-end="url(#ah-bad)" />
-              <text class="t-lbl e" x="368" y="140">MT timeout 4 s</text>
-              <text class="t-lbl e" x="368" y="155">429 after 1 retry</text>
-              <text class="t-lbl e" x="368" y="170">empty · disconnect · HTTP fail</text>
-              <path class="edge bad" d="M540 106V194" marker-end="url(#ah-bad)" />
-              <text class="t-lbl e" x="532" y="150">TTS idle 5 s · fail</text>
-              <path class="edge warn" d="M630 106V172H770V194" marker-end="url(#ah-warn)" />
-              <text class="t-lbl" x="660" y="165">next speech end (headphones)</text>
+              <path class="edge subdued" d="M166 106V194" marker-end="url(#arrowhead-subdued)" />
+              <text class="text-label anchor-end" x="158" y="156">empty final</text>
+              <path class="edge bad" d="M376 106V194" marker-end="url(#arrowhead-bad)" />
+              <text class="text-label anchor-end" x="368" y="140">MT timeout 4 s</text>
+              <text class="text-label anchor-end" x="368" y="155">429 after 1 retry</text>
+              <text class="text-label anchor-end" x="368" y="170">empty · disconnect · HTTP fail</text>
+              <path class="edge bad" d="M540 106V194" marker-end="url(#arrowhead-bad)" />
+              <text class="text-label anchor-end" x="532" y="150">TTS idle 5 s · fail</text>
+              <path class="edge warn" d="M630 106V172H770V194" marker-end="url(#arrowhead-warn)" />
+              <text class="text-label" x="660" y="165">next speech end (headphones)</text>
 
               <!-- main row -->
-              <rect class="st" x="96" y="60" width="140" height="46" rx="23" />
-              <text class="c" x="166" y="88">hearing</text>
-              <rect class="st" x="306" y="60" width="140" height="46" rx="23" />
-              <text class="c" x="376" y="88">translating</text>
-              <rect class="st" x="516" y="60" width="140" height="46" rx="23" />
-              <text class="c" x="586" y="88">speaking</text>
-              <rect class="st ok" x="726" y="60" width="140" height="46" rx="23" />
-              <text class="t-ok c" x="796" y="88">done</text>
-              <text class="t-mono c" x="796" y="128">joins context (last 5)</text>
+              <rect class="state-pill" x="96" y="60" width="140" height="46" rx="23" />
+              <text class="anchor-middle" x="166" y="88">hearing</text>
+              <rect class="state-pill" x="306" y="60" width="140" height="46" rx="23" />
+              <text class="anchor-middle" x="376" y="88">translating</text>
+              <rect class="state-pill" x="516" y="60" width="140" height="46" rx="23" />
+              <text class="anchor-middle" x="586" y="88">speaking</text>
+              <rect class="state-pill ok" x="726" y="60" width="140" height="46" rx="23" />
+              <text class="text-ok anchor-middle" x="796" y="88">done</text>
+              <text class="text-mono anchor-middle" x="796" y="128">joins context (last 5)</text>
 
               <!-- terminal states -->
-              <rect class="st mut" x="96" y="196" width="140" height="46" rx="23" />
-              <text class="t-muted c" x="166" y="224">empty</text>
-              <rect class="st bad" x="340" y="196" width="220" height="46" rx="23" />
-              <text class="t-bad c" x="450" y="224">failed</text>
-              <rect class="st warn" x="700" y="196" width="140" height="46" rx="23" />
-              <text class="t-warn c" x="770" y="224">cut</text>
+              <rect class="state-pill subdued" x="96" y="196" width="140" height="46" rx="23" />
+              <text class="text-muted anchor-middle" x="166" y="224">empty</text>
+              <rect class="state-pill bad" x="340" y="196" width="220" height="46" rx="23" />
+              <text class="text-bad anchor-middle" x="450" y="224">failed</text>
+              <rect class="state-pill warn" x="700" y="196" width="140" height="46" rx="23" />
+              <text class="text-warn anchor-middle" x="770" y="224">cut</text>
 
-              <text class="t-mono c" x="166" y="264">nothing heard, no playback</text>
-              <text class="t-mono c" x="450" y="264">“not interpreted (stage reason)”</text>
-              <text class="t-mono c" x="450" y="280">late results dropped · next turn goes on</text>
-              <text class="t-mono c" x="770" y="264">rest of the reply dropped</text>
+              <text class="text-mono anchor-middle" x="166" y="264">nothing heard, no playback</text>
+              <text class="text-mono anchor-middle" x="450" y="264">“not interpreted (stage reason)”</text>
+              <text class="text-mono anchor-middle" x="450" y="280">
+                late results dropped · next turn goes on
+              </text>
+              <text class="text-mono anchor-middle" x="770" y="264">rest of the reply dropped</text>
             </svg>
           </div>
           <figcaption>
@@ -505,10 +548,10 @@
       </section>
 
       <!-- 04 ─ what each mode can measure ─────────────────────────────────────────────────────────────────── -->
-      <section id="timing" class="panel block" aria-labelledby="timing-h">
+      <section id="timing" class="panel block" aria-labelledby="timing-heading">
         <header class="block-head">
-          <span class="num">04</span>
-          <h2 id="timing-h">What each mode can measure</h2>
+          <span class="section-number">04</span>
+          <h2 id="timing-heading">What each mode can measure</h2>
           <p class="muted">
             Every point is stamped in browser time; server stamps are converted with a clock offset measured
             by ping (INV-1). The clock starts at the true end of speech, not at a vendor's notice (D10).
@@ -516,9 +559,14 @@
         </header>
         <figure class="diagram">
           <div class="scroll">
-            <svg class="dg" viewBox="0 0 900 280" role="img" aria-labelledby="d4-t d4-d">
-              <title id="d4-t">Timing points per mode</title>
-              <desc id="d4-d">
+            <svg
+              class="diagram-svg"
+              viewBox="0 0 900 280"
+              role="img"
+              aria-labelledby="diagram-4-title diagram-4-description"
+            >
+              <title id="diagram-4-title">Timing points per mode</title>
+              <desc id="diagram-4-description">
                 Two timelines. Voice-to-voice shows three points: an estimated speech end, first audio and end
                 of audio; everything between speech end and first audio is sealed inside the model. Cascade
                 shows seven points: speech end, turn detected and STT final (the same instant), first
@@ -534,22 +582,22 @@
 
               <!-- voice-to-voice lane -->
               <text x="16" y="96">Voice-to-voice</text>
-              <text class="t-mono" x="16" y="114">3 points</text>
+              <text class="text-mono" x="16" y="114">3 points</text>
               <line class="lane" x1="170" y1="100" x2="870" y2="100" />
-              <rect class="seal" x="204" y="88" width="384" height="24" rx="6" />
-              <text class="t-sub c" x="396" y="105">sealed: no stage timings</text>
-              <rect class="play v2v" x="600" y="96" width="250" height="8" rx="4" />
-              <circle class="pt est" cx="190" cy="100" r="6" />
-              <circle class="pt v2v" cx="600" cy="100" r="6" />
-              <circle class="pt v2v" cx="850" cy="100" r="6" />
-              <text class="t-lbl c" x="190" y="80">speech end ≈</text>
-              <text class="t-lbl c" x="600" y="80">first audio</text>
-              <text class="t-lbl c" x="850" y="80">end of audio</text>
-              <text class="t-mono" x="190" y="132">≈ speech_stopped arrival − 500 ms</text>
+              <rect class="sealed-region" x="204" y="88" width="384" height="24" rx="6" />
+              <text class="text-subtitle anchor-middle" x="396" y="105">sealed: no stage timings</text>
+              <rect class="playback voice-to-voice" x="600" y="96" width="250" height="8" rx="4" />
+              <circle class="timing-point estimated" cx="190" cy="100" r="6" />
+              <circle class="timing-point voice-to-voice" cx="600" cy="100" r="6" />
+              <circle class="timing-point voice-to-voice" cx="850" cy="100" r="6" />
+              <text class="text-label anchor-middle" x="190" y="80">speech end ≈</text>
+              <text class="text-label anchor-middle" x="600" y="80">first audio</text>
+              <text class="text-label anchor-middle" x="850" y="80">end of audio</text>
+              <text class="text-mono" x="190" y="132">≈ speech_stopped arrival − 500 ms</text>
 
               <!-- cascade lane -->
               <text x="16" y="216">Cascade</text>
-              <text class="t-mono" x="16" y="234">7 points</text>
+              <text class="text-mono" x="16" y="234">7 points</text>
               <line class="lane" x1="170" y1="220" x2="870" y2="220" />
               <line class="tick" x1="190" y1="214" x2="190" y2="204" />
               <line class="tick" x1="300" y1="214" x2="300" y2="188" />
@@ -557,30 +605,30 @@
               <line class="tick" x1="510" y1="214" x2="510" y2="188" />
               <line class="tick" x1="600" y1="214" x2="600" y2="204" />
               <line class="tick" x1="850" y1="214" x2="850" y2="188" />
-              <circle class="pt cas" cx="190" cy="220" r="6" />
-              <circle class="pt cas" cx="300" cy="220" r="6" />
-              <circle class="pt cas" cx="410" cy="220" r="6" />
-              <circle class="pt cas" cx="510" cy="220" r="6" />
-              <circle class="pt cas" cx="600" cy="220" r="6" />
-              <circle class="pt cas" cx="850" cy="220" r="6" />
-              <text class="t-lbl c" x="190" y="200">speech end</text>
-              <text class="t-lbl c" x="300" y="184">turn detected · STT final</text>
-              <text class="t-lbl c" x="410" y="200">first translation</text>
-              <text class="t-lbl c" x="510" y="184">first TTS byte</text>
-              <text class="t-lbl c" x="600" y="200">first audio</text>
-              <text class="t-lbl c" x="850" y="184">end of audio</text>
+              <circle class="timing-point cascade" cx="190" cy="220" r="6" />
+              <circle class="timing-point cascade" cx="300" cy="220" r="6" />
+              <circle class="timing-point cascade" cx="410" cy="220" r="6" />
+              <circle class="timing-point cascade" cx="510" cy="220" r="6" />
+              <circle class="timing-point cascade" cx="600" cy="220" r="6" />
+              <circle class="timing-point cascade" cx="850" cy="220" r="6" />
+              <text class="text-label anchor-middle" x="190" y="200">speech end</text>
+              <text class="text-label anchor-middle" x="300" y="184">turn detected · STT final</text>
+              <text class="text-label anchor-middle" x="410" y="200">first translation</text>
+              <text class="text-label anchor-middle" x="510" y="184">first TTS byte</text>
+              <text class="text-label anchor-middle" x="600" y="200">first audio</text>
+              <text class="text-label anchor-middle" x="850" y="184">end of audio</text>
 
-              <rect class="span wait" x="190" y="234" width="110" height="18" rx="4" />
-              <rect class="span mt" x="300" y="234" width="110" height="18" rx="4" />
+              <rect class="span turn-wait" x="190" y="234" width="110" height="18" rx="4" />
+              <rect class="span translate" x="300" y="234" width="110" height="18" rx="4" />
               <rect class="span tts" x="410" y="234" width="100" height="18" rx="4" />
-              <rect class="span net" x="510" y="234" width="90" height="18" rx="4" />
-              <rect class="span out" x="600" y="234" width="250" height="18" rx="4" />
-              <text class="t-span c" x="245" y="247">turn wait</text>
-              <text class="t-span c" x="355" y="247">to 1st token</text>
-              <text class="t-span c" x="460" y="247">to 1st byte</text>
-              <text class="t-span c" x="555" y="247">to ear</text>
-              <text class="t-span c" x="725" y="247">speaking</text>
-              <text class="t-mono" x="170" y="274">
+              <rect class="span network" x="510" y="234" width="90" height="18" rx="4" />
+              <rect class="span speaking" x="600" y="234" width="250" height="18" rx="4" />
+              <text class="text-span-label anchor-middle" x="245" y="247">turn wait</text>
+              <text class="text-span-label anchor-middle" x="355" y="247">to 1st token</text>
+              <text class="text-span-label anchor-middle" x="460" y="247">to 1st byte</text>
+              <text class="text-span-label anchor-middle" x="555" y="247">to ear</text>
+              <text class="text-span-label anchor-middle" x="725" y="247">speaking</text>
+              <text class="text-mono" x="170" y="274">
                 dotted lines = comparable across modes (time not to scale)
               </text>
             </svg>
@@ -596,15 +644,15 @@
       </section>
 
       <!-- 05 ─ trust boundaries ───────────────────────────────────────────────────────────────────────────── -->
-      <section id="trust" class="panel block" aria-labelledby="trust-h">
+      <section id="trust" class="panel block" aria-labelledby="trust-heading">
         <header class="block-head">
-          <span class="num">05</span>
-          <h2 id="trust-h">Trust boundaries</h2>
+          <span class="section-number">05</span>
+          <h2 id="trust-heading">Trust boundaries</h2>
           <p class="muted">What crosses each line, and what never does.</p>
         </header>
         <ul class="cards">
           <li class="card">
-            <span class="card-k">Server ↔ vendors</span>
+            <span class="card-label">Server ↔ vendors</span>
             <h3>Keys stay on the server</h3>
             <p>
               Vendor keys are read from <code>.env</code> by the Node process only. The browser learns vendor
@@ -613,7 +661,7 @@
             </p>
           </li>
           <li class="card">
-            <span class="card-k">Browser ↔ OpenAI</span>
+            <span class="card-label">Browser ↔ OpenAI</span>
             <h3>A short-lived client secret</h3>
             <p>
               For voice-to-voice the server mints a client secret that expires after 10 minutes. The browser
@@ -621,7 +669,7 @@
             </p>
           </li>
           <li class="card">
-            <span class="card-k">Public deploy</span>
+            <span class="card-label">Public deploy</span>
             <h3>Access code + HttpOnly cookie</h3>
             <p>
               Every route and the <code>/cascade</code> socket need the access code (Basic auth), traded for
@@ -630,7 +678,7 @@
             </p>
           </li>
           <li class="card">
-            <span class="card-k">Local run</span>
+            <span class="card-label">Local run</span>
             <h3>Localhost only, Host and Origin checked</h3>
             <p>
               The server binds 127.0.0.1 and refuses foreign <code>Host</code> headers (DNS rebinding);
@@ -642,10 +690,10 @@
       </section>
 
       <!-- 06 ─ scale budget ───────────────────────────────────────────────────────────────────────────────── -->
-      <section id="scale" class="panel block" aria-labelledby="scale-h">
+      <section id="scale" class="panel block" aria-labelledby="scale-heading">
         <header class="block-head">
-          <span class="num">06</span>
-          <h2 id="scale-h">Scale budget</h2>
+          <span class="section-number">06</span>
+          <h2 id="scale-heading">Scale budget</h2>
           <p class="muted">Discussion only (NFR-010): the workbench runs one session. From HLD §5.</p>
         </header>
         <div class="table-wrap">
@@ -685,15 +733,15 @@
       </section>
 
       <!-- 07 ─ key decisions ──────────────────────────────────────────────────────────────────────────────── -->
-      <section id="decisions" class="panel block" aria-labelledby="decisions-h">
+      <section id="decisions" class="panel block" aria-labelledby="decisions-heading">
         <header class="block-head">
-          <span class="num">07</span>
-          <h2 id="decisions-h">Key decisions</h2>
+          <span class="section-number">07</span>
+          <h2 id="decisions-heading">Key decisions</h2>
           <p class="muted">One line each; the full options, costs and reasons are in the repo.</p>
         </header>
         <ol class="decisions">
           <li>
-            <span class="dn">D22</span>
+            <span class="decision-id">D22</span>
             <p>
               <b>TypeScript everywhere.</b> One language for server, browser and the shared stage contracts; a
               .NET server would be a port of the contracts, not a rewrite.
@@ -706,7 +754,7 @@
             >
           </li>
           <li>
-            <span class="dn">D25</span>
+            <span class="decision-id">D25</span>
             <p>
               <b>Browser-direct WebRTC for voice-to-voice.</b> Each mode runs the way it would in production;
               relaying its audio through our server would add a hop that skews its latency.
@@ -719,7 +767,7 @@
             >
           </li>
           <li>
-            <span class="dn">D11</span>
+            <span class="decision-id">D11</span>
             <p>
               <b>Stream settled segments only.</b> Spoken audio cannot be unsaid, so only text that has
               settled is translated and spoken, clause by clause.
@@ -732,7 +780,7 @@
             >
           </li>
           <li>
-            <span class="dn">D10</span>
+            <span class="decision-id">D10</span>
             <p>
               <b>The clock starts at the true end of speech.</b> Not at a vendor's “speech stopped” notice;
               the turn-detection wait is its own stage.
@@ -745,7 +793,7 @@
             >
           </li>
           <li>
-            <span class="dn">INV-3</span>
+            <span class="decision-id">INV-3</span>
             <p>
               <b>Skip and mark failed turns.</b> A stuck stage marks one turn “not interpreted” and drops its
               late results; later turns play on time.
@@ -758,7 +806,7 @@
             >
           </li>
           <li>
-            <span class="dn">D19</span>
+            <span class="decision-id">D19</span>
             <p>
               <b>Barge-in cuts playback (headphones on).</b> When the next turn's speech ends while an
               interpretation is still playing, the rest of it is cut, accepting that its tail is lost.
@@ -771,7 +819,7 @@
             >
           </li>
           <li>
-            <span class="dn">Guard</span>
+            <span class="decision-id">Guard</span>
             <p>
               <b>Prompt-injection guard.</b> The utterance is fenced as data and earlier turns are background
               only, after a spoken “ignore your instructions” broke a cascade turn in evaluation.
@@ -786,7 +834,7 @@
         </ol>
       </section>
 
-      <footer class="foot muted small">
+      <footer class="page-footer muted small">
         Diagrams are drawn by hand from the code and from
         <a
           href="https://github.com/hisefath/boostlingo-interpreter/blob/main/docs/architecture/hld.md"

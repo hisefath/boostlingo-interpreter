@@ -1,7 +1,7 @@
 // Cascade pipeline: STT finals -> streamed translation -> settled segments -> TTS (lld.md §1–§2, hld.md INV-3/5/6).
 import { ProviderError } from "../shared/contracts.ts";
 import type {
-  Lang,
+  LanguageCode,
   SttFinal,
   SttProvider,
   Stage,
@@ -14,17 +14,18 @@ import type {
 } from "../shared/contracts.ts";
 
 export interface PipelineEvents {
-  turn(u: TurnUpdate): void;
+  turn(update: TurnUpdate): void;
   audio(seq: number, chunk: Uint8Array): void;
   timing(turnId: string, point: TimingPoint, serverT: number, vendor?: string): void;
-  error?(e: ProviderError): void;
+  error?(error: ProviderError): void;
 }
 
 export interface PipelineOptions {
   stt: SttProvider;
   translator: Translator;
   tts: Tts;
-  pair: [Lang, Lang];
+  pair: [LanguageCode, LanguageCode];
+  /** idle timeouts per stage: a stage fails when it produces nothing for this long */
   limits: { translateMs: number; ttsMs: number };
   events: PipelineEvents;
   context?: TurnText[];
@@ -32,129 +33,139 @@ export interface PipelineOptions {
 
 export interface Pipeline {
   pushAudio(pcm: Int16Array): void;
-  setContext(ctx: TurnText[]): void;
+  setContext(context: TurnText[]): void;
   stop(): void;
 }
 
 const CONTEXT_TURNS = 5;
 /** A clause/sentence end followed by whitespace: everything up to it is settled (FR-025). */
-const BOUNDARY = /[,.?!;:](?=\s)/g;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const SETTLED_TEXT_BOUNDARY = /[,.?!;:](?=\s)/g;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function createPipeline(o: PipelineOptions): Pipeline {
-  let context = [...(o.context ?? [])];
+export function createPipeline(options: PipelineOptions): Pipeline {
+  let context = [...(options.context ?? [])];
   let seq = 0;
   let stopped = false;
-  const live = new Set<AbortController>();
-  const other = (l: Lang): Lang => (l === o.pair[0] ? o.pair[1] : o.pair[0]);
+  const activeControllers = new Set<AbortController>();
+  const otherLanguage = (language: LanguageCode): LanguageCode =>
+    language === options.pair[0] ? options.pair[1] : options.pair[0];
 
-  const stream = o.stt.open({
-    languages: [...o.pair],
-    onPartial(p) {
+  const stream = options.stt.open({
+    languages: [...options.pair],
+    onPartial(partial) {
       if (stopped) return;
-      const n = seq + 1;
-      o.events.turn({
-        turnId: `t${n}`,
-        seq: n,
+      const nextSeq = seq + 1;
+      options.events.turn({
+        turnId: `t${nextSeq}`,
+        seq: nextSeq,
         mode: "cascade",
         state: "hearing",
-        from: p.lang,
-        to: other(p.lang),
-        srcText: p.text,
+        from: partial.lang,
+        to: otherLanguage(partial.lang),
+        srcText: partial.text,
       });
     },
-    onFinal(f) {
-      if (!stopped) void runTurn(f);
+    onFinal(final) {
+      if (!stopped) void runTurn(final);
     },
-    onError(e) {
-      o.events.error?.(e);
+    onError(error) {
+      options.events.error?.(error);
     },
   });
 
-  async function runTurn(f: SttFinal) {
-    const n = ++seq;
-    const turnId = `t${n}`;
-    const from = f.lang;
-    const to = other(from);
-    const srcText = f.text.trim();
-    const mine = new Set<AbortController>();
-    let dead = false; // failed or finished: every later result for this turn is dropped (INV-3)
+  async function runTurn(final: SttFinal) {
+    const turnSeq = ++seq;
+    const turnId = `t${turnSeq}`;
+    const from = final.lang;
+    const to = otherLanguage(from);
+    const srcText = final.text.trim();
+    const turnControllers = new Set<AbortController>();
+    let turnClosed = false; // failed or finished: every later result for this turn is dropped (INV-3)
     let state: TurnState = "translating";
-    let tgt = "";
+    let targetText = "";
 
-    const emit = (s: TurnState, extra: Partial<TurnUpdate> = {}) => {
-      if (dead || stopped) return;
-      state = s;
-      o.events.turn({ turnId, seq: n, mode: "cascade", state: s, from, to, srcText, ...extra });
+    const emit = (nextState: TurnState, extra: Partial<TurnUpdate> = {}) => {
+      if (turnClosed || stopped) return;
+      state = nextState;
+      options.events.turn({
+        turnId,
+        seq: turnSeq,
+        mode: "cascade",
+        state: nextState,
+        from,
+        to,
+        srcText,
+        ...extra,
+      });
     };
-    const fail = (e: unknown, st: Stage) => {
-      if (dead) return;
-      const reason = e instanceof ProviderError ? `${e.stage} ${e.kind}` : `${st} failed`;
-      emit("failed", { reason, tgtText: tgt.trim() || undefined });
-      dead = true;
-      for (const ac of mine) ac.abort();
+    const fail = (error: unknown, stage: Stage) => {
+      if (turnClosed) return;
+      const reason = error instanceof ProviderError ? `${error.stage} ${error.kind}` : `${stage} failed`;
+      emit("failed", { reason, tgtText: targetText.trim() || undefined });
+      turnClosed = true;
+      for (const controller of turnControllers) controller.abort();
     };
     /** Runs one stage call with its own AbortController and an idle timeout: the stage fails only when it
-     * produces nothing for `ms` (FR-013); `kick()` on every delta/chunk re-arms it. The race fires even if fn
-     * ignores the signal. */
-    const stage = async (
-      st: Stage,
-      ms: number,
-      fn: (signal: AbortSignal, kick: () => void) => Promise<void>,
+     * produces nothing for `idleTimeoutMs` (FR-013); `resetIdleTimer()` on every delta/chunk re-arms it. The race
+     * fires even if `run` ignores the signal. */
+    const runStage = async (
+      stage: Stage,
+      idleTimeoutMs: number,
+      run: (signal: AbortSignal, resetIdleTimer: () => void) => Promise<void>,
     ) => {
-      const ac = new AbortController();
-      mine.add(ac);
-      live.add(ac);
+      const controller = new AbortController();
+      turnControllers.add(controller);
+      activeControllers.add(controller);
       let timer: ReturnType<typeof setTimeout> | undefined;
-      let reject!: (e: unknown) => void;
-      const timeout = new Promise<never>((_, rej) => (reject = rej));
-      const kick = () => {
+      let reject!: (error: unknown) => void;
+      const timeout = new Promise<never>((_, rejectTimeout) => (reject = rejectTimeout));
+      const resetIdleTimer = () => {
         clearTimeout(timer);
         timer = setTimeout(() => {
-          ac.abort();
-          reject(new ProviderError(st, "timeout"));
-        }, ms);
+          controller.abort();
+          reject(new ProviderError(stage, "timeout"));
+        }, idleTimeoutMs);
       };
-      kick();
+      resetIdleTimer();
       try {
-        await Promise.race([fn(ac.signal, kick), timeout]);
+        await Promise.race([run(controller.signal, resetIdleTimer), timeout]);
       } finally {
         clearTimeout(timer);
-        mine.delete(ac);
-        live.delete(ac);
+        turnControllers.delete(controller);
+        activeControllers.delete(controller);
       }
     };
 
-    o.events.timing(turnId, "speech_end", f.endMs, o.stt.name);
+    options.events.timing(turnId, "speech_end", final.endMs, options.stt.name);
     // In the cascade the final transcript arriving IS the end-of-turn signal (HLD §4: turn-detection wait).
-    o.events.timing(turnId, "turn_detected", Date.now(), o.stt.name);
-    o.events.timing(turnId, "stt_final", Date.now(), o.stt.name);
+    options.events.timing(turnId, "turn_detected", Date.now(), options.stt.name);
+    options.events.timing(turnId, "stt_final", Date.now(), options.stt.name);
     if (!srcText) {
       emit("empty");
-      dead = true;
+      turnClosed = true;
       return;
     }
     emit("translating");
 
     // TTS: settled segments are spoken one after another, in order, while translation continues (FR-004).
     let speaking = Promise.resolve();
-    let segIdx = 0;
+    let nextSegmentIndex = 0;
     let firstByte = false;
     const speak = (text: string) => {
-      const segmentIdx = segIdx++;
+      const segmentIndex = nextSegmentIndex++;
       speaking = speaking.then(async () => {
-        if (dead || stopped) return;
+        if (turnClosed || stopped) return;
         try {
-          await stage("tts", o.limits.ttsMs, async (signal, kick) => {
-            for await (const chunk of o.tts.speak({ turnId, segmentIdx, text, lang: to }, signal)) {
-              if (dead || stopped) return;
-              kick();
+          await runStage("tts", options.limits.ttsMs, async (signal, resetIdleTimer) => {
+            for await (const chunk of options.tts.speak({ turnId, segmentIndex, text, lang: to }, signal)) {
+              if (turnClosed || stopped) return;
+              resetIdleTimer();
               if (!firstByte) {
                 firstByte = true;
-                o.events.timing(turnId, "first_tts_byte", Date.now(), o.tts.name);
-                emit("speaking", { tgtText: tgt.trim() });
+                options.events.timing(turnId, "first_tts_byte", Date.now(), options.tts.name);
+                emit("speaking", { tgtText: targetText.trim() });
               }
-              o.events.audio(n, chunk);
+              options.events.audio(turnSeq, chunk);
             }
           });
         } catch (e) {
@@ -163,37 +174,47 @@ export function createPipeline(o: PipelineOptions): Pipeline {
       });
     };
 
-    let buf = "";
-    const cut = (end: boolean) => {
-      let at = end ? buf.length : -1;
-      if (!end) for (const m of buf.matchAll(BOUNDARY)) at = m.index + 1;
-      if (at <= 0) return;
-      const seg = buf.slice(0, at).trim();
-      buf = buf.slice(at);
-      if (seg) speak(seg);
+    let unspokenText = "";
+    /** Speaks the translated text up to its last settled boundary (or all of it once translation is final). */
+    const speakSettledText = (isFinal: boolean) => {
+      let cutAt = isFinal ? unspokenText.length : -1;
+      if (!isFinal)
+        for (const boundaryMatch of unspokenText.matchAll(SETTLED_TEXT_BOUNDARY))
+          cutAt = boundaryMatch.index + 1;
+      if (cutAt <= 0) return;
+      const segment = unspokenText.slice(0, cutAt).trim();
+      unspokenText = unspokenText.slice(cutAt);
+      if (segment) speak(segment);
     };
 
-    const req = { turnId, text: srcText, from, to, context: context.slice(-CONTEXT_TURNS) };
+    const request = { turnId, text: srcText, from, to, context: context.slice(-CONTEXT_TURNS) };
     try {
       for (let attempt = 0; ; attempt++) {
         try {
-          await stage("translate", o.limits.translateMs, async (signal, kick) => {
-            for await (const delta of o.translator.translate(req, signal)) {
-              if (dead || stopped) return;
-              kick();
-              if (!tgt) o.events.timing(turnId, "first_translation", Date.now(), o.translator.name);
-              tgt += delta;
-              buf += delta;
-              emit(state, { tgtText: tgt.trim() });
-              cut(false);
+          await runStage("translate", options.limits.translateMs, async (signal, resetIdleTimer) => {
+            for await (const delta of options.translator.translate(request, signal)) {
+              if (turnClosed || stopped) return;
+              resetIdleTimer();
+              if (!targetText)
+                options.events.timing(turnId, "first_translation", Date.now(), options.translator.name);
+              targetText += delta;
+              unspokenText += delta;
+              emit(state, { tgtText: targetText.trim() });
+              speakSettledText(false);
             }
           });
           break;
         } catch (e) {
           // FR-012: one retry after the advised wait, only if nothing was streamed yet.
-          if (e instanceof ProviderError && e.kind === "rate_limited" && attempt === 0 && !tgt && !dead) {
-            const wait = Math.min(e.retryAfterMs ?? 1000, o.limits.translateMs);
-            o.events.error?.(
+          if (
+            e instanceof ProviderError &&
+            e.kind === "rate_limited" &&
+            attempt === 0 &&
+            !targetText &&
+            !turnClosed
+          ) {
+            const wait = Math.min(e.retryAfterMs ?? 1000, options.limits.translateMs);
+            options.events.error?.(
               new ProviderError(
                 "translate",
                 "rate_limited",
@@ -206,19 +227,19 @@ export function createPipeline(o: PipelineOptions): Pipeline {
           throw e;
         }
       }
-      if (dead || stopped) return;
-      cut(true);
-      if (!tgt.trim()) throw new ProviderError("translate", "empty");
+      if (turnClosed || stopped) return;
+      speakSettledText(true);
+      if (!targetText.trim()) throw new ProviderError("translate", "empty");
     } catch (e) {
       fail(e, "translate");
       return;
     }
 
     await speaking;
-    if (dead || stopped) return;
-    emit("done", { tgtText: tgt.trim() });
-    dead = true;
-    context.push({ srcText, tgtText: tgt.trim(), from, to });
+    if (turnClosed || stopped) return;
+    emit("done", { tgtText: targetText.trim() });
+    turnClosed = true;
+    context.push({ srcText, tgtText: targetText.trim(), from, to });
     context = context.slice(-CONTEXT_TURNS);
   }
 
@@ -226,14 +247,14 @@ export function createPipeline(o: PipelineOptions): Pipeline {
     pushAudio(pcm) {
       if (!stopped) stream.push(pcm);
     },
-    setContext(ctx) {
-      context = [...ctx];
+    setContext(newContext) {
+      context = [...newContext];
     },
     stop() {
       if (stopped) return;
       stopped = true;
       stream.close();
-      for (const ac of live) ac.abort();
+      for (const controller of activeControllers) controller.abort();
     },
   };
 }

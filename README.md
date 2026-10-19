@@ -71,7 +71,7 @@ Local mode has no password: the server only listens on localhost and refuses oth
 The Eval and 5-minute Soak buttons appear only in the local dev build; the public deployment hides them and refuses uploads.
 
 ```bash
-npx tsx --env-file=.env scripts/eval/make-clips.ts          # synthesise the 36 evaluation clips once (~$0.05)
+npx tsx --env-file=.env scripts/eval/make-evaluation-clips.ts   # synthesise the 36 evaluation clips once (~$0.05)
 # in the app: choose a mode, press "Run eval" (≈6 min per mode) or "Run 5-min soak"
 npx tsx --env-file=.env scripts/eval/score.ts eval/results/*.json   # writes eval/report.md
 ```
