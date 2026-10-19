@@ -77,6 +77,7 @@ const STATIC_TYPES: Record<string, string> = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".json": "application/json",
+  ".wav": "audio/wav",
   ".woff2": "font/woff2",
 };
 

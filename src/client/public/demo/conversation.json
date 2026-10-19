@@ -1,0 +1,58 @@
+[
+  {
+    "id": "d01",
+    "speaker": "Ana",
+    "lang": "en",
+    "text": "Good morning, Riverside Family Clinic, this is Ana. How can I help you?",
+    "voice": "coral"
+  },
+  {
+    "id": "d02",
+    "speaker": "Sra. Gómez",
+    "lang": "es",
+    "text": "Buenos días. Quisiera hacer una cita para mi chequeo anual, por favor.",
+    "voice": "shimmer"
+  },
+  {
+    "id": "d03",
+    "speaker": "Ana",
+    "lang": "en",
+    "text": "Of course. I have Thursday at ten in the morning. Does that work for you?",
+    "voice": "coral"
+  },
+  {
+    "id": "d04",
+    "speaker": "Sra. Gómez",
+    "lang": "es",
+    "text": "Sí, el jueves a las diez está bien. ¿Necesito traer algo?",
+    "voice": "shimmer"
+  },
+  {
+    "id": "d05",
+    "speaker": "Ana",
+    "lang": "en",
+    "text": "Please bring your insurance card and a photo ID. Try to arrive fifteen minutes early.",
+    "voice": "coral"
+  },
+  {
+    "id": "d06",
+    "speaker": "Sra. Gómez",
+    "lang": "es",
+    "text": "Muy bien. Llego a las diez menos cuarto con mi tarjeta del seguro.",
+    "voice": "shimmer"
+  },
+  {
+    "id": "d07",
+    "speaker": "Ana",
+    "lang": "en",
+    "text": "Perfect. Would you like a text message to confirm the appointment?",
+    "voice": "coral"
+  },
+  {
+    "id": "d08",
+    "speaker": "Sra. Gómez",
+    "lang": "es",
+    "text": "Sí, por favor, mándeme un mensaje. Muchas gracias, hasta el jueves.",
+    "voice": "shimmer"
+  }
+]
