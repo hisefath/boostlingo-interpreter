@@ -51,6 +51,17 @@ Local mode has no password: the server only listens on localhost and refuses oth
 - *429 / "no credits"* in a turn: the vendor account is rate-limited or out of credit.
 - *Microphone blocked*: allow it for `localhost` in the browser's site settings, then reload.
 
+## What you can do in the app
+
+- **Language pairs:** English ↔ Spanish, French, Portuguese (Brazil) or Mandarin. Switch before or during a session.
+- **Modes:** Voice-to-voice (OpenAI Realtime) or Cascade (STT → translate → TTS); switch mid-conversation.
+- **▶ Run demo:** plays a scripted 8-turn English/Spanish clinic scheduling call through the active mode, with the
+  original voices audible, so a screen recording captures the whole flow. Works locally and on the deployed site.
+- **Metrics:** a live dashboard (avg / p50 / p90 / p95 / n per mode; "n/a" where a mode cannot observe a stage) above
+  a syntax-highlighted log of every timing event.
+- **Architecture** (`/architecture.html`) and **System demo** (`/system-demo.html`): the system design and a simulated
+  walkthrough from one user to thousands.
+
 ## Evaluate (local only)
 
 The Eval and 5-minute Soak buttons appear only in the local dev build; the public deployment hides them and refuses uploads.

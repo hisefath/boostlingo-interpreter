@@ -80,6 +80,13 @@ Swapping a stage's vendor is a settings change (`STT_PROVIDER`, `TTS_PROVIDER`),
   workbench does not yet reconnect a dropped STT session (see Limits). The deployed default therefore stays on
   Deepgram (36/36) until recovery lands.
 
+**Time to onboard a new language pair (partner metric).** English ↔ French, ↔ Portuguese and ↔ Mandarin were added
+in about 10 minutes of build time (code + tests, 01:58 → 02:08). Each language is one entry in
+`src/shared/languages.ts`; a pair is one line. Mandarin shows the cascade's per-pair routing: Deepgram's multilingual
+model does not cover Chinese, so that pair's speech recognition goes to OpenAI automatically while the other stages
+stay the same. Voice-to-voice gets new pairs for free, but only the ones its single model supports. New pairs are not
+yet scored by the evaluation set (English/Spanish only).
+
 ## Controllability and provider flexibility
 
 | | Voice-to-voice | Cascade |
