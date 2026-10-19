@@ -1,0 +1,251 @@
+/* ---- System Design footer: a mini construction site around the crane ------------------------------------------
+   Four layers, farthest first. Each farther layer mixes the theme accent toward the dark background (greyer, darker,
+   fainter) and a haze gradient sits between layers, so depth comes from atmospheric perspective. All colours derive
+   from --accent / --accent-2 / --bg, so the scene follows whatever theme the page is in. */
+.sd-footer {
+  --cs-far: color-mix(in srgb, var(--accent-2) 9%, #1a1b26);
+  --cs-far-line: color-mix(in srgb, var(--accent-2) 16%, #2a2b38);
+  --cs-far2: color-mix(in srgb, var(--accent-2) 16%, #252632);
+  --cs-mid: color-mix(in srgb, var(--accent-2) 32%, #2e2f3d);
+  --cs-mid-lit: color-mix(in srgb, var(--accent-2) 50%, #3b3c4e);
+  --cs-mid-dk: color-mix(in srgb, var(--accent-2) 18%, #1f2029);
+  --cs-mid-back: color-mix(in srgb, var(--accent-2) 10%, #17181f);
+  position: relative;
+  display: block;
+  height: 300px;
+  margin-top: 104px; /* breathing room under the conversation and terminal panels */
+  padding: 0;
+  overflow: hidden;
+}
+.cs-scene {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 980px; /* fixed size, cropped by the footer: the hero lines up with the scene at every width */
+  height: 300px;
+  margin-left: -490px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+/* the link stands on the scene's ground line (scene y = 270, i.e. 30 px above the bottom) */
+.sd-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  margin-left: -130px;
+}
+
+/* gradient stops */
+.cs-st-bg {
+  stop-color: var(--bg);
+}
+.cs-st-lit {
+  stop-color: var(--accent);
+}
+.cs-st-shade {
+  stop-color: color-mix(in srgb, var(--accent-2) 55%, #2a2b38);
+}
+.cs-st-ground {
+  stop-color: color-mix(in srgb, var(--accent-2) 14%, #1c1d27);
+}
+.cs-st-mid-lit {
+  stop-color: var(--cs-mid-lit);
+}
+.cs-st-mid-dk {
+  stop-color: var(--cs-mid-dk);
+}
+.cs-st-cone-lit {
+  stop-color: color-mix(in srgb, var(--warn) 60%, var(--bad));
+}
+.cs-st-cone-dk {
+  stop-color: color-mix(in srgb, var(--bad) 55%, #2a2b38);
+}
+.cs-st-weight-lit {
+  stop-color: color-mix(in srgb, var(--accent-2) 55%, #3a3b4c);
+}
+.cs-st-weight-dk {
+  stop-color: color-mix(in srgb, var(--accent-2) 22%, #1a1b26);
+}
+
+/* layer 1, farthest: faint, darkest, greyest */
+.cs-l1 {
+  opacity: 0.55;
+}
+.cs-far {
+  fill: var(--cs-far);
+}
+.cs-far-line {
+  fill: none;
+  stroke: var(--cs-far-line);
+  stroke-width: 1.2;
+}
+.cs-win {
+  fill: color-mix(in srgb, var(--accent) 35%, #3a3b4c);
+  opacity: 0.5;
+}
+/* layer 2 */
+.cs-l2 {
+  opacity: 0.8;
+}
+.cs-far2 {
+  fill: var(--cs-far2);
+}
+.cs-far2-line {
+  fill: none;
+  stroke: var(--cs-far2);
+  stroke-width: 2;
+}
+/* layer 3, middle: lit and shadow faces */
+.cs-back {
+  fill: var(--cs-mid-back);
+}
+.cs-side,
+.cs-mid-dk {
+  fill: var(--cs-mid-dk);
+}
+.cs-mid {
+  fill: var(--cs-mid);
+}
+.cs-mid-lit {
+  fill: var(--cs-mid-lit);
+}
+.cs-mid-line,
+.cs-drum-line {
+  fill: none;
+  stroke: var(--cs-mid-lit);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+.cs-drum-line {
+  stroke: var(--cs-mid-dk);
+  stroke-width: 2;
+}
+.cs-glass {
+  fill: color-mix(in srgb, var(--accent) 30%, #2a2b38);
+}
+.cs-tire {
+  fill: #14151c;
+  stroke: var(--cs-mid);
+}
+/* layer 4, near: full theme colour */
+.cs-ground-edge {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-opacity: 0.3;
+}
+.cs-ground-lines {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-opacity: 0.07;
+}
+.cs-board {
+  fill: color-mix(in srgb, var(--accent-2) 30%, #23242f);
+}
+.cs-board-lit {
+  fill: var(--accent);
+  opacity: 0.55;
+}
+.cs-stripe {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+.cs-leg {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent-2) 50%, #2a2b38);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.cs-cone-band {
+  fill: var(--fg);
+  opacity: 0.85;
+}
+.cs-cone-base {
+  fill: color-mix(in srgb, var(--bad) 40%, #2a2b38);
+}
+
+/* hero crane details (keeps the trolley, cable and hook geometry the lift animation depends on) */
+.cs-hero-back path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent-2) 45%, #2a2b38);
+  stroke-width: 0.7;
+}
+.cs-hero-back path:first-child {
+  stroke-width: 1.6;
+}
+.cs-chord {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.cs-bar {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 0.8;
+}
+.sd-crane .sd-lattice {
+  stroke-width: 0.7;
+  opacity: 0.85;
+}
+.sd-crane .sd-tie {
+  stroke-width: 0.6;
+  opacity: 0.55;
+}
+.cs-cab-glass {
+  fill: color-mix(in srgb, #fff 65%, var(--accent-2));
+  opacity: 0.85;
+}
+.cs-wheel {
+  fill: #1a1b26;
+  stroke: var(--accent-2);
+  stroke-width: 0.8;
+}
+
+/* subtle life */
+.cs-beacon {
+  fill: #ff5a6a;
+  animation: cs-blink 1.8s steps(1) infinite;
+}
+.cs-beacon-2 {
+  animation-delay: 0.9s;
+}
+@keyframes cs-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+.cs-dust circle {
+  fill: var(--accent);
+  opacity: 0.35;
+  animation: cs-drift 14s ease-in-out infinite alternate;
+}
+.cs-dust circle:nth-child(2n) {
+  animation-duration: 19s;
+  animation-direction: alternate-reverse;
+}
+.cs-dust circle:nth-child(3n) {
+  animation-duration: 23s;
+}
+@keyframes cs-drift {
+  to {
+    transform: translate(28px, -12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-beacon,
+  .cs-dust circle {
+    animation: none;
+  }
+}
+
+/* phones: drop the far layers; the scene is cropped, never scaled, so nothing overflows */
+@media (max-width: 640px) {
+  .cs-l1,
+  .cs-l2 {
+    display: none;
+  }
+}
