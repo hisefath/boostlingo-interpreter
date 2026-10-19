@@ -94,3 +94,4 @@ several harnesses read it and the repo is public.
 2026-10-19 02:26 CDT ROUTE M6 polish (human): crane spacing + construction scene; mode themes green/purple. DISPATCH M6-T014 scene
 2026-10-19 02:37 CDT VERIFY M6 merged main 00c4892 pushed GitLab+GitHub; Railway SUCCESS
 2026-10-19 02:45 CDT VERIFY M6 main 45aafc8 pushed; Railway SUCCESS
+2026-10-19 11:29 CDT VERIFY M7 main 5bb097f pushed GitLab+GitHub; Railway SUCCESS /api/version 5bb097f
