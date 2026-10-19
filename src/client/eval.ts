@@ -5,7 +5,7 @@ import { capture } from "./capture.ts";
 import { encodeWav, floatToPcm16, toBase64 } from "./lib.ts";
 import { isTerminal, type Session } from "./session.ts";
 
-const GAP_MS = 1500;
+const GAP_MS = 3500; // longer than either mode's turn-detection wait (~1.6 s cascade), so clips never merge
 const TURN_TIMEOUT_MS = 15000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

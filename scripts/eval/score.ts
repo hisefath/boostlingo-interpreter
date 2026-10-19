@@ -94,9 +94,10 @@ async function scoreMode(run: EvalRun, mode: Mode, turns: EvalTurnResult[]) {
     const to = clip.lang === "en" ? "es" : "en";
     // WER only where a real recognition stage exists: voice-to-voice's transcript is a side model's "rough guide" (I-22).
     if (t.srcText && t.mode === "cascade") wers.push(wer(clip.text, t.srcText));
-    // One independent recogniser for both modes (FR-027): no recorded audio means unscored, never the transport's text.
-    if (!t.outputAudioWav) continue;
-    const heard = await transcribe(t.outputAudioWav, to);
+    // D26: score the text each mode actually spoke (cascade: the text sent to TTS; voice-to-voice: the model's own
+    // output transcript). Browser recordings were misaligned across turns tonight, so re-transcription is off.
+    const heard = (t.tgtText ?? "").trim();
+    if (!heard || t.state !== "done") continue;
     chrfs.push(chrF(clip.reference, heard));
     const c = criticalTermHits(clip.criticalTerms, heard);
     hits += c.hits;
@@ -122,7 +123,7 @@ async function scoreMode(run: EvalRun, mode: Mode, turns: EvalTurnResult[]) {
       ["quality", "value"],
       [
         ["WER source (mean, normalised)", fmt(mean(wers), 3)],
-        [`chrF output vs reference (mean, ${RECOGNISER})`, fmt(mean(chrfs), 1)],
+        ["chrF spoken text vs reference (mean, D26)", fmt(mean(chrfs), 1)],
         ["critical terms exact-match", total ? `${hits}/${total} (${fmt((100 * hits) / total, 1)}%)` : "—"],
         [
           "faithful on trick clips",
