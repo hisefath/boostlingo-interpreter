@@ -1,62 +1,74 @@
 // Cascade transport (lld §3, §5): WebSocket /cascade, mic PCM16 16 kHz up, events + seq-prefixed PCM16 24 kHz down.
-import type { ClientMsg, Lang, ServerMsg, TurnText } from "../../shared/contracts.ts";
-import { capture } from "../capture.ts";
-import { clockOffset, floatToPcm16, parseAudioFrame, resample } from "../lib.ts";
-import { Player } from "../player.ts";
+import type { ClientMessage, LanguageCode, ServerMessage, TurnText } from "../../shared/contracts.ts";
+import { captureAudioChunks } from "../audio-capture.ts";
+import {
+  clockOffsetMs,
+  floatToPcm16,
+  parseAudioFrame,
+  resampleFloat32,
+} from "../timing-and-audio-helpers.ts";
+import { AudioPlayer } from "../audio-player.ts";
 import type { Transport, TransportEvents } from "../session.ts";
 
-const UP_RATE = 16000;
+const UPLOAD_SAMPLE_RATE = 16000;
 
 export class CascadeTransport implements Transport {
-  private ws: WebSocket | null = null;
-  private player: Player | null = null;
+  private socket: WebSocket | null = null;
+  private player: AudioPlayer | null = null;
   private stopCapture: (() => void) | null = null;
-  private offset = 0;
-  private bestRtt = Infinity;
-  private pinger: ReturnType<typeof setInterval> | undefined;
+  private clockOffsetMs = 0;
+  private bestRoundTripMs = Infinity;
+  private pingTimer: ReturnType<typeof setInterval> | undefined;
   private stopped = false;
   private reconnected = false;
   private echoGuard = true;
-  private seqOf = new Map<string, number>();
-  private idOf = new Map<number, string>();
+  private seqByTurnId = new Map<string, number>();
+  private turnIdBySeq = new Map<number, string>();
   private context: TurnText[] = [];
   // A reconnect starts a new server pipeline whose seq and turn ids restart; offset them so they never collide.
-  private epoch = 0;
-  private seqBase = 0;
+  private connectionEpoch = 0;
+  private seqOffset = 0;
   private maxSeq = 0;
-  private pair: [Lang, Lang] = ["en", "es"];
+  private pair: [LanguageCode, LanguageCode] = ["en", "es"];
 
-  constructor(private ev: TransportEvents) {}
+  constructor(private events: TransportEvents) {}
 
-  async start(input: MediaStream, context: TurnText[], pair: [Lang, Lang]): Promise<void> {
+  async start(input: MediaStream, context: TurnText[], pair: [LanguageCode, LanguageCode]): Promise<void> {
     this.context = context;
     this.pair = pair;
-    const player = new Player({
-      firstAudio: (seq, t) => this.idOf.has(seq) && this.ev.timing(this.idOf.get(seq)!, "first_audio", t),
-      audioEnd: (seq, t) => this.idOf.has(seq) && this.ev.timing(this.idOf.get(seq)!, "audio_end", t),
-      cut: (seq) => this.idOf.has(seq) && this.ev.turn({ turnId: this.idOf.get(seq)!, state: "cut" }),
+    const player = new AudioPlayer({
+      firstAudio: (seq, atMs) =>
+        this.turnIdBySeq.has(seq) && this.events.timing(this.turnIdBySeq.get(seq)!, "first_audio", atMs),
+      audioEnd: (seq, atMs) =>
+        this.turnIdBySeq.has(seq) && this.events.timing(this.turnIdBySeq.get(seq)!, "audio_end", atMs),
+      cut: (seq) =>
+        this.turnIdBySeq.has(seq) && this.events.turn({ turnId: this.turnIdBySeq.get(seq)!, state: "cut" }),
     });
     this.player = player;
-    await player.ctx.resume();
+    await player.audioContext.resume();
     await this.connect();
-    const block = Math.round(player.ctx.sampleRate / 50); // 20 ms
-    let acc: number[] = [];
-    this.stopCapture = await capture(player.ctx, input, (chunk) => {
-      for (const v of chunk) acc.push(v);
-      while (acc.length >= block) {
-        const frame = resample(Float32Array.from(acc.splice(0, block)), player.ctx.sampleRate, UP_RATE);
+    const samplesPerFrame = Math.round(player.audioContext.sampleRate / 50); // 20 ms
+    let pendingSamples: number[] = [];
+    this.stopCapture = await captureAudioChunks(player.audioContext, input, (chunk) => {
+      for (const sample of chunk) pendingSamples.push(sample);
+      while (pendingSamples.length >= samplesPerFrame) {
+        const frame = resampleFloat32(
+          Float32Array.from(pendingSamples.splice(0, samplesPerFrame)),
+          player.audioContext.sampleRate,
+          UPLOAD_SAMPLE_RATE,
+        );
         // echo guard: send silence (keeps the STT clock running) while our own audio plays
         const pcm = this.echoGuard && player.playing ? new Int16Array(frame.length) : floatToPcm16(frame);
-        if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(pcm as Int16Array<ArrayBuffer>);
+        if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(pcm as Int16Array<ArrayBuffer>);
       }
     });
   }
 
   stop(): void {
     this.stopped = true;
-    clearInterval(this.pinger);
-    if (this.ws?.readyState === WebSocket.OPEN) this.send({ type: "stop" });
-    this.ws?.close();
+    clearInterval(this.pingTimer);
+    if (this.socket?.readyState === WebSocket.OPEN) this.send({ type: "stop" });
+    this.socket?.close();
     this.stopCapture?.();
     this.player?.close();
   }
@@ -69,82 +81,90 @@ export class CascadeTransport implements Transport {
     this.echoGuard = on;
   }
 
-  private send(m: ClientMsg): void {
-    this.ws?.send(JSON.stringify(m));
+  private send(message: ClientMessage): void {
+    this.socket?.send(JSON.stringify(message));
   }
 
   private connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/cascade`);
-      ws.binaryType = "arraybuffer";
-      this.ws = ws;
+      const socket = new WebSocket(
+        `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/cascade`,
+      );
+      socket.binaryType = "arraybuffer";
+      this.socket = socket;
       let opened = false;
-      ws.onopen = () => {
+      socket.onopen = () => {
         opened = true;
         this.send({ type: "start", pair: this.pair, context: this.context });
         const ping = () => this.send({ type: "ping", t: performance.now() });
         ping();
-        clearInterval(this.pinger);
-        this.pinger = setInterval(ping, 5000);
+        clearInterval(this.pingTimer);
+        this.pingTimer = setInterval(ping, 5000);
         resolve();
       };
-      ws.onmessage = (e) =>
-        typeof e.data === "string" ? this.onJson(JSON.parse(e.data)) : this.onAudio(e.data);
-      ws.onclose = () => {
-        clearInterval(this.pinger);
+      socket.onmessage = (event) =>
+        typeof event.data === "string"
+          ? this.onJsonMessage(JSON.parse(event.data))
+          : this.onAudioFrame(event.data);
+      socket.onclose = () => {
+        clearInterval(this.pingTimer);
         if (this.stopped) return;
         if (!opened) return reject(new Error("could not connect to the cascade server"));
-        if (this.reconnected) return this.ev.error("cascade connection lost");
+        if (this.reconnected) return this.events.error("cascade connection lost");
         this.reconnected = true;
-        this.epoch++;
-        this.seqBase = this.maxSeq;
-        this.ev.notice("cascade connection lost, reconnecting…");
+        this.connectionEpoch++;
+        this.seqOffset = this.maxSeq;
+        this.events.notice("cascade connection lost, reconnecting…");
         this.connect().then(
-          () => this.ev.notice("reconnected"),
-          () => this.ev.error("cascade connection lost; reconnect failed"),
+          () => this.events.notice("reconnected"),
+          () => this.events.error("cascade connection lost; reconnect failed"),
         );
       };
     });
   }
 
-  private onAudio(buf: ArrayBuffer): void {
-    const { seq, pcm } = parseAudioFrame(buf);
-    this.player?.push(seq + this.seqBase, pcm);
+  private onAudioFrame(frame: ArrayBuffer): void {
+    const { seq, pcm } = parseAudioFrame(frame);
+    this.player?.push(seq + this.seqOffset, pcm);
   }
 
-  private onJson(m: ServerMsg): void {
+  private onJsonMessage(message: ServerMessage): void {
     const now = performance.now();
-    switch (m.type) {
+    switch (message.type) {
       case "pong": {
-        const rtt = now - m.t;
-        if (rtt <= this.bestRtt) {
-          this.bestRtt = rtt;
-          this.offset = clockOffset(m.t, m.serverT, now);
+        const roundTripMs = now - message.t;
+        if (roundTripMs <= this.bestRoundTripMs) {
+          this.bestRoundTripMs = roundTripMs;
+          this.clockOffsetMs = clockOffsetMs(message.t, message.serverT, now);
         }
         return;
       }
       case "turn": {
-        const { type: _type, ...raw } = m;
-        const u = { ...raw, seq: raw.seq + this.seqBase, turnId: `${this.epoch}-${raw.turnId}` };
-        this.maxSeq = Math.max(this.maxSeq, u.seq);
-        this.seqOf.set(u.turnId, u.seq);
-        this.idOf.set(u.seq, u.turnId);
-        this.ev.turn(u);
-        this.player?.setState(u.seq, u.state);
+        const { type: _type, ...raw } = message;
+        const update = {
+          ...raw,
+          seq: raw.seq + this.seqOffset,
+          turnId: `${this.connectionEpoch}-${raw.turnId}`,
+        };
+        this.maxSeq = Math.max(this.maxSeq, update.seq);
+        this.seqByTurnId.set(update.turnId, update.seq);
+        this.turnIdBySeq.set(update.seq, update.turnId);
+        this.events.turn(update);
+        this.player?.setState(update.seq, update.state);
         return;
       }
       case "timing": {
-        const turnId = `${this.epoch}-${m.turnId}`;
-        this.ev.timing(turnId, m.point, m.serverT - this.offset, m.vendor);
-        const seq = this.seqOf.get(turnId);
+        const turnId = `${this.connectionEpoch}-${message.turnId}`;
+        this.events.timing(turnId, message.point, message.serverT - this.clockOffsetMs, message.vendor);
+        const seq = this.seqByTurnId.get(turnId);
         // barge-in only with headphones: with the echo guard on, the mic is silent while we play, so a new
         // speech end then belongs to speech from before playback. ponytail: no per-turn time comparison.
-        const ended = m.point === "speech_end" || m.point === "stt_final";
+        const ended = message.point === "speech_end" || message.point === "stt_final";
         if (seq !== undefined && ended && !this.echoGuard) this.player?.bargeIn(seq);
         return;
       }
       case "error":
-        this.ev.error(`${m.stage} ${m.kind}: ${m.message}`);
+        this.events.error(`${message.stage} ${message.kind}: ${message.message}`);
         return;
     }
   }

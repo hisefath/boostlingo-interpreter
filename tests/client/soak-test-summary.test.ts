@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  drift,
-  heapGrowthPct,
+  medianDrift,
+  heapGrowthPercent,
   median,
-  soakLine,
+  soakStatusLine,
   summarizeSoak,
   type SoakInput,
-} from "../../src/client/soak.ts";
+} from "../../src/client/soak-test-summary.ts";
 
 // 24 cascade turns: speech_end→first_audio 1500 ms, first_tts_byte→first_audio 100 ms, unless overridden
 const cascadeTurn = (i: number, firstAudio = 1500, lag = 100) => ({
@@ -32,33 +32,33 @@ const healthy = (over: Partial<SoakInput> = {}): SoakInput => ({
   ...over,
 });
 
-describe("median and drift", () => {
+describe("median and medianDrift", () => {
   it("median is the nearest-rank p50 used elsewhere, null when empty", () => {
     expect(median([5, 1, 3])).toBe(3);
     expect(median([4, 1, 3, 2])).toBe(2);
     expect(median([])).toBeNull();
   });
-  it("drift compares the median of the last 5 with the first 5", () => {
-    expect(drift([100, 100, 100, 100, 100, 999, 999, 400, 400, 400, 400, 400])).toBe(300);
-    expect(drift([100, 300])).toBe(200); // short run: one value per end, never overlapping
-    expect(drift([100])).toBeNull();
+  it("medianDrift compares the median of the last 5 with the first 5", () => {
+    expect(medianDrift([100, 100, 100, 100, 100, 999, 999, 400, 400, 400, 400, 400])).toBe(300);
+    expect(medianDrift([100, 300])).toBe(200); // short run: one value per end, never overlapping
+    expect(medianDrift([100])).toBeNull();
   });
 });
 
-describe("heapGrowthPct", () => {
+describe("heapGrowthPercent", () => {
   it("measures from the first sample after warm-up, not the start", () => {
-    expect(heapGrowthPct(flatHeap)).toBe(0);
+    expect(heapGrowthPercent(flatHeap)).toBe(0);
     const grown = [...flatHeap.slice(0, -1), { atMs: 300_000, bytes: 60 * MB }];
-    expect(heapGrowthPct(grown)).toBe(20);
+    expect(heapGrowthPercent(grown)).toBe(20);
   });
   it("falls back to the first sample for a short run and is null without samples", () => {
     expect(
-      heapGrowthPct([
+      heapGrowthPercent([
         { atMs: 0, bytes: 40 * MB },
         { atMs: 30_000, bytes: 44 * MB },
       ]),
     ).toBe(10);
-    expect(heapGrowthPct([])).toBeNull();
+    expect(heapGrowthPercent([])).toBeNull();
   });
 });
 
@@ -78,7 +78,7 @@ describe("summarizeSoak vs NFR-003", () => {
       heapGrowthPct: 0,
       pass: true,
     });
-    expect(soakLine(s, "soak-x")).toMatch(/^Soak PASS \(300 s\) · turns 24\/24 done.*saved as soak-x$/);
+    expect(soakStatusLine(s, "soak-x")).toMatch(/^Soak PASS \(300 s\) · turns 24\/24 done.*saved as soak-x$/);
   });
   it("fails on any disconnect and counts a reconnect, not the reconnect-failed follow-up twice", () => {
     const s = summarizeSoak(

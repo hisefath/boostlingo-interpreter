@@ -1,7 +1,7 @@
 // REQ-12: the vendor-adapter side of the provider boundary (error mapping, PCM chunking, SSE parsing). No network.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderError } from "../../src/shared/contracts.ts";
-import { checkResponse, pcmChunks } from "../../src/server/providers/http.ts";
+import { checkResponse, pcm16Chunks } from "../../src/server/providers/vendor-adapter-helpers.ts";
 import { openaiTranslator } from "../../src/server/providers/translate/openai.ts";
 
 const stream = (parts: Array<number[] | string>) =>
@@ -47,10 +47,11 @@ describe("checkResponse", () => {
   });
 });
 
-describe("pcmChunks", () => {
+describe("pcm16Chunks", () => {
   it("carries an odd byte into the next chunk so a sample is never split", async () => {
     const out: number[][] = [];
-    for await (const c of pcmChunks("tts", new Response(stream([[1, 2, 3], [4, 5], [6]])))) out.push([...c]);
+    for await (const c of pcm16Chunks("tts", new Response(stream([[1, 2, 3], [4, 5], [6]]))))
+      out.push([...c]);
     expect(out).toEqual([
       [1, 2],
       [3, 4],
@@ -61,7 +62,7 @@ describe("pcmChunks", () => {
   it("a body with no whole sample is empty", async () => {
     const e = await rejection(
       (async () => {
-        for await (const _ of pcmChunks("tts", new Response(stream([[7]])))) void _;
+        for await (const _ of pcm16Chunks("tts", new Response(stream([[7]])))) void _;
       })(),
     );
     expect(e).toMatchObject({ stage: "tts", kind: "empty" });
@@ -70,7 +71,7 @@ describe("pcmChunks", () => {
 
 describe("openai translator", () => {
   afterEach(() => vi.unstubAllGlobals());
-  const req = {
+  const request = {
     turnId: "t1",
     text: "Hola.",
     from: "es" as const,
@@ -92,7 +93,7 @@ describe("openai translator", () => {
     ];
     const fetchStub = vi.fn(async () => new Response(stream(sse)));
     vi.stubGlobal("fetch", fetchStub);
-    expect(await collect(openaiTranslator("k").translate(req, new AbortController().signal))).toEqual([
+    expect(await collect(openaiTranslator("k").translate(request, new AbortController().signal))).toEqual([
       "Hello",
       ".",
     ]);
@@ -106,14 +107,14 @@ describe("openai translator", () => {
   it("a network failure -> disconnected; a 429 -> rate_limited", async () => {
     vi.stubGlobal("fetch", async () => Promise.reject(new TypeError("fetch failed")));
     expect(
-      await rejection(collect(openaiTranslator("k").translate(req, new AbortController().signal))),
+      await rejection(collect(openaiTranslator("k").translate(request, new AbortController().signal))),
     ).toMatchObject({
       stage: "translate",
       kind: "disconnected",
     });
     vi.stubGlobal("fetch", async () => new Response(null, { status: 429, headers: { "retry-after": "2" } }));
     expect(
-      await rejection(collect(openaiTranslator("k").translate(req, new AbortController().signal))),
+      await rejection(collect(openaiTranslator("k").translate(request, new AbortController().signal))),
     ).toMatchObject({
       kind: "rate_limited",
       retryAfterMs: 2000,

@@ -4,7 +4,7 @@
 import type { LANGUAGES } from "./languages.ts";
 
 /** a language code from the table in languages.ts */
-export type Lang = keyof typeof LANGUAGES;
+export type LanguageCode = keyof typeof LANGUAGES;
 export type Stage = "stt" | "translate" | "tts";
 export type ErrorKind = "rate_limited" | "timeout" | "empty" | "disconnected" | "failed";
 export type Mode = "realtime" | "cascade";
@@ -24,14 +24,14 @@ export class ProviderError extends Error {
 export interface SttFinal {
   segmentId: string;
   text: string;
-  lang: Lang;
+  lang: LanguageCode;
   /** true end of speech, ms on the pipeline clock (INV-2) */
   endMs: number;
 }
 export interface SttHandlers {
-  onPartial(p: { text: string; lang: Lang }): void;
-  onFinal(f: SttFinal): void;
-  onError(e: ProviderError): void;
+  onPartial(partial: { text: string; lang: LanguageCode }): void;
+  onFinal(final: SttFinal): void;
+  onError(error: ProviderError): void;
 }
 export interface SttStream {
   /** PCM16 mono 16 kHz */
@@ -40,39 +40,39 @@ export interface SttStream {
 }
 export interface SttProvider {
   readonly name: string;
-  open(opts: { languages: Lang[] } & SttHandlers): SttStream;
+  open(options: { languages: LanguageCode[] } & SttHandlers): SttStream;
 }
 
 // ---- Translate: settled source text in, streamed target text out ----------------------------------------
 export interface TurnText {
   srcText: string;
   tgtText: string;
-  from: Lang;
-  to: Lang;
+  from: LanguageCode;
+  to: LanguageCode;
 }
 export interface TranslateRequest {
   turnId: string;
   text: string;
-  from: Lang;
-  to: Lang;
+  from: LanguageCode;
+  to: LanguageCode;
   /** recent turns, oldest first (INV-6) */
   context: TurnText[];
 }
 export interface Translator {
   readonly name: string;
-  translate(req: TranslateRequest, signal: AbortSignal): AsyncIterable<string>;
+  translate(request: TranslateRequest, signal: AbortSignal): AsyncIterable<string>;
 }
 
 // ---- TTS: text segment in, PCM16 24 kHz chunks out -------------------------------------------------------
 export interface TtsRequest {
   turnId: string;
-  segmentIdx: number;
+  segmentIndex: number;
   text: string;
-  lang: Lang;
+  lang: LanguageCode;
 }
 export interface Tts {
   readonly name: string;
-  speak(req: TtsRequest, signal: AbortSignal): AsyncIterable<Uint8Array>;
+  speak(request: TtsRequest, signal: AbortSignal): AsyncIterable<Uint8Array>;
 }
 
 // ---- Turns and timing (shared by both modes for display) -------------------------------------------------
@@ -89,11 +89,12 @@ export type TimingPoint =
 
 export interface TurnUpdate {
   turnId: string;
+  /** turn sequence number (1, 2, 3…), the established protocol name: also the 4-byte prefix of each audio frame */
   seq: number;
   mode: Mode;
   state: TurnState;
-  from: Lang;
-  to: Lang;
+  from: LanguageCode;
+  to: LanguageCode;
   srcText?: string;
   tgtText?: string;
   /** e.g. "translate timeout" when state is failed */
@@ -101,19 +102,21 @@ export interface TurnUpdate {
 }
 
 // ---- Wire protocol: browser <-> server WebSocket /cascade (lld.md §3) -------------------------------------
-export type ClientMsg =
-  { type: "start"; pair: [Lang, Lang]; context: TurnText[] } | { type: "stop" } | { type: "ping"; t: number };
+export type ClientMessage =
+  | { type: "start"; pair: [LanguageCode, LanguageCode]; context: TurnText[] }
+  | { type: "stop" }
+  | { type: "ping"; t: number };
 
-export type ServerMsg =
+export type ServerMessage =
   | { type: "pong"; t: number; serverT: number }
   | ({ type: "turn" } & TurnUpdate)
   | { type: "timing"; turnId: string; point: TimingPoint; serverT: number; vendor?: string }
   | { type: "error"; stage: Stage | "session"; kind: ErrorKind; message: string };
 
 // ---- Evaluation (lld.md §7): clips defined in eval/clips.json, audio in eval/clips/<id>.wav ---------------
-export interface EvalClip {
+export interface EvaluationClip {
   id: string;
-  lang: Lang;
+  lang: LanguageCode;
   text: string;
   /** reference translation into the other language */
   reference: string;
@@ -121,7 +124,7 @@ export interface EvalClip {
   /** terms that must survive exactly (numbers, doses, negations, names) */
   criticalTerms: string[];
 }
-export interface EvalTurnResult {
+export interface EvaluationTurnResult {
   clipId: string;
   mode: Mode;
   /** ms on the browser clock, keyed by timing point */
@@ -132,9 +135,9 @@ export interface EvalTurnResult {
   /** base64 WAV of the interpreted audio, for independent re-transcription */
   outputAudioWav?: string;
 }
-export interface EvalRun {
+export interface EvaluationRun {
   runId: string;
   startedAt: string;
   vendors: Record<Stage | "realtime", string>;
-  turns: EvalTurnResult[];
+  turns: EvaluationTurnResult[];
 }

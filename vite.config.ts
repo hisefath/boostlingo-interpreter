@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": "http://localhost:8787",
-      "/eval/": "http://localhost:8787", // trailing slash: must not catch /eval.ts
+      "/eval/": "http://localhost:8787", // trailing slash: must not catch /evaluation-runners.ts
       "/cascade": { target: "ws://localhost:8787", ws: true },
     },
   },

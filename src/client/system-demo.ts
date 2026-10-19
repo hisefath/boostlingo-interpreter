@@ -1,331 +1,375 @@
-// system-demo.ts — diagram, two walkthroughs and the dashboard. All load numbers come from sim.ts (simulated).
+// system-demo.ts — diagram, two walkthroughs and the dashboard. All load numbers come from load-simulation.ts
+// (simulated).
 import {
-  BASE,
+  BASELINE_LATENCY_MS,
   CASCADE_HOPS,
-  COMPS,
-  NAIVE,
-  SCALED,
-  V2V_HOPS,
-  hopTotal,
-  initSim,
-  step,
-  type CompId,
+  COMPONENT_IDS,
+  NAIVE_DESIGN,
+  SCALED_DESIGN,
+  VOICE_TO_VOICE_HOPS,
+  sumHopLatencyMs,
+  createSimulationState,
+  stepSimulation,
+  type ComponentId,
   type Hop,
   type Snapshot,
-} from "./sim.ts";
+} from "./load-simulation.ts";
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const fmt = (n: number, d = 0) =>
-  n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-const SVG = "http://www.w3.org/2000/svg";
+const byId = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const formatNumber = (value: number, decimals = 0) =>
+  value.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
-const NAME: Record<CompId, string> = {
+const COMPONENT_NAMES: Record<ComponentId, string> = {
   edge: "Edge / LB",
   api: "API instances",
   stt: "STT pool",
-  mt: "MT (translate)",
+  translate: "MT (translate)",
   tts: "TTS pool",
   realtime: "Realtime (v2v)",
   limiter: "Rate limiter",
 };
 
 /* ---- diagram --------------------------------------------------------------------------------------------------- */
-const NODES: { id: string; x: number; y: number; w: number; h: number; lines: string[] }[] = [
-  { id: "metrics", x: 400, y: 14, w: 170, h: 56, lines: ["Metrics + tracing", "per-hop timings, logs"] },
-  { id: "client", x: 14, y: 180, w: 142, h: 72, lines: ["Clients", "browsers"] },
-  { id: "edge", x: 200, y: 180, w: 150, h: 72, lines: ["Edge / LB", "TLS · sticky WS"] },
+const NODES: { id: string; x: number; y: number; width: number; height: number; lines: string[] }[] = [
+  {
+    id: "metrics",
+    x: 400,
+    y: 14,
+    width: 170,
+    height: 56,
+    lines: ["Metrics + tracing", "per-hop timings, logs"],
+  },
+  { id: "client", x: 14, y: 180, width: 142, height: 72, lines: ["Clients", "browsers"] },
+  { id: "edge", x: 200, y: 180, width: 150, height: 72, lines: ["Edge / LB", "TLS · sticky WS"] },
   {
     id: "api",
     x: 395,
     y: 166,
-    w: 180,
-    h: 100,
+    width: 180,
+    height: 100,
     lines: ["Node API ×N", "autoscaled", "token · /cascade WS · turns"],
   },
   {
     id: "limiter",
     x: 620,
     y: 166,
-    w: 170,
-    h: 100,
+    width: 170,
+    height: 100,
     lines: ["Vendor pools", "rate limiter + retry", "budget (Redis)"],
   },
-  { id: "stt", x: 830, y: 56, w: 160, h: 72, lines: ["STT pool", "Deepgram → OpenAI"] },
-  { id: "mt", x: 830, y: 180, w: 160, h: 72, lines: ["MT", "OpenAI GPT-4.1-mini"] },
-  { id: "tts", x: 830, y: 304, w: 160, h: 72, lines: ["TTS pool", "ElevenLabs Flash"] },
-  { id: "realtime", x: 600, y: 352, w: 190, h: 72, lines: ["OpenAI Realtime", "voice-to-voice"] },
+  { id: "stt", x: 830, y: 56, width: 160, height: 72, lines: ["STT pool", "Deepgram → OpenAI"] },
+  { id: "translate", x: 830, y: 180, width: 160, height: 72, lines: ["MT", "OpenAI GPT-4.1-mini"] },
+  { id: "tts", x: 830, y: 304, width: 160, height: 72, lines: ["TTS pool", "ElevenLabs Flash"] },
+  { id: "realtime", x: 600, y: 352, width: 190, height: 72, lines: ["OpenAI Realtime", "voice-to-voice"] },
 ];
-const WIRES: { a: string; b: string; d: string; label?: [number, number, string] }[] = [
-  { a: "client", b: "edge", d: "M156 216H200", label: [178, 206, "WS"] },
-  { a: "edge", b: "api", d: "M350 216H395" },
-  { a: "api", b: "limiter", d: "M575 216H620" },
-  { a: "limiter", b: "stt", d: "M790 196L830 92" },
-  { a: "limiter", b: "mt", d: "M790 216H830" },
-  { a: "limiter", b: "tts", d: "M790 236L830 340" },
-  { a: "api", b: "metrics", d: "M485 166V70" },
-  { a: "api", b: "realtime", d: "M520 266L640 352", label: [500, 318, "mint secret"] },
-  { a: "client", b: "realtime", d: "M85 252V388H600", label: [300, 380, "WebRTC media, direct to vendor"] },
+const WIRES: { from: string; to: string; pathData: string; label?: [number, number, string] }[] = [
+  { from: "client", to: "edge", pathData: "M156 216H200", label: [178, 206, "WS"] },
+  { from: "edge", to: "api", pathData: "M350 216H395" },
+  { from: "api", to: "limiter", pathData: "M575 216H620" },
+  { from: "limiter", to: "stt", pathData: "M790 196L830 92" },
+  { from: "limiter", to: "translate", pathData: "M790 216H830" },
+  { from: "limiter", to: "tts", pathData: "M790 236L830 340" },
+  { from: "api", to: "metrics", pathData: "M485 166V70" },
+  { from: "api", to: "realtime", pathData: "M520 266L640 352", label: [500, 318, "mint secret"] },
+  {
+    from: "client",
+    to: "realtime",
+    pathData: "M85 252V388H600",
+    label: [300, 380, "WebRTC media, direct to vendor"],
+  },
 ];
 
-const diagram = $("diagram") as unknown as SVGSVGElement;
-function el(tag: string, attrs: Record<string, string | number>, text?: string) {
-  const e = document.createElementNS(SVG, tag);
-  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
-  if (text) e.textContent = text;
-  return e;
+const diagram = byId("diagram") as unknown as SVGSVGElement;
+function createSvgElement(tag: string, attributes: Record<string, string | number>, text?: string) {
+  const element = document.createElementNS(SVG_NAMESPACE, tag);
+  for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, String(value));
+  if (text) element.textContent = text;
+  return element;
 }
 function buildDiagram() {
   diagram.append(
-    el("title", { id: "dg-title" }, "Scaled target architecture"),
-    el(
+    createSvgElement("title", { id: "diagram-title" }, "Scaled target architecture"),
+    createSvgElement(
       "desc",
-      { id: "dg-desc" },
+      { id: "diagram-description" },
       "Browsers connect through an edge load balancer to autoscaled Node API instances, which call speech-to-text, " +
         "translation and text-to-speech vendors through per-vendor pools and a shared rate limiter. Voice-to-voice " +
         "audio goes from the browser straight to OpenAI Realtime; the API only mints its client secret. " +
         "All instances report to a metrics and tracing sink.",
     ),
   );
-  for (const w of WIRES) {
-    diagram.append(el("path", { class: "wire", id: `w-${w.a}-${w.b}`, d: w.d }));
-    if (w.label) diagram.append(el("text", { class: "wire-l", x: w.label[0], y: w.label[1] }, w.label[2]));
-  }
-  for (const n of NODES) {
-    const g = el("g", { class: "node", id: `n-${n.id}` });
-    g.append(el("rect", { x: n.x, y: n.y, width: n.w, height: n.h, rx: 14 }));
-    n.lines.forEach((line, i) =>
-      g.append(el("text", { class: i ? "ns" : "nt", x: n.x + 12, y: n.y + 24 + i * 18 }, line)),
+  for (const wire of WIRES) {
+    diagram.append(
+      createSvgElement("path", { class: "wire", id: `wire-${wire.from}-${wire.to}`, d: wire.pathData }),
     );
-    g.append(el("text", { class: "nm", x: n.x + 12, y: n.y + n.h - 10 }));
-    diagram.append(g);
+    if (wire.label)
+      diagram.append(
+        createSvgElement("text", { class: "wire-label", x: wire.label[0], y: wire.label[1] }, wire.label[2]),
+      );
+  }
+  for (const node of NODES) {
+    const group = createSvgElement("g", { class: "node", id: `node-${node.id}` });
+    group.append(
+      createSvgElement("rect", { x: node.x, y: node.y, width: node.width, height: node.height, rx: 14 }),
+    );
+    node.lines.forEach((line, i) =>
+      group.append(
+        createSvgElement(
+          "text",
+          { class: i ? "node-subtitle" : "node-title", x: node.x + 12, y: node.y + 24 + i * 18 },
+          line,
+        ),
+      ),
+    );
+    group.append(
+      createSvgElement("text", { class: "node-metric", x: node.x + 12, y: node.y + node.height - 10 }),
+    );
+    diagram.append(group);
   }
 }
-const node = (id: string) => document.getElementById(`n-${id}`)!;
-const wire = (a: string, b: string) =>
-  document.getElementById(`w-${a}-${b}`) ?? document.getElementById(`w-${b}-${a}`);
+const diagramNode = (id: string) => document.getElementById(`node-${id}`)!;
+const diagramWire = (from: string, to: string) =>
+  document.getElementById(`wire-${from}-${to}`) ?? document.getElementById(`wire-${to}-${from}`);
 function clearDiagram() {
-  diagram.querySelectorAll(".active,.flow").forEach((e) => e.classList.remove("active", "flow"));
-  diagram.querySelectorAll<SVGElement>("[data-heat]").forEach((e) => delete e.dataset.heat);
-  diagram.querySelectorAll(".nm").forEach((e) => (e.textContent = ""));
+  diagram.querySelectorAll(".active,.flow").forEach((element) => element.classList.remove("active", "flow"));
+  diagram.querySelectorAll<SVGElement>("[data-heat]").forEach((element) => delete element.dataset.heat);
+  diagram.querySelectorAll(".node-metric").forEach((element) => (element.textContent = ""));
 }
 
-/* ---- walkthrough A --------------------------------------------------------------------------------------------- */
-let aMode: "cascade" | "v2v" = "cascade";
-let aIdx = -1;
-let aTimer = 0;
-const hops = (): Hop[] => (aMode === "cascade" ? CASCADE_HOPS : V2V_HOPS);
+/* ---- walkthrough A: one user ----------------------------------------------------------------------------------- */
+let oneUserMode: "cascade" | "voice-to-voice" = "cascade";
+let oneUserStepIndex = -1;
+let oneUserTimer = 0;
+const currentHops = (): Hop[] => (oneUserMode === "cascade" ? CASCADE_HOPS : VOICE_TO_VOICE_HOPS);
 
-function renderA() {
-  const hs = hops();
-  const total = hopTotal(hs);
-  const done = hs.slice(0, aIdx + 1).reduce((t, h) => t + h.ms, 0);
-  const big = hs.reduce((a, b) => (b.ms > a.ms ? b : a));
-  if (aIdx >= 0) {
+function renderOneUserWalkthrough() {
+  const hopList = currentHops();
+  const total = sumHopLatencyMs(hopList);
+  const done = hopList.slice(0, oneUserStepIndex + 1).reduce((sum, hop) => sum + hop.latencyMs, 0);
+  const biggestHop = hopList.reduce((a, b) => (b.latencyMs > a.latencyMs ? b : a));
+  if (oneUserStepIndex >= 0) {
     clearDiagram();
-    const h = hs[aIdx];
-    h.path.forEach((id, i) => {
-      node(id).classList.add("active");
-      if (i) wire(h.path[i - 1], id)?.classList.add("flow", "active");
+    const hop = hopList[oneUserStepIndex];
+    hop.path.forEach((id, i) => {
+      diagramNode(id).classList.add("active");
+      if (i) diagramWire(hop.path[i - 1], id)?.classList.add("flow", "active");
     });
   }
-  $("wa-caption").textContent =
-    aIdx < 0
-      ? `Press Play or Next to follow one ${aMode === "cascade" ? "cascade" : "voice-to-voice"} turn from speech end to first audio.`
-      : `Step ${aIdx + 1} of ${hs.length} · ${hs[aIdx].label} · ${fmt(hs[aIdx].ms)} ms (${hs[aIdx].source}). ${hs[aIdx].caption}`;
-  $("wa-bar").replaceChildren(
-    ...hs.map((h, i) => {
-      const s = document.createElement("span");
-      s.style.flexGrow = String(Math.max(h.ms, 1));
-      s.className = i < aIdx ? "done" : i === aIdx ? "now" : "";
-      if (h === big) s.classList.add("big");
-      return s;
+  byId("one-user-walkthrough-caption").textContent =
+    oneUserStepIndex < 0
+      ? `Press Play or Next to follow one ${oneUserMode === "cascade" ? "cascade" : "voice-to-voice"} turn from speech end to first audio.`
+      : `Step ${oneUserStepIndex + 1} of ${hopList.length} · ${hopList[oneUserStepIndex].label} · ${formatNumber(hopList[oneUserStepIndex].latencyMs)} ms (${hopList[oneUserStepIndex].source}). ${hopList[oneUserStepIndex].caption}`;
+  byId("one-user-walkthrough-bar").replaceChildren(
+    ...hopList.map((hop, i) => {
+      const segment = document.createElement("span");
+      segment.style.flexGrow = String(Math.max(hop.latencyMs, 1));
+      segment.className = i < oneUserStepIndex ? "done" : i === oneUserStepIndex ? "now" : "";
+      if (hop === biggestHop) segment.classList.add("big");
+      return segment;
     }),
   );
-  $("wa-hops").replaceChildren(
-    ...hs.map((h, i) => {
-      const li = document.createElement("li");
-      li.className = i < aIdx ? "done" : i === aIdx ? "now" : "";
-      if (i === aIdx) li.setAttribute("aria-current", "step");
-      li.innerHTML = `<span>${h.label}${h.source === "assumed" ? ' <i class="tag tag-sim">assumed</i>' : ""}</span><b>${fmt(h.ms)}<span class="u"> ms</span></b>`;
-      return li;
+  byId("one-user-walkthrough-hops").replaceChildren(
+    ...hopList.map((hop, i) => {
+      const item = document.createElement("li");
+      item.className = i < oneUserStepIndex ? "done" : i === oneUserStepIndex ? "now" : "";
+      if (i === oneUserStepIndex) item.setAttribute("aria-current", "step");
+      item.innerHTML = `<span>${hop.label}${hop.source === "assumed" ? ' <i class="tag tag-simulated">assumed</i>' : ""}</span><b>${formatNumber(hop.latencyMs)}<span class="unit"> ms</span></b>`;
+      return item;
     }),
   );
-  $("wa-total").innerHTML =
-    `First audio: <b>${fmt(done)}</b> of <b>${fmt(total)}</b> ms` +
-    (aMode === "cascade"
+  byId("one-user-walkthrough-total").innerHTML =
+    `First audio: <b>${formatNumber(done)}</b> of <b>${formatNumber(total)}</b> ms` +
+    (oneUserMode === "cascade"
       ? ' <span class="muted small">(sum of stage medians; measured end-to-end p50 1,395 ms)</span>'
       : ' <span class="muted small">(measured p50; p95 944 ms)</span>');
-  $("wa-callout").textContent =
-    aMode === "cascade"
-      ? `Biggest share: ${big.label}, ${fmt(big.ms)} ms of ${fmt(total)} (${Math.round((big.ms / total) * 100)}%). At p95 it is 5,574 ms: Deepgram's multilingual end-of-speech wait, a vendor setting, not load.`
+  byId("one-user-walkthrough-callout").textContent =
+    oneUserMode === "cascade"
+      ? `Biggest share: ${biggestHop.label}, ${formatNumber(biggestHop.latencyMs)} ms of ${formatNumber(total)} (${Math.round((biggestHop.latencyMs / total) * 100)}%). At p95 it is 5,574 ms: Deepgram's multilingual end-of-speech wait, a vendor setting, not load.`
       : "One sealed hop: 818 ms is all of it. Nothing inside can be seen, timed or tuned separately.";
-  $<HTMLButtonElement>("wa-next").disabled = aIdx >= hs.length - 1;
+  byId<HTMLButtonElement>("one-user-walkthrough-next").disabled = oneUserStepIndex >= hopList.length - 1;
 }
-function stopA() {
-  clearInterval(aTimer);
-  aTimer = 0;
-  $("wa-play").textContent = "▶ Play";
+function stopOneUserWalkthrough() {
+  clearInterval(oneUserTimer);
+  oneUserTimer = 0;
+  byId("one-user-walkthrough-play").textContent = "▶ Play";
 }
-function nextA() {
-  if (aIdx === -1) {
-    pauseB();
+function showNextOneUserStep() {
+  if (oneUserStepIndex === -1) {
+    pauseLoadWalkthrough();
     clearDiagram();
   }
-  if (aIdx < hops().length - 1) aIdx++;
-  if (aIdx >= hops().length - 1) stopA();
-  renderA();
+  if (oneUserStepIndex < currentHops().length - 1) oneUserStepIndex++;
+  if (oneUserStepIndex >= currentHops().length - 1) stopOneUserWalkthrough();
+  renderOneUserWalkthrough();
 }
-$("wa-next").addEventListener("click", () => {
-  stopA();
-  nextA();
+byId("one-user-walkthrough-next").addEventListener("click", () => {
+  stopOneUserWalkthrough();
+  showNextOneUserStep();
 });
-$("wa-play").addEventListener("click", () => {
-  if (aTimer) return stopA();
-  if (aIdx >= hops().length - 1) aIdx = -1;
-  $("wa-play").textContent = "❚❚ Pause";
-  nextA();
-  aTimer = window.setInterval(nextA, 1800);
+byId("one-user-walkthrough-play").addEventListener("click", () => {
+  if (oneUserTimer) return stopOneUserWalkthrough();
+  if (oneUserStepIndex >= currentHops().length - 1) oneUserStepIndex = -1;
+  byId("one-user-walkthrough-play").textContent = "❚❚ Pause";
+  showNextOneUserStep();
+  oneUserTimer = window.setInterval(showNextOneUserStep, 1800);
 });
-$("wa-reset").addEventListener("click", () => {
-  stopA();
-  aIdx = -1;
+byId("one-user-walkthrough-reset").addEventListener("click", () => {
+  stopOneUserWalkthrough();
+  oneUserStepIndex = -1;
   clearDiagram();
-  renderA();
+  renderOneUserWalkthrough();
 });
-document.querySelectorAll<HTMLInputElement>('input[name="wa-mode"]').forEach((r) =>
-  r.addEventListener("change", () => {
-    aMode = r.value as typeof aMode;
-    stopA();
-    aIdx = -1;
+document.querySelectorAll<HTMLInputElement>('input[name="one-user-walkthrough-mode"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    oneUserMode = radio.value as typeof oneUserMode;
+    stopOneUserWalkthrough();
+    oneUserStepIndex = -1;
     clearDiagram();
-    renderA();
+    renderOneUserWalkthrough();
   }),
 );
 
-/* ---- walkthrough B --------------------------------------------------------------------------------------------- */
-const SEED = 20261019;
-const END_S = 40; // 30 s ramp + 10 s at peak
+/* ---- walkthrough B: load --------------------------------------------------------------------------------------- */
+const SIMULATION_SEED = 20261019;
+const SIMULATION_END_SECONDS = 40; // 30 s ramp + 10 s at peak
 const TICK_MS = 250;
-let design = SCALED;
-let st = initSim(SEED);
-let snap = step(st, design, 0).snap;
-let bTimer = 0;
+let design = SCALED_DESIGN;
+let simulationState = createSimulationState(SIMULATION_SEED);
+let snapshot = stepSimulation(simulationState, design, 0).snapshot;
+let loadTimer = 0;
 
-const heat = (u: number) => (u >= 0.9 ? "hot" : u >= 0.7 ? "warn" : "ok");
-const pct = (u: number) => (u > 9.99 ? "999%+" : `${fmt(u * 100)}%`);
+const heatLevel = (utilisation: number) => (utilisation >= 0.9 ? "hot" : utilisation >= 0.7 ? "warn" : "ok");
+const formatUtilisation = (utilisation: number) =>
+  utilisation > 9.99 ? "999%+" : `${formatNumber(utilisation * 100)}%`;
 
-function renderB(running: boolean) {
-  const s = snap;
-  if (running || s.t > 0) {
-    for (const id of COMPS) {
-      const c = s.comps[id];
-      const n = node(id);
-      if (!c.present) {
-        n.dataset.heat = "off";
-        n.querySelector(".nm")!.textContent = "not in naive design";
+function renderLoadWalkthrough(running: boolean) {
+  const current = snapshot;
+  if (running || current.elapsedSeconds > 0) {
+    for (const id of COMPONENT_IDS) {
+      const componentMetrics = current.components[id];
+      const nodeElement = diagramNode(id);
+      if (!componentMetrics.present) {
+        nodeElement.dataset.heat = "off";
+        nodeElement.querySelector(".node-metric")!.textContent = "not in naive design";
         continue;
       }
-      n.dataset.heat = heat(c.util);
-      n.querySelector(".nm")!.textContent = `${pct(c.util)} · p95 ${fmt(c.p95)} ms`;
+      nodeElement.dataset.heat = heatLevel(componentMetrics.utilisation);
+      nodeElement.querySelector(".node-metric")!.textContent =
+        `${formatUtilisation(componentMetrics.utilisation)} · p95 ${formatNumber(componentMetrics.p95)} ms`;
     }
-    node("client").querySelector(".nm")!.textContent = `${fmt(s.sessions)} sessions`;
-    for (const w of WIRES) {
-      const on = running && !(w.a === "api" && w.b === "limiter" && !design.scaled);
-      wire(w.a, w.b)?.classList.toggle("flow", on);
+    diagramNode("client").querySelector(".node-metric")!.textContent =
+      `${formatNumber(current.sessions)} sessions`;
+    for (const wire of WIRES) {
+      const on = running && !(wire.from === "api" && wire.to === "limiter" && !design.scaled);
+      diagramWire(wire.from, wire.to)?.classList.toggle("flow", on);
     }
   }
-  $("wb-clock").innerHTML =
-    `<b>t = ${fmt(s.t, 1)} s</b> · <b>${fmt(s.sessions)}</b> sessions · ${fmt(s.instances)} API instance${s.instances > 1 ? "s" : ""}` +
-    (design.scaled && s.sttFailoverShare > 0
-      ? ` · ${fmt(s.sttFailoverShare * 100)}% of STT on failover`
+  byId("load-walkthrough-clock").innerHTML =
+    `<b>t = ${formatNumber(current.elapsedSeconds, 1)} s</b> · <b>${formatNumber(current.sessions)}</b> sessions · ${formatNumber(current.instances)} API instance${current.instances > 1 ? "s" : ""}` +
+    (design.scaled && current.sttFailoverShare > 0
+      ? ` · ${formatNumber(current.sttFailoverShare * 100)}% of STT on failover`
       : "");
-  $("wb-ramp").style.width = `${Math.min(100, (s.sessions / 3000) * 100)}%`;
-  const h = s.comps[s.hottest];
-  const slow = s.slowest;
-  $("wb-callout").innerHTML =
-    (h.util < 0.05
+  byId("load-walkthrough-ramp").style.width = `${Math.min(100, (current.sessions / 3000) * 100)}%`;
+  const hottestMetrics = current.components[current.hottest];
+  const slowestComponent = current.slowest;
+  byId("load-walkthrough-callout").innerHTML =
+    (hottestMetrics.utilisation < 0.05
       ? "Idle at one session. "
-      : `Hottest: <b>${NAME[s.hottest]}</b> at ${pct(h.util)} utilisation. `) +
-    (slow
-      ? `Most simulated latency now: <b>${NAME[slow]}</b> adds +${fmt(s.comps[slow].p95 - BASE[slow][1])} ms at p95` +
-        (s.comps[slow].errs > 0
-          ? `, with ${fmt(s.comps[slow].errs)} rejects/s (429s and retries).`
+      : `Hottest: <b>${COMPONENT_NAMES[current.hottest]}</b> at ${formatUtilisation(hottestMetrics.utilisation)} utilisation. `) +
+    (slowestComponent
+      ? `Most simulated latency now: <b>${COMPONENT_NAMES[slowestComponent]}</b> adds +${formatNumber(current.components[slowestComponent].p95 - BASELINE_LATENCY_MS[slowestComponent][1])} ms at p95` +
+        (current.components[slowestComponent].errorsPerSecond > 0
+          ? `, with ${formatNumber(current.components[slowestComponent].errorsPerSecond)} rejects/s (429s and retries).`
           : " (queueing).")
       : "Load adds under 50 ms anywhere; the biggest fixed cost is still STT turn detection (610 ms p50, 5,574 ms p95, measured).");
-  renderDash(s);
+  renderComponentDashboard(current);
 }
-function tickB() {
-  const dt = (TICK_MS / 1000) * Number($<HTMLSelectElement>("wb-speed").value);
-  ({ state: st, snap } = step(st, design, dt));
-  if (snap.t >= END_S) pauseB();
-  renderB(!!bTimer);
+function tickLoadWalkthrough() {
+  const stepSeconds = (TICK_MS / 1000) * Number(byId<HTMLSelectElement>("load-walkthrough-speed").value);
+  ({ state: simulationState, snapshot } = stepSimulation(simulationState, design, stepSeconds));
+  if (snapshot.elapsedSeconds >= SIMULATION_END_SECONDS) pauseLoadWalkthrough();
+  renderLoadWalkthrough(!!loadTimer);
 }
-function pauseB() {
-  clearInterval(bTimer);
-  bTimer = 0;
-  $("wb-play").textContent = "▶ Play";
-  renderB(false);
+function pauseLoadWalkthrough() {
+  clearInterval(loadTimer);
+  loadTimer = 0;
+  byId("load-walkthrough-play").textContent = "▶ Play";
+  renderLoadWalkthrough(false);
 }
-$("wb-play").addEventListener("click", () => {
-  if (bTimer) return pauseB();
-  stopA();
-  aIdx = -1;
-  renderA();
+byId("load-walkthrough-play").addEventListener("click", () => {
+  if (loadTimer) return pauseLoadWalkthrough();
+  stopOneUserWalkthrough();
+  oneUserStepIndex = -1;
+  renderOneUserWalkthrough();
   clearDiagram();
-  if (snap.t >= END_S) resetB();
-  $("wb-play").textContent = "❚❚ Pause";
-  bTimer = window.setInterval(tickB, TICK_MS);
-  renderB(true);
+  if (snapshot.elapsedSeconds >= SIMULATION_END_SECONDS) resetLoadWalkthrough();
+  byId("load-walkthrough-play").textContent = "❚❚ Pause";
+  loadTimer = window.setInterval(tickLoadWalkthrough, TICK_MS);
+  renderLoadWalkthrough(true);
 });
-function resetB() {
-  clearInterval(bTimer);
-  bTimer = 0;
-  $("wb-play").textContent = "▶ Play";
-  st = initSim(SEED);
-  snap = step(st, design, 0).snap;
+function resetLoadWalkthrough() {
+  clearInterval(loadTimer);
+  loadTimer = 0;
+  byId("load-walkthrough-play").textContent = "▶ Play";
+  simulationState = createSimulationState(SIMULATION_SEED);
+  snapshot = stepSimulation(simulationState, design, 0).snapshot;
   clearDiagram();
-  renderB(false);
+  renderLoadWalkthrough(false);
 }
-$("wb-reset").addEventListener("click", resetB);
-document.querySelectorAll<HTMLInputElement>('input[name="wb-design"]').forEach((r) =>
-  r.addEventListener("change", () => {
-    design = r.value === "naive" ? NAIVE : SCALED;
-    if (!bTimer) resetB();
+byId("load-walkthrough-reset").addEventListener("click", resetLoadWalkthrough);
+document.querySelectorAll<HTMLInputElement>('input[name="load-walkthrough-design"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    design = radio.value === "naive" ? NAIVE_DESIGN : SCALED_DESIGN;
+    if (!loadTimer) resetLoadWalkthrough();
   }),
 );
 
 /* ---- dashboard ------------------------------------------------------------------------------------------------- */
-function renderDash(s: Snapshot) {
-  $("dash-design").textContent = `${design.scaled ? "Scaled design" : "Naive design"} · t = ${fmt(s.t, 1)} s`;
-  $("dash-body").replaceChildren(
-    ...COMPS.map((id) => {
-      const c = s.comps[id];
-      const tr = document.createElement("tr");
-      tr.dataset.heat = c.present ? heat(c.util) : "off";
-      const cells = c.present
-        ? [fmt(c.rps, 1), fmt(c.p50), fmt(c.p95), pct(c.util), fmt(c.queue), fmt(c.errs, 1)]
+function renderComponentDashboard(current: Snapshot) {
+  byId("dashboard-design").textContent =
+    `${design.scaled ? "Scaled design" : "Naive design"} · t = ${formatNumber(current.elapsedSeconds, 1)} s`;
+  byId("dashboard-body").replaceChildren(
+    ...COMPONENT_IDS.map((id) => {
+      const componentMetrics = current.components[id];
+      const row = document.createElement("tr");
+      row.dataset.heat = componentMetrics.present ? heatLevel(componentMetrics.utilisation) : "off";
+      const cells = componentMetrics.present
+        ? [
+            formatNumber(componentMetrics.requestsPerSecond, 1),
+            formatNumber(componentMetrics.p50),
+            formatNumber(componentMetrics.p95),
+            formatUtilisation(componentMetrics.utilisation),
+            formatNumber(componentMetrics.queueLength),
+            formatNumber(componentMetrics.errorsPerSecond, 1),
+          ]
         : ["—", "—", "—", "—", "—", "—"];
-      tr.innerHTML =
-        `<th scope="row"><i class="dot" aria-hidden="true"></i>${NAME[id]}</th>` +
-        cells.map((v) => `<td class="num">${v}</td>`).join("");
-      return tr;
+      row.innerHTML =
+        `<th scope="row"><i class="heat-dot" aria-hidden="true"></i>${COMPONENT_NAMES[id]}</th>` +
+        cells.map((cell) => `<td class="numeric">${cell}</td>`).join("");
+      return row;
     }),
   );
-  const t: [string, string][] = [
-    ["Sessions", fmt(s.sessions)],
+  const totals: [string, string][] = [
+    ["Sessions", formatNumber(current.sessions)],
     [
       "Cascade first audio p50 / p95",
-      `${fmt(s.cascadeP50)} / ${fmt(s.cascadeP95)} <span class="u">ms</span>`,
+      `${formatNumber(current.cascadeP50)} / ${formatNumber(current.cascadeP95)} <span class="unit">ms</span>`,
     ],
-    ["Voice-to-voice first audio p50 / p95", `${fmt(s.v2vP50)} / ${fmt(s.v2vP95)} <span class="u">ms</span>`],
+    [
+      "Voice-to-voice first audio p50 / p95",
+      `${formatNumber(current.voiceToVoiceP50)} / ${formatNumber(current.voiceToVoiceP95)} <span class="unit">ms</span>`,
+    ],
     [
       "Cost estimate",
-      `$${fmt(s.costPerMin, s.costPerMin < 10 ? 2 : 0)}<span class="u">/min</span> <span class="u">($0.040 cascade, ~$0.17 v2v)</span>`,
+      `$${formatNumber(current.costPerMinute, current.costPerMinute < 10 ? 2 : 0)}<span class="unit">/min</span> <span class="unit">($0.040 cascade, ~$0.17 v2v)</span>`,
     ],
   ];
-  $("dash-totals").innerHTML = t.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  byId("dashboard-totals").innerHTML = totals
+    .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
+    .join("");
 }
 
 buildDiagram();
-renderA();
-renderB(false);
+renderOneUserWalkthrough();
+renderLoadWalkthrough(false);

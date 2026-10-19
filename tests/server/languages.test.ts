@@ -2,10 +2,14 @@
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
-import type { Lang, ServerMsg } from "../../src/shared/contracts.ts";
-import { isPair, LANG_CODES, LANGUAGES, PAIRS } from "../../src/shared/languages.ts";
+import type { LanguageCode, ServerMessage } from "../../src/shared/contracts.ts";
+import { isOnboardedPair, LANGUAGE_CODES, LANGUAGES, PAIRS } from "../../src/shared/languages.ts";
 import { createAppServer } from "../../src/server/index.ts";
-import { guessLang, interpreterInstructions, sttPrompt } from "../../src/server/providers/http.ts";
+import {
+  guessLanguage,
+  interpreterInstructions,
+  sttPrompt,
+} from "../../src/server/providers/vendor-adapter-helpers.ts";
 import { createProviders } from "../../src/server/providers/registry.ts";
 import { openaiTranslator } from "../../src/server/providers/translate/openai.ts";
 
@@ -24,28 +28,28 @@ vi.mock("../../src/server/providers/registry.ts", async (orig) => {
 
 describe("language table", () => {
   it("every language is complete; Mandarin and Bengali are outside Deepgram multi", () => {
-    for (const l of LANG_CODES) {
+    for (const l of LANGUAGE_CODES) {
       const x = LANGUAGES[l];
       expect([x.name, x.nativeName, x.sttHint].every((s) => s.length > 0)).toBe(true);
     }
-    expect(LANG_CODES.filter((l) => !LANGUAGES[l].deepgram)).toEqual(["zh", "bn"]);
+    expect(LANGUAGE_CODES.filter((l) => !LANGUAGES[l].deepgram)).toEqual(["zh", "bn"]);
   });
 
   it("onboards en-es, en-fr, en-pt, en-zh, en-bn with ids the UI select can split back into the pair", () => {
     expect(PAIRS.map((p) => p.id)).toEqual(["en-es", "en-fr", "en-pt", "en-zh", "en-bn"]);
     for (const p of PAIRS) {
       expect(p.id.split("-")).toEqual(p.langs);
-      expect(p.langs.every((l) => LANG_CODES.includes(l)) && p.langs[0] !== p.langs[1]).toBe(true);
+      expect(p.langs.every((l) => LANGUAGE_CODES.includes(l)) && p.langs[0] !== p.langs[1]).toBe(true);
     }
     expect(PAIRS[3].label).toBe("English ↔ Mandarin Chinese (中文)");
   });
 });
 
-describe("isPair (trust boundary)", () => {
+describe("isOnboardedPair (trust boundary)", () => {
   it("accepts every onboarded pair in either order", () => {
     for (const { langs } of PAIRS) {
-      expect(isPair(langs)).toBe(true);
-      expect(isPair([langs[1], langs[0]])).toBe(true);
+      expect(isOnboardedPair(langs)).toBe(true);
+      expect(isOnboardedPair([langs[1], langs[0]])).toBe(true);
     }
   });
   it("rejects nonsense and pairs that were never onboarded", () => {
@@ -59,7 +63,7 @@ describe("isPair (trust boundary)", () => {
       null,
       {},
     ])
-      expect(isPair(bad)).toBe(false);
+      expect(isOnboardedPair(bad)).toBe(false);
   });
 });
 
@@ -74,15 +78,15 @@ describe("per-pair STT routing", () => {
       ["en", "es"],
       ["en", "fr"],
       ["en", "pt"],
-    ] as Lang[][])
+    ] as LanguageCode[][])
       expect(createProviders(env, p).stt.name).toBe("deepgram");
     expect(createProviders(env).stt.name).toBe("deepgram");
     expect(createProviders({ ...env, STT_PROVIDER: "openai" }, ["en", "zh"]).stt.name).toBe("openai");
   });
 });
 
-describe("server guessLang within a pair", () => {
-  const cases: [Lang, string, Lang][] = [
+describe("server guessLanguage within a pair", () => {
+  const cases: [LanguageCode, string, LanguageCode][] = [
     ["es", "Necesito cambiar mi cita.", "es"],
     ["es", "I need to change my appointment.", "en"],
     ["fr", "J'ai mal à la poitrine depuis hier.", "fr"],
@@ -97,12 +101,12 @@ describe("server guessLang within a pair", () => {
     ["zh", "Do you have any allergies?", "en"],
   ];
   it.each(cases)("en-%s: %s -> %s", (other, text, want) => {
-    expect(guessLang(text, ["en", other])).toBe(want);
+    expect(guessLanguage(text, ["en", other])).toBe(want);
   });
   it("only ever answers with one of the pair's languages; no evidence -> pair[0]", () => {
-    expect(guessLang("¿Dónde le duele?", ["en", "zh"])).toBe("en");
-    expect(guessLang("", ["en", "fr"])).toBe("en");
-    expect(guessLang("ok", ["fr", "en"])).toBe("fr");
+    expect(guessLanguage("¿Dónde le duele?", ["en", "zh"])).toBe("en");
+    expect(guessLanguage("", ["en", "fr"])).toBe("en");
+    expect(guessLanguage("ok", ["fr", "en"])).toBe("fr");
   });
 });
 
@@ -147,7 +151,7 @@ describe("new pairs flow through the server", () => {
   it("/cascade start accepts en-zh and rejects a pair never onboarded", async () => {
     seen.length = 0;
     const ws = new WebSocket(`ws://${base}/cascade`);
-    const msgs: ServerMsg[] = [];
+    const msgs: ServerMessage[] = [];
     ws.on("message", (d, bin) => !bin && msgs.push(JSON.parse(d.toString())));
     await new Promise((r) => ws.once("open", r));
     ws.send(JSON.stringify({ type: "start", pair: ["en", "zh"], context: [] }));
