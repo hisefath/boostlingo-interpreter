@@ -124,6 +124,10 @@ export function createAppServer(opts: AppOptions = {}): Server {
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
+    if (req.method === "GET" && url.pathname === "/api/version") {
+      // open on purpose (health check + deploy verification); reveals only the commit id
+      return send(res, 200, { sha: env.RAILWAY_GIT_COMMIT_SHA || env.GIT_SHA || "dev" });
+    }
     const auth = authorized(req, code);
     if (!auth) {
       res.writeHead(401, { "www-authenticate": 'Basic realm="Interpreter Workbench", charset="UTF-8"' });
@@ -136,9 +140,6 @@ export function createAppServer(opts: AppOptions = {}): Server {
       );
     }
     try {
-      if (req.method === "GET" && url.pathname === "/api/version") {
-        return send(res, 200, { sha: env.RAILWAY_GIT_COMMIT_SHA || env.GIT_SHA || "dev" });
-      }
       if (req.method === "GET" && url.pathname === "/api/config") {
         const p = createProviders(env);
         return send(res, 200, {
