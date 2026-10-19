@@ -33,9 +33,9 @@ export const CASCADE_HOPS: Hop[] = [
   {
     path: ["stt", "limiter", "api"],
     label: "STT final",
-    ms: 1,
-    source: "measured",
-    caption: "The final transcript arrives about 1 ms after end of turn is declared.",
+    ms: 0,
+    source: "assumed",
+    caption: "The final transcript is the end-of-turn signal itself, so this hop adds no time of its own.",
   },
   {
     path: ["api", "limiter", "mt"],
@@ -66,7 +66,7 @@ export const V2V_HOPS: Hop[] = [
     path: ["client", "edge", "api", "realtime"],
     label: "Session start (once)",
     ms: 0,
-    source: "measured",
+    source: "assumed",
     caption:
       "Once per session, not per turn: the API mints a short-lived client secret, so the vendor key never reaches the browser.",
   },

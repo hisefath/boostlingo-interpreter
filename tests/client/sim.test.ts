@@ -14,7 +14,7 @@ import {
 
 describe("walkthrough A (one user)", () => {
   it("totals the measured hop medians", () => {
-    expect(hopTotal(CASCADE_HOPS)).toBe(20 + 610 + 1 + 496 + 251 + 27);
+    expect(hopTotal(CASCADE_HOPS)).toBe(20 + 610 + 0 + 496 + 251 + 27); // STT final is the end-of-turn signal: 0 ms
     expect(hopTotal(V2V_HOPS)).toBe(818);
   });
   it("turn detection is the biggest cascade share", () => {

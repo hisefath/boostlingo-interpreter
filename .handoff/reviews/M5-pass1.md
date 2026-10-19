@@ -14,3 +14,14 @@
 | R9 | authz AUTH-4 | P3 | cookie is a fixed bearer token until the code rotates | file: rotate ACCESS_CODE to revoke (documented in the handoff) |
 | R10 | static F6 | P3 | cached Basic credentials ride cross-site top-level requests | file: no CORS, so responses (client secrets) are unreadable cross-site; WS needs our origin |
 | R11 | tests F6 | P3 | startup guard (public bind) has no test | file |
+
+## M5 feature reviews (T008–T013), dispositions
+| Task | Verdict | Fixed before merge | Filed |
+|---|---|---|---|
+| T008 header/terminal | pass | dev group hidden from first paint; summary dashes muted | 5 untested label strings |
+| T009 Run demo | pass w/ concerns | Stop usable during demo (`demoing`); clip tools pin EN↔ES | runDemo has no direct test |
+| T010 dashboard | pass | render tests (cell order, dashes, headline) | strict `<` vs PRD `≤` at exactly the target |
+| T011 language pairs | pass | demo/eval/soak pin EN↔ES; STT hint only for zh; "a" in fr/pt words | live fr/pt/zh audio untested (no long runs, per human) |
+| T012 architecture page | pass w/ fixes | barge-in, failure edges, contract error kinds, speech-end source, stat attribution | container diagram omits the SDP POST hop |
+| T013 system demo | pass w/ fixes | "STT final" and "session start" no longer labelled measured | naive-mode hottest-component callout; 8 sim mutants survive; system-demo.ts untested |
+| T005 streaming / T006 recovery | regression found | not merged (branches kept) | REQ-10 / REQ-13 stay partial, documented in COMPARISON.md |
