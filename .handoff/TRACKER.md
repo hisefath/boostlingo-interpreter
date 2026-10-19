@@ -10,7 +10,7 @@ several harnesses read it and the repo is public.
 - **As of:** 2026-10-18 22:50 CDT
 - **In flight:** none
 - **Next:** deadline 2026-10-19 03:00 CDT (~4 h): compressed design card (stack, keys, scope cut) → build → try-it → write-up
-- **Waiting on:** human (stack + keys)
+- **Waiting on:** human fills .env; human says "go" for /plan-design
 - **Verified:** 15b177e `make check` → OK
 
 ## Tasks
@@ -34,6 +34,7 @@ several harnesses read it and the repo is public.
 | 2026-10-14 23:56 CDT | auto-T2 | docs/product/prd.md@d607ae5 | standing rule: Type 2 proceeds (WORKFLOW §5) — D8, D9, D10, D11 |
 | 2026-10-18 22:47 CDT | GI | .handoff/checkpoints/GI-M1.md@3c0eba5 | "Take all your recommendations on the GI card, deadline is <date>." |
 | 2026-10-18 22:50 CDT | GI item 1 (deadline) | .handoff/checkpoints/GI-M1.md@3c0eba5 | "tomorrow 3am" |
+| 2026-10-18 22:55 CDT | GD (compressed, before design) | .handoff/TRACKER.md@8b4dbe0 | "A: TypeScript everywhere — yes" · ".env: create this file for me, with all the var names, and ill populate them. always create file and populate var names you need" · "Keep, full size — keep full size" |
 
 ## Log
 
@@ -52,3 +53,4 @@ several harnesses read it and the repo is public.
 2026-10-14 23:58 CDT VERIFY M1-PP PRD Done-when checks empty after revise; evidence=d607ae5
 2026-10-18 22:47 CDT VERIFY M1-PP GI approved items 2-11 by the human; item 1 (deadline) unanswered
 2026-10-18 22:50 CDT ROUTE M1-PP deadline set to 2026-10-19 03:00 CDT; appetite collapses from 15-20 h to ~4 h; scope cut needed
+2026-10-18 22:55 CDT VERIFY M1 GD answers recorded; .env + .env.example created (names only)

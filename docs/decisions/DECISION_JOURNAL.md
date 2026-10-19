@@ -220,3 +220,21 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 - Cost accepted: 2 h of the appetite · Reversibility: Type 2 two-way · Confidence: med
 - Revisit if: deadline forces cuts (first to cut) · Evidence: card item 11; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I timed how long it took to add a new language pair, the partner's own metric."
 - Review: Topic Product · Weight ●●○ · One-liner: One extra pair, 2 h, in M6.
+
+### D22 TypeScript everywhere: Node server and browser app  [status: accepted]
+- 2026-10-18 22:55 CDT · plan-design (GD, compressed) · M1 · Decided by: human · Proposed by: supervisor (Claude Code, claude-opus-5-5) · .handoff/TRACKER.md@8b4dbe0
+- Context and forces: C-3 / D20 (language is the builder's choice, .NET preferred), REQ-20 (explain the choice); deadline 2026-10-19 03:00 CDT (~4 h).
+- Options: do nothing (no build) · .NET/C# server + TypeScript browser (rejected: +1–2 h tonight; vendor TypeScript SDKs are first-class) · Python server (rejected: no advantage) · TypeScript server and browser (chosen)
+- Choice · Why: we chose TypeScript everywhere over .NET to get one language, first-class vendor SDKs and the shortest path in a 4-hour window, accepting a gap against the partner's stated preference that the write-up explains.
+- Cost accepted: not the partner's preferred backend · Reversibility: Type 1 one-way · Confidence: high
+- Revisit if: the project continues past the deadline (a .NET port of the server is a contained change behind the stage contracts) · Evidence: R02 (vendor SDKs), C-3 · GD 2026-10-18 22:55 CDT: "A: TypeScript everywhere — yes" · Interview line: "With four hours, one language end to end beat matching the preferred backend; the stage contracts make a .NET server a port, not a rewrite."
+- Review: Topic Infrastructure · Weight ●●● · One-liner: TypeScript server and browser; .NET gap explained.
+
+### D23 Scope cut for a 4-hour build  [status: accepted]
+- 2026-10-18 22:55 CDT · plan-design (GD, compressed) · M1 · Decided by: human · Proposed by: supervisor (Claude Code, claude-opus-5-5) · .handoff/TRACKER.md@8b4dbe0
+- Context and forces: deadline 2026-10-19 03:00 CDT; PRD Appetite cut order; D17, D21.
+- Options: do nothing (keep 15–20 h scope; misses the deadline) · cut extra pair (D21), third model (D17), vendor failover, full 40-clip eval; keep ~10 clips + 5 trick clips, recognition-stage vendor comparison, one soak run if time; keep both modes, transcripts, honest timing, failure handling, mode switch and the write-up full size (chosen)
+- Choice · Why: we chose the cut list to ship every required function on time, accepting thinner evidence.
+- Cost accepted: smaller evaluation; D17 and D21 deferred · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: time remains after the write-up · Evidence: PRD Appetite · GD 2026-10-18 22:55 CDT: "keep full size" (read as approving the proposed cut list) · Interview line: "I cut evidence volume, never a required function."
+- Review: Topic Product · Weight ●●○ · One-liner: Ship all required functions; shrink the evaluation.

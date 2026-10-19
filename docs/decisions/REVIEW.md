@@ -9,7 +9,7 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 ## By topic
 
-### Product (11)
+### Product (12)
 
 - ●●● D8 — Routine calls for the demo; high-stakes only to show failures.
 - ●●● D9 — Score faithfulness and critical terms, not just WER and speed.
@@ -17,6 +17,7 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 - ●●○ D10 — Measure from real speech end; show turn-detection wait as a stage.
 - ●●○ D11 — Stream settled segments only; price calls by their real length.
 - ●●○ D21 — One extra pair, 2 h, in M6.
+- ●●○ D23 — Ship all required functions; shrink the evaluation.
 - ●○○ D3 — Detect the speaker's language; no direction button.
 - ●○○ D4 — Median gates the target; p95 is always reported.
 - ●○○ D7 — The comparison is docs/COMPARISON.md, linked from README.
@@ -36,8 +37,9 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 - ●●● D12 — Spend cap $30; tests use fakes.
 
-### Infrastructure (3)
+### Infrastructure (4)
 
+- ●●● D22 — TypeScript server and browser; .NET gap explained.
 - ●●○ D13 — OpenAI + Deepgram + ElevenLabs.
 - ●●○ D14 — Local-only; hosting decided later.
 - ●○○ D20 — Stack decided at the Design check.
@@ -58,6 +60,8 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ### 2026-10-18
 
+- D23 · Product · ●●○ — Ship all required functions; shrink the evaluation.
+- D22 · Infrastructure · ●●● — TypeScript server and browser; .NET gap explained.
 - D21 · Product · ●●○ — One extra pair, 2 h, in M6.
 - D20 · Infrastructure · ●○○ — Stack decided at the Design check.
 - D19 · Product · ●○○ — Barge-in stops playback.
