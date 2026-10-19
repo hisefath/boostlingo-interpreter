@@ -119,3 +119,71 @@ describe("ws /cascade", () => {
     expect(frames[0].length).toBeGreaterThan(4);
   });
 });
+
+describe("public mode (ACCESS_CODE)", () => {
+  const dist = mkdtempSync(join(tmpdir(), "dist-"));
+  writeFileSync(join(dist, "index.html"), "<!doctype html><title>wb</title>");
+  const pub = createAppServer({
+    env: { ...env, ACCESS_CODE: "s3cret", GIT_SHA: "abc1234" },
+    evalDir,
+    staticDir: dist,
+  });
+  let pbase = "";
+  beforeAll(async () => {
+    await new Promise<void>((r) => pub.listen(0, "127.0.0.1", r));
+    pbase = `127.0.0.1:${(pub.address() as AddressInfo).port}`;
+  });
+  afterAll(() => pub.close());
+  const basic = (pw: string) => ({ authorization: `Basic ${Buffer.from(`any:${pw}`).toString("base64")}` });
+
+  it("asks for the access code before anything, including the client-secret route", async () => {
+    for (const [m, path] of [
+      ["GET", "/"],
+      ["GET", "/api/config"],
+      ["POST", "/api/realtime-session"],
+    ]) {
+      const r = await fetch(`http://${pbase}${path}`, { method: m });
+      expect(r.status).toBe(401);
+      expect(r.headers.get("www-authenticate")).toMatch(/^Basic/);
+    }
+    expect((await fetch(`http://${pbase}/`, { headers: basic("wrong") })).status).toBe(401);
+  });
+
+  it("the right code serves the app and sets an HttpOnly Secure cookie that works on its own", async () => {
+    const r = await fetch(`http://${pbase}/`, { headers: basic("s3cret") });
+    expect(r.status).toBe(200);
+    expect(await r.text()).toContain("<title>wb</title>");
+    const cookie = r.headers.get("set-cookie") ?? "";
+    expect(cookie).toMatch(/HttpOnly/);
+    expect(cookie).toMatch(/Secure/);
+    const v = await fetch(`http://${pbase}/api/version`, { headers: { cookie: cookie.split(";")[0] } });
+    expect(await v.json()).toEqual({ sha: "abc1234" });
+  });
+
+  it("never serves files outside dist", async () => {
+    const r = await fetch(`http://${pbase}/..%2Fpackage.json`, { headers: basic("s3cret") });
+    expect(r.status).toBe(404);
+  });
+
+  it("rejects a /cascade WebSocket without the code, accepts it with the cookie", async () => {
+    const tryWs = (headers: Record<string, string>) =>
+      new Promise<string>((r) => {
+        const ws = new WebSocket(`ws://${pbase}/cascade`, { headers });
+        ws.on("unexpected-response", (_q, res) => r(String(res.statusCode)));
+        ws.on("open", () => (ws.close(), r("open")));
+        ws.on("error", () => r("error"));
+      });
+    expect(await tryWs({})).toBe("401");
+    const r = await fetch(`http://${pbase}/`, { headers: basic("s3cret") });
+    expect(await tryWs({ cookie: (r.headers.get("set-cookie") ?? "").split(";")[0] })).toBe("open");
+  });
+
+  it("refuses eval uploads in public mode", async () => {
+    const r = await fetch(`http://${pbase}/api/eval-results`, {
+      method: "POST",
+      headers: { ...basic("s3cret"), "content-type": "application/json" },
+      body: JSON.stringify({ runId: "x" }),
+    });
+    expect(r.status).toBe(403);
+  });
+});
