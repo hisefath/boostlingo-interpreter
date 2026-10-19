@@ -69,3 +69,6 @@ several harnesses read it and the repo is public.
 2026-10-18 23:13 CDT VERIFY M4 481819e make check → OK (51 tests); scope-guard OK T001, T002
 2026-10-18 23:14 CDT VERIFY M4 app starts; /api/config, /api/eval-clips (36), /api/realtime-session 200; OpenAI still 429 no credits
 2026-10-18 23:18 CDT VERIFY M4 review pass1: 11 fixed (2d0e576, f62178e), 7 filed/kept; make check OK 54 tests
+2026-10-18 23:42 CDT DISPATCH M4-T004 harness=claude-subagent why=one skill, Owns src/client only, parallel with eval scoring
+2026-10-18 23:58 CDT RESULT M4-T004 status=done harness=claude-subagent timeout=no tree=clean
+2026-10-18 23:58 CDT VERIFY M4-T004 c8a4217 scope-guard OK; make check OK; vite build OK → squashed
