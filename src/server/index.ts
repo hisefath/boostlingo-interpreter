@@ -10,7 +10,8 @@ import { createProviders, type Env } from "./providers/registry.ts";
 import { interpreterInstructions } from "./providers/http.ts";
 
 const LIMITS = { translateMs: 4000, ttsMs: 5000 }; // lld.md §2
-const MAX_BODY = 50 * 1024 * 1024; // eval runs carry base64 WAVs
+const MAX_BODY = 64 * 1024; // control routes
+const MAX_EVAL_BODY = 300 * 1024 * 1024; // eval runs carry base64 WAVs of every interpreted turn (localhost only)
 const SAFE_ID = /^[A-Za-z0-9_-]{1,100}$/;
 const LANGS: Lang[] = ["en", "es"];
 
@@ -25,12 +26,12 @@ function send(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
-async function readBody(req: IncomingMessage): Promise<string> {
+async function readBody(req: IncomingMessage, max = MAX_BODY): Promise<string> {
   let size = 0;
   const parts: Buffer[] = [];
   for await (const c of req as AsyncIterable<Buffer>) {
     size += c.length;
-    if (size > MAX_BODY) throw new Error("body too large");
+    if (size > max) throw new Error("body too large");
     parts.push(c);
   }
   return Buffer.concat(parts).toString("utf8");
@@ -120,7 +121,7 @@ export function createAppServer(opts: AppOptions = {}): Server {
       if (req.method === "POST" && url.pathname === "/api/eval-results") {
         if (!String(req.headers["content-type"]).startsWith("application/json"))
           return send(res, 415, { error: "json only" });
-        const run = JSON.parse(await readBody(req)) as { runId?: unknown };
+        const run = JSON.parse(await readBody(req, MAX_EVAL_BODY)) as { runId?: unknown };
         if (typeof run.runId !== "string" || !SAFE_ID.test(run.runId))
           return send(res, 400, { error: "bad runId" });
         await mkdir(join(evalDir, "results"), { recursive: true });
