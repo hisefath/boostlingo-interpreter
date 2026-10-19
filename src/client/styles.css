@@ -1,0 +1,152 @@
+:root {
+  --bg: #f7f7f5;
+  --fg: #1d1d1b;
+  --muted: #5f5f5a;
+  --card: #ffffff;
+  --line: #d9d9d4;
+  --accent: #1f5fbf;
+  --bar: #6a8fd0;
+  --warn: #a33a1f;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615;
+    --fg: #ececea;
+    --muted: #a4a49e;
+    --card: #20201f;
+    --line: #3a3a37;
+    --accent: #7aa7f0;
+    --bar: #4f74b5;
+    --warn: #f08a6c;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  font:
+    15px/1.45 system-ui,
+    sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.muted,
+.hint {
+  color: var(--muted);
+}
+.hint {
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  margin-top: 12px;
+}
+fieldset {
+  display: flex;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px 6px;
+}
+button {
+  font: inherit;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  min-width: 6rem;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#status {
+  min-height: 1.4em;
+  font-weight: 600;
+}
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+}
+.pane {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 0;
+}
+.turns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.turns li {
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+  overflow-wrap: anywhere;
+}
+.label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.state-failed,
+.err {
+  color: var(--warn);
+}
+.state-empty,
+.state-cut {
+  color: var(--muted);
+  font-style: italic;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 11rem 1fr 4rem;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.8rem;
+}
+.bar {
+  height: 8px;
+  background: var(--bar);
+  border-radius: 4px;
+}
+.na {
+  color: var(--muted);
+  font-style: italic;
+}
