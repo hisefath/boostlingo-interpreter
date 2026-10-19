@@ -26,6 +26,7 @@ export class RealtimeTransport implements Transport {
   private mic: MediaStreamTrack | null = null;
   private t0 = 0;
   private echoGuard = true;
+  private unmute: ReturnType<typeof setTimeout> | undefined;
   private stopped = false;
   private reconnected = false;
   private seq = 0;
@@ -179,12 +180,18 @@ export class RealtimeTransport implements Transport {
       case "output_audio_buffer.started": {
         const id = this.byResponse.get(e.response_id ?? "") ?? this.turnFor();
         this.ev.timing(id, "first_audio", now);
-        if (this.echoGuard && this.mic) this.mic.enabled = false;
+        if (this.echoGuard && this.mic) {
+          this.mic.enabled = false;
+          // never leave the mic muted if the stop event is lost (review A-R10)
+          clearTimeout(this.unmute);
+          this.unmute = setTimeout(() => this.mic && (this.mic.enabled = true), 15_000);
+        }
         return;
       }
       case "output_audio_buffer.stopped":
       case "output_audio_buffer.cleared": {
         const id = this.byResponse.get(e.response_id ?? "") ?? this.turnFor();
+        clearTimeout(this.unmute);
         if (this.mic) this.mic.enabled = true;
         if (e.type === "output_audio_buffer.cleared") return this.ev.turn({ turnId: id, state: "cut" });
         this.ev.timing(id, "audio_end", now);
@@ -192,6 +199,8 @@ export class RealtimeTransport implements Transport {
         return;
       }
       case "error":
+        clearTimeout(this.unmute);
+        if (this.mic) this.mic.enabled = true;
         this.ev.error(e.error?.message ?? "realtime error", this.current ?? undefined);
         return;
     }

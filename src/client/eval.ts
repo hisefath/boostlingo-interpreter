@@ -32,6 +32,7 @@ export async function runEval(
   };
   try {
     if (session.live) session.stop();
+    session.setEchoGuard(false); // fake mic hears no speakers: never mute it during an eval
     await session.start(mic.stream);
     for (const [i, clip] of clips.entries()) {
       progress(`Eval ${i + 1}/${clips.length}: ${clip.id}`);

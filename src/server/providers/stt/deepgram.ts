@@ -11,7 +11,7 @@ interface DgWord {
   language?: string;
 }
 interface DgResults {
-  type: "Results";
+  type: "Results" | "UtteranceEnd" | string;
   is_final?: boolean;
   speech_final?: boolean;
   channel?: { alternatives?: Array<{ transcript: string; words?: DgWord[]; languages?: string[] }> };
@@ -31,6 +31,9 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
         punctuate: "true",
         smart_format: "true",
         endpointing: String(endpointingMs),
+        // backup end-of-turn when speech_final never comes (noise, merged utterances): R02 F6, review A-R9
+        utterance_end_ms: "1000",
+        vad_events: "true",
       });
       const ws = new WebSocket(`wss://api.deepgram.com/v1/listen?${q}`, {
         headers: { authorization: `Token ${apiKey}` },
@@ -62,6 +65,7 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
         } catch {
           return;
         }
+        if (m.type === "UtteranceEnd") return finish();
         if (m.type !== "Results") return;
         const alt = m.channel?.alternatives?.[0];
         if (!alt) return;
@@ -75,20 +79,20 @@ export function deepgramStt(apiKey: string, endpointingMs = 300): SttProvider {
         if (lang) langs.push(lang);
         const w = alt.words?.at(-1);
         if (w) lastEnd = w.end;
-        if (m.speech_final) {
-          const text = parts.join(" ").trim();
-          if (text || parts.length) {
-            h.onFinal({
-              segmentId: `dg${++n}`,
-              text,
-              lang: toLang(langs[0], text),
-              endMs: t0 + lastEnd * 1000,
-            });
-          }
-          parts = [];
-          langs = [];
-        }
+        if (m.speech_final) finish();
       });
+      function finish() {
+        const text = parts.join(" ").trim();
+        if (text)
+          h.onFinal({
+            segmentId: `dg${++n}`,
+            text,
+            lang: toLang(langs[0], text),
+            endMs: t0 + lastEnd * 1000,
+          });
+        parts = [];
+        langs = [];
+      }
       ws.on("error", () => h.onError(new ProviderError("stt", "disconnected", "deepgram socket error")));
       ws.on("close", (code) => {
         if (!closed && code !== 1000)
