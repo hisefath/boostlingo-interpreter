@@ -16,8 +16,13 @@ export interface Providers {
   tts: Tts;
 }
 
-/** `hears` = the vendor transcribes this language (STT only; absent = every language). */
-type Factory<T> = { key?: string; make: (e: Env) => T; hears?: (l: Lang) => boolean };
+/** `hears` / `speaks` = the vendor transcribes / speaks this language (absent = every language). */
+type Factory<T> = {
+  key?: string;
+  make: (e: Env) => T;
+  hears?: (l: Lang) => boolean;
+  speaks?: (l: Lang) => boolean;
+};
 
 const STT: Record<string, Factory<SttProvider>> = {
   openai: {
@@ -42,6 +47,7 @@ const TTS: Record<string, Factory<Tts>> = {
   openai: {
     key: "OPENAI_API_KEY",
     make: (e) => openaiTts(e.OPENAI_API_KEY ?? "", e.OPENAI_TTS_MODEL || undefined),
+    speaks: (l) => LANGUAGES[l].openaiTts,
   },
   elevenlabs: {
     key: "ELEVENLABS_API_KEY",
@@ -61,9 +67,13 @@ function pick<T>(table: Record<string, Factory<T>>, wanted: string | undefined, 
  * (per-pair routing; the pipeline's timing events then name the vendor that actually ran). */
 export function createProviders(env: Env = process.env, pair?: readonly Lang[]): Providers {
   const hears = STT[env.STT_PROVIDER ?? "openai"]?.hears;
+  // speech output: a vendor that can't speak one of the pair's languages hands it to ElevenLabs when that key exists
+  const speaks = TTS[env.TTS_PROVIDER ?? "openai"]?.speaks;
+  const ttsVendor =
+    pair && speaks && !pair.every(speaks) && env.ELEVENLABS_API_KEY ? "elevenlabs" : env.TTS_PROVIDER;
   return {
     stt: pick(STT, pair && hears && !pair.every(hears) ? "openai" : env.STT_PROVIDER, env),
     translator: pick(TRANSLATE, env.TRANSLATE_PROVIDER, env),
-    tts: pick(TTS, env.TTS_PROVIDER, env),
+    tts: pick(TTS, ttsVendor, env),
   };
 }

@@ -87,6 +87,12 @@ model does not cover Chinese, so that pair's speech recognition goes to OpenAI a
 stay the same. Voice-to-voice gets new pairs for free, but only the ones its single model supports. New pairs are not
 yet scored by the evaluation set (English/Spanish only).
 
+**English ↔ Bangla (Bengali)** shows routing in all three stages at once: Deepgram's multilingual model has no Bengali
+(OpenAI hears it), OpenAI TTS doesn't list it and ElevenLabs Flash rejects it with HTTP 400, so Bangla speaks through
+ElevenLabs `eleven_v4_turbo` (first audio byte 356 ms in a live check, vs ~250 ms for Flash). Live translation checks
+also exposed a register problem (informal তুমি to a patient); every language now carries its formal form (আপনি,
+usted, vous, 您) in the interpreter instructions.
+
 ## Controllability and provider flexibility
 
 | | Voice-to-voice | Cascade |
