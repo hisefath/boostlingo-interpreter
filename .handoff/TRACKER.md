@@ -7,11 +7,11 @@ several harnesses read it and the repo is public.
 ## Resume
 
 <!-- Rewritten as the LAST edit of every supervisor move. Times come from `date`. -->
-- **As of:** 2026-10-18 22:50 CDT
+- **As of:** 2026-10-19 14:12 CDT
 - **In flight:** none
-- **Next:** GD answer → /build-milestone (M4+M5+M6 compressed) → GT → write-up → push (human yes)
-- **Waiting on:** human answers GD (dependencies), fills .env
-- **Verified:** 15b177e `make check` → OK
+- **Next:** human: push main (3058f47+) to GitLab/GitHub; deploy only on request (Railway still runs 5bb097f)
+- **Waiting on:** human yes for push
+- **Verified:** 3058f47 `make check` → 182 passed OK
 
 ## Tasks
 
