@@ -9,7 +9,48 @@ Weight: ●●● critical (hard to undo, or touches money, personal data or sig
 
 ## By topic
 
-- none yet
+### Product (12)
+
+- ●●● D8 — Routine calls for the demo; high-stakes only to show failures.
+- ●●● D9 — Score faithfulness and critical terms, not just WER and speed.
+- ●●○ D2 — Ship voice-to-voice end to end before the three-stage chain.
+- ●●○ D10 — Measure from real speech end; show turn-detection wait as a stage.
+- ●●○ D11 — Stream settled segments only; price calls by their real length.
+- ●●○ D21 — One extra pair, 2 h, in M6.
+- ●●○ D23 — Ship all required functions; shrink the evaluation.
+- ●○○ D3 — Detect the speaker's language; no direction button.
+- ●○○ D4 — Median gates the target; p95 is always reported.
+- ●○○ D7 — The comparison is docs/COMPARISON.md, linked from README.
+- ●○○ D17 — Third model only if time remains.
+- ●○○ D19 — Barge-in stops playback.
+
+### Data (2)
+
+- ●●○ D5 — Score both modes on the same public FLEURS EN/ES set.
+- ●●○ D24 — Same synthetic clips for both modes; limitation stated.
+
+### Security (2)
+
+- ●○○ D6 — Paraphrase partner docs; keep the originals private.
+- ●○○ D16 — Confirms D6.
+
+### Money (1)
+
+- ●●● D12 — Spend cap $30; tests use fakes.
+
+### Infrastructure (5)
+
+- ●●● D22 — TypeScript server and browser; .NET gap explained.
+- ●●○ D13 — OpenAI + Deepgram + ElevenLabs.
+- ●●○ D14 — Local-only; hosting decided later.
+- ●●○ D25 — WebRTC direct for voice-to-voice; WS for the cascade.
+- ●○○ D20 — Stack decided at the Design check.
+
+### Process (3)
+
+- ●○○ D1 — Full track, one planning session, one batched card.
+- ●○○ D15 — Per-task commits, no milestone squash.
+- ●○○ D18 — Agent-usage section in AGENTS.md.
 
 ## How the workflow improved
 
@@ -19,4 +60,33 @@ Decisions that adopted a software-factory-kit change (H) and the finding (F) beh
 
 ## By day
 
-- none yet
+### 2026-10-18
+
+- D25 · Infrastructure · ●●○ — WebRTC direct for voice-to-voice; WS for the cascade.
+- D24 · Data · ●●○ — Same synthetic clips for both modes; limitation stated.
+- D23 · Product · ●●○ — Ship all required functions; shrink the evaluation.
+- D22 · Infrastructure · ●●● — TypeScript server and browser; .NET gap explained.
+- D21 · Product · ●●○ — One extra pair, 2 h, in M6.
+- D20 · Infrastructure · ●○○ — Stack decided at the Design check.
+- D19 · Product · ●○○ — Barge-in stops playback.
+- D18 · Process · ●○○ — Agent-usage section in AGENTS.md.
+- D17 · Product · ●○○ — Third model only if time remains.
+- D16 · Security · ●○○ — Confirms D6.
+- D15 · Process · ●○○ — Per-task commits, no milestone squash.
+- D14 · Infrastructure · ●●○ — Local-only; hosting decided later.
+- D13 · Infrastructure · ●●○ — OpenAI + Deepgram + ElevenLabs.
+- D12 · Money · ●●● — Spend cap $30; tests use fakes.
+
+### 2026-10-14
+
+- D11 · Product · ●●○ — Stream settled segments only; price calls by their real length.
+- D10 · Product · ●●○ — Measure from real speech end; show turn-detection wait as a stage.
+- D9 · Product · ●●● — Score faithfulness and critical terms, not just WER and speed.
+- D8 · Product · ●●● — Routine calls for the demo; high-stakes only to show failures.
+- D7 · Product · ●○○ — The comparison is docs/COMPARISON.md, linked from README.
+- D6 · Security · ●○○ — Paraphrase partner docs; keep the originals private.
+- D5 · Data · ●●○ — Score both modes on the same public FLEURS EN/ES set.
+- D4 · Product · ●○○ — Median gates the target; p95 is always reported.
+- D3 · Product · ●○○ — Detect the speaker's language; no direction button.
+- D2 · Product · ●●○ — Ship voice-to-voice end to end before the three-stage chain.
+- D1 · Process · ●○○ — Full track, one planning session, one batched card.

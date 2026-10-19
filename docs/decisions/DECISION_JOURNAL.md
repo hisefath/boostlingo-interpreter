@@ -31,3 +31,228 @@ Copy this block for each new entry (D-ids increase by one, starting at D1):
 ## Entries
 
 <!-- log-decision appends D1 below this line. -->
+
+### D1 Full track, planned in one plan-product session  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: sharpen-brief (Claude Code, claude-opus-5-5) · specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2
+- Context: new greenfield partner project, no PRD, graded; v0.2 folds the planning checkpoints into the Intent check (GI).
+- Options: do nothing (no build, no submission) · Standard (rejected: no PRD to start from) · Fix (rejected: not a bug) · Full (chosen).
+- Choice · Why: in a new graded product with no PRD, facing a 15–20 h appetite, we chose Full over Standard to get a defensible brief, research and PRD, accepting ~2–3 h of planning.
+- Cost accepted: planning hours · Reversibility: Type 2 · Confidence: high
+- Revisit if: the human trims the appetite below 10 h · Evidence: WORKFLOW §3; brief ## Track · Interview line: "A graded new product starts on the Full track; planning cost two hours of twenty."
+- Review: Topic Process · Weight ●○○ · One-liner: Full track, one planning session, one batched card.
+
+### D2 Voice-to-voice mode is the tracer bullet  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: write-prd (Claude Code, claude-opus-5-5) · docs/product/prd.md@2bc910e
+- Context: FR-001, FR-002, FR-005..FR-007; RISK-5 (time); both modes share the UI and the timing clock (NFR-009).
+- Options: do nothing (no order; parallel risk) · three-stage first (rejected: three vendors and streaming before anything plays) · voice-to-voice first (chosen).
+- Choice · Why: facing a short appetite, we chose voice-to-voice first over three-stage to get the shared UI, mic, playback and timing proven with one vendor, accepting that the harder streaming work starts one milestone later.
+- Cost accepted: the three-stage risk (RISK-1) surfaces later · Reversibility: Type 2 · Confidence: med
+- Revisit if: R01 shows the browser connection blocked by the hosting choice · Evidence: PRD ## Milestone cut; R01 · Interview line: "I built the thinnest end-to-end slice first: one vendor, real audio, real timing."
+- Review: Topic Product · Weight ●●○ · One-liner: Ship voice-to-voice end to end before the three-stage chain.
+
+### D3 Spoken language detected within the selected pair  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: write-prd (Claude Code, claude-opus-5-5) · docs/product/prd.md@2bc910e (A-1, A-5)
+- Context: FR-010; one shared screen hosts both speakers (A-5).
+- Options: do nothing (fixed one-way EN→ES; fails the back-and-forth) · per-turn direction button (rejected: slower, unnatural, adds a step to every turn) · auto-detect within the pair (chosen).
+- Choice · Why: we chose auto-detect over a direction button to get natural turn-taking, accepting misdetection on mixed-language turns (EC-8).
+- Cost accepted: EC-8 errors · Reversibility: Type 2 (a button can be added) · Confidence: med
+- Revisit if: misdetection exceeds 5 % of evaluation turns · Evidence: PRD A-1, EC-8; R02 · Interview line: "The workbench listens for which of the two languages you speak, like a human interpreter would."
+- Review: Topic Product · Weight ●○○ · One-liner: Detect the speaker's language; no direction button.
+
+### D4 Delay targets judged at the median, p95 reported  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: write-prd (Claude Code, claude-opus-5-5) · docs/product/prd.md@2bc910e (A-2)
+- Context: NFR-001, NFR-002; the PDF gives "under 1.5 s / 3 s" with no percentile (REQ-17, REQ-18).
+- Options: do nothing (undefined target; NOGO-3) · p95 as the gate (rejected: too strict for 40-turn samples, noisy) · median as the gate, p95 reported (chosen).
+- Choice · Why: we chose the median gate with p95 shown to get a stable pass/fail on a small set, accepting that the tail is reported, not gated.
+- Cost accepted: a slow tail can pass the gate (visible in the write-up) · Reversibility: Type 2 · Confidence: med
+- Revisit if: the partner says the target means p95 · Evidence: PRD A-2; R03 · Interview line: "I gate on the median and always show p95, because a conversation is ruined by the tail."
+- Review: Topic Product · Weight ●○○ · One-liner: Median gates the target; p95 is always reported.
+
+### D5 Evaluation set drawn from FLEURS EN/ES, at least 20 per direction  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: write-prd (Claude Code, claude-opus-5-5) · docs/product/prd.md@2bc910e (A-6, AE-014)
+- Context: FR-017, FR-018, SC-001, SC-004; NOGO-1 (no real patient data).
+- Options: do nothing (quality by feel; NOGO-2) · record our own clinic script (rejected: no independent references, slow) · CoVoST 2 (rejected: ES→EN only) · FLEURS en_us + es_419 subsets (chosen).
+- Choice · Why: we chose FLEURS over CoVoST 2 to get both directions with references under CC-BY-4.0, accepting read speech is cleaner than clinic talk (RISK-4).
+- Cost accepted: RISK-4; the FLEURS id join is still unchecked (R03 gap) · Reversibility: Type 2 · Confidence: med
+- Revisit if: the FLEURS id join fails · Evidence: R03 F-rows, S03.x · Interview line: "I scored both modes on the same public, licensed EN/ES set, so the numbers are reproducible."
+- Review: Topic Data · Weight ●●○ · One-liner: Score both modes on the same public FLEURS EN/ES set.
+
+### D6 Partner documents stay outside the repo until cleared  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: sharpen-brief (Claude Code, claude-opus-5-5) · specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2 (U-01, U-02)
+- Context: the repo will be public; the PDF and portal pages may be partner-confidential.
+- Options: do nothing (commit the PDF; possible leak) · paraphrase with section refs, copy kept privately (chosen).
+- Choice · Why: we chose private copies plus paraphrase to avoid leaking partner text, accepting slightly vaguer citations.
+- Cost accepted: no verbatim quotes · Reversibility: Type 2 (the human can clear them at GI) · Confidence: high
+- Revisit if: the human clears U-01/U-02 · Evidence: brief ## User-owned steps · Interview line: "I treated the partner brief as confidential until told otherwise."
+- Review: Topic Security · Weight ●○○ · One-liner: Paraphrase partner docs; keep the originals private.
+
+### D7 Comparison write-up lives at docs/COMPARISON.md  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:30 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: sharpen-brief (Claude Code, claude-opus-5-5) · specs/M1-interpreter-tradeoffs/brief.md@a1dbdf2 (REQ-08)
+- Context: the PDF requires a 1–2 page write-up but names no file; no factory skill owns a comparison essay.
+- Options: do nothing (write-up missing; REQ-08 fails) · put it inside README (rejected: README is setup and architecture) · docs/COMPARISON.md, written in M6 by the supervisor from report-milestone's measured numbers, linked from README (chosen).
+- Choice · Why: we chose a standalone docs/COMPARISON.md over a README section to get one printable 1–2 page document graders can find from the README, accepting one more file.
+- Cost accepted: a README link to keep in sync (garden-docs) · Reversibility: Type 2 · Confidence: high
+- Revisit if: the portal submission form asks for a specific file · Evidence: brief REQ-08 · Interview line: "The recommendation is one page anyone can open, and every number in it links to a measured run."
+- Review: Topic Product · Weight ●○○ · One-liner: The comparison is docs/COMPARISON.md, linked from README.
+
+### D8 Demo and evaluation use routine calls, not clinical talk  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (A-7, personas, AE-001, AE-003)
+- Context: R04 F6, the partner's own AI Interpreter rule: machine for routine calls, humans for clinical, legal and high-stakes talk; prompt review I-16.
+- Options: do nothing (keep the clinic diagnosis demo; contradicts the partner's product) · high-stakes only (rejected: shows the case they say AI should not handle) · routine scenarios plus a separate high-stakes set used only to show failures (chosen).
+- Choice · Why: in a partner audition, facing their published "AI when it fits, human when it counts" rule, we chose routine scenarios over clinical talk to get a recommendation that speaks their language, accepting a less dramatic demo.
+- Cost accepted: less dramatic demo · Reversibility: Type 2 · Confidence: high
+- Revisit if: the partner says the evaluation should target clinical use · Evidence: R04 F6 (S04.6) · Interview line: "I tested AI where Boostlingo already uses it, and showed exactly where it breaks on the high-stakes calls they keep for humans."
+- Review: Topic Product · Weight ●●● · One-liner: Routine calls for the demo; high-stakes only to show failures.
+
+### D9 Faithfulness and critical-term accuracy are scored per mode  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (FR-021..FR-023, SC-005)
+- Context: prompt review I-14 (the voice model may answer or obey instead of interpreting), I-17 (averages hide numbers and negations); R04 F9 (the open role: evals, guardrails, hallucination, prompt injection).
+- Options: do nothing (WER/BLEU only; misses the failures that matter) · human review of every turn (rejected: does not scale, not reproducible) · scripted adversarial and critical-term clips scored automatically per mode (chosen).
+- Choice · Why: we chose scored adversarial and critical-term clips over averages alone to get the failure modes the partner hires for, accepting ~1–2 h of eval work in M6.
+- Cost accepted: eval time inside the appetite · Reversibility: Type 2 · Confidence: high
+- Revisit if: the appetite forces cuts (keep ≥10 clips per type) · Evidence: prompt review I-14, I-17; R01 gap 6; R04 F9 · Interview line: "Speed means nothing if the interpreter answers the patient's question itself; I measured that first."
+- Review: Topic Product · Weight ●●● · One-liner: Score faithfulness and critical terms, not just WER and speed.
+
+### D10 Delay clock starts at the true end of speech  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (NFR-009)
+- Context: prompt review I-15: the vendor's "speech stopped" event fires after its silence wait (~500 ms default, R01 F6).
+- Options: do nothing (start at the vendor event; flatters numbers by ~0.5 s) · start at the true end of speech in the audio, with turn-detection wait as its own stage (chosen).
+- Choice · Why: we chose the true end of speech over the vendor event to get the delay the listener actually feels, accepting worse-looking numbers.
+- Cost accepted: numbers ~0.5 s higher · Reversibility: Type 2 · Confidence: high
+- Revisit if: never for the write-up; the vendor-event view can be shown beside it · Evidence: R01 F6 (S01.3) · Interview line: "My stopwatch starts when the speaker actually stops, not when the vendor notices."
+- Review: Topic Product · Weight ●●○ · One-liner: Measure from real speech end; show turn-detection wait as a stage.
+
+### D11 Never speak unsettled partial translations; report cost by session length  [status: accepted (auto, Type 2)]
+- 2026-10-14 23:56 CDT · plan-product · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: project prompt review (Claude Code, claude-opus-5-5) · docs/product/prd.md@d607ae5 (FR-004, FR-025, FR-024)
+- Context: prompt review I-20 (Spanish verbs and negation arrive late; spoken audio cannot be unsaid), I-19 (the voice model re-bills context, so cost per minute rises with call length; average call ~21 min, R06).
+- Options: do nothing (translate every partial; cost from short turns) · translate stable segments only, cost at 1 and 5 minutes with a 21-minute projection (chosen).
+- Choice · Why: we chose stable-segment streaming over translate-every-partial to get audio that is never wrong-then-corrected, accepting a little extra delay; and cost by length to get a number valid for real calls.
+- Cost accepted: some delay in three-stage mode · Reversibility: Type 2 · Confidence: med
+- Revisit if: stable-segment delay alone breaks the 3 s gate · Evidence: prompt review I-19, I-20; R01 I3; R06 · Interview line: "Streaming doesn't mean speaking guesses; I stream the settled part only."
+- Review: Topic Product · Weight ●●○ · One-liner: Stream settled segments only; price calls by their real length.
+
+### D12 Vendor spend capped at $30, fakes in automated tests  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: NFR-007; voice-to-voice ≈ $0.10/min before context re-billing (R01)
+- Options: do nothing (no live testing; benchmarks unmeasurable) · $15 (rejected: ~20-clip eval, few soak runs) · $60 (rejected: more than needed) · $30 with fakes in tests (chosen)
+- Choice · Why: we chose cap $30 total to get the demo, soak runs and a 40-clip × 2-mode eval, accepting little room for re-runs.
+- Cost accepted: re-runs limited · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: evaluation needs more than ~2 h of live audio · Evidence: R01, R02; card item 2; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I kept a hard $30 budget and used fake vendors in tests so spend only buys measurements."
+- Review: Topic Money · Weight ●●● · One-liner: Spend cap $30; tests use fakes.
+
+### D13 Vendors: OpenAI required, Deepgram and ElevenLabs on free tiers  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-1, C-4, FR-016, NFR-006; R02 (Deepgram server end-of-speech, ElevenLabs text-streaming input)
+- Options: do nothing / OpenAI only (all three stages on one vendor; weak swap story) · OpenAI + Deepgram + ElevenLabs (chosen)
+- Choice · Why: we chose three vendors to get server-side end-of-speech and streaming text-to-speech plus a real alternate per stage, accepting two more accounts for the human to open.
+- Cost accepted: two extra accounts (human-owned, U-03) · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: a free tier blocks EN/ES streaming · Evidence: R02; card item 3; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Each stage has a second vendor, so the swap is proven, not promised."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: OpenAI + Deepgram + ElevenLabs.
+
+### D14 Run locally; decide hosting after the write-up  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-6, NG-4, REQ-22
+- Options: do nothing (no setup docs; fails REQ-14) · AWS preview (rejected now: ~2–3 h, needs HTTPS for the mic) · Railway (rejected: not the partner preference) · local-only with setup steps (chosen)
+- Choice · Why: we chose local-only to protect the build hours, accepting that graders run it themselves.
+- Cost accepted: graders must run it locally; GT on localhost · Reversibility: Type 1 one-way · Confidence: med
+- Revisit if: the write-up is done with time left · Evidence: PRD C-6; card item 4; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Hosting was optional, so I spent the hours on measurement instead."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: Local-only; hosting decided later.
+
+### D15 One commit per task; milestones merged without squash  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: REQ-16 (logical history)
+- Options: do nothing (factory default squash) · per-task commits + merge commits (chosen)
+- Choice · Why: we chose readable logical history, accepting a longer log.
+- Cost accepted: longer log · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: never · Evidence: card item 5; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The history reads as the steps I actually took."
+- Review: Topic Process · Weight ●○○ · One-liner: Per-task commits, no milestone squash.
+
+### D16 Partner documents stay private and paraphrased  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: U-01, U-02
+- Options: do nothing (commit PDF) · paraphrase + private copy (chosen)
+- Choice · Why: we chose no partner text in a public repo, accepting vaguer citations.
+- Cost accepted: vaguer citations · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: partner clears quoting · Evidence: card item 6; D6; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I treated the partner brief as confidential."
+- Review: Topic Security · Weight ●○○ · One-liner: Confirms D6.
+
+### D17 Measure the dedicated translate model only if time and spend remain  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: SC-001, SC-003; R01 (gpt-realtime-translate, $0.034/min)
+- Options: do nothing (skip) · measure in M6 if time and spend remain (chosen)
+- Choice · Why: we chose a stronger write-up at low cost, accepting it may be dropped.
+- Cost accepted: may be cut · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: spend or time runs short · Evidence: card item 7; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The vendor ships a purpose-built interpreter model; I checked it against both modes."
+- Review: Topic Product · Weight ●○○ · One-liner: Third model only if time remains.
+
+### D18 Agent-usage section drafted for AGENTS.md at M6  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: REQ-15, C-7
+- Options: do nothing (fails REQ-15) · separate docs/AGENT_USAGE.md (rejected: graders look in AGENTS.md) · draft in AGENTS.md, human approves the diff (chosen)
+- Choice · Why: we chose meet REQ-15 where graders look, accepting a human-approved edit.
+- Cost accepted: one diff to review · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: never · Evidence: card item 8; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "AGENTS.md says exactly how I directed the agent."
+- Review: Topic Process · Weight ●○○ · One-liner: Agent-usage section in AGENTS.md.
+
+### D19 A new turn cuts off playback still in progress  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: EC-3, FR-002, FR-003
+- Options: do nothing (talk over each other) · stop playback and interpret the new turn (chosen)
+- Choice · Why: we chose natural barge-in, accepting the rest of that interpretation is lost.
+- Cost accepted: lost tail of one interpretation · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: evaluation shows too many cut-offs · Evidence: card item 9; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "Like a human interpreter, it stops when someone starts talking."
+- Review: Topic Product · Weight ●○○ · One-liner: Barge-in stops playback.
+
+### D20 Language preference is context, not a mandate  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: C-3, REQ-20
+- Options: do nothing (unclear) · treat as mandated (rejected: PDF says candidate choice) · context only; stack chosen at the Design check with reasons (chosen)
+- Choice · Why: we chose freedom to pick the stack on merit, accepting we must explain it.
+- Cost accepted: an explanation to write · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: partner says otherwise · Evidence: card item 10; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "The PDF preferred .NET but let me choose; I chose on evidence and wrote down why."
+- Review: Topic Infrastructure · Weight ●○○ · One-liner: Stack decided at the Design check.
+
+### D21 Add one less-common language pair as a 2-hour onboarding test  [status: accepted]
+- 2026-10-18 22:47 CDT · plan-product (GI) · M1 · Decided by: human · Proposed by: plan-product (Claude Code, claude-opus-5-5) · .handoff/checkpoints/GI-M1.md@3c0eba5
+- Context and forces: NG-1, PRD open question; prompt review AIM-4, I-18
+- Options: do nothing / state the gap (rejected: leaves the partner metric unanswered) · one pair, timeboxed 2 h in M6 (chosen)
+- Choice · Why: we chose a measured time-to-onboard and a test of the cascade where it should win, accepting 2 h.
+- Cost accepted: 2 h of the appetite · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: deadline forces cuts (first to cut) · Evidence: card item 11; GI 2026-10-18 22:47 CDT: "Take all your recommendations on the GI card, deadline is <date>." · Interview line: "I timed how long it took to add a new language pair, the partner's own metric."
+- Review: Topic Product · Weight ●●○ · One-liner: One extra pair, 2 h, in M6.
+
+### D22 TypeScript everywhere: Node server and browser app  [status: accepted]
+- 2026-10-18 22:55 CDT · plan-design (GD, compressed) · M1 · Decided by: human · Proposed by: supervisor (Claude Code, claude-opus-5-5) · .handoff/TRACKER.md@8b4dbe0
+- Context and forces: C-3 / D20 (language is the builder's choice, .NET preferred), REQ-20 (explain the choice); deadline 2026-10-19 03:00 CDT (~4 h).
+- Options: do nothing (no build) · .NET/C# server + TypeScript browser (rejected: +1–2 h tonight; vendor TypeScript SDKs are first-class) · Python server (rejected: no advantage) · TypeScript server and browser (chosen)
+- Choice · Why: we chose TypeScript everywhere over .NET to get one language, first-class vendor SDKs and the shortest path in a 4-hour window, accepting a gap against the partner's stated preference that the write-up explains.
+- Cost accepted: not the partner's preferred backend · Reversibility: Type 1 one-way · Confidence: high
+- Revisit if: the project continues past the deadline (a .NET port of the server is a contained change behind the stage contracts) · Evidence: R02 (vendor SDKs), C-3 · GD 2026-10-18 22:55 CDT: "A: TypeScript everywhere — yes" · Interview line: "With four hours, one language end to end beat matching the preferred backend; the stage contracts make a .NET server a port, not a rewrite."
+- Review: Topic Infrastructure · Weight ●●● · One-liner: TypeScript server and browser; .NET gap explained.
+
+### D23 Scope cut for a 4-hour build  [status: accepted]
+- 2026-10-18 22:55 CDT · plan-design (GD, compressed) · M1 · Decided by: human · Proposed by: supervisor (Claude Code, claude-opus-5-5) · .handoff/TRACKER.md@8b4dbe0
+- Context and forces: deadline 2026-10-19 03:00 CDT; PRD Appetite cut order; D17, D21.
+- Options: do nothing (keep 15–20 h scope; misses the deadline) · cut extra pair (D21), third model (D17), vendor failover, full 40-clip eval; keep ~10 clips + 5 trick clips, recognition-stage vendor comparison, one soak run if time; keep both modes, transcripts, honest timing, failure handling, mode switch and the write-up full size (chosen)
+- Choice · Why: we chose the cut list to ship every required function on time, accepting thinner evidence.
+- Cost accepted: smaller evaluation; D17 and D21 deferred · Reversibility: Type 2 two-way · Confidence: med
+- Revisit if: time remains after the write-up · Evidence: PRD Appetite · GD 2026-10-18 22:55 CDT: "keep full size" (read as approving the proposed cut list) · Interview line: "I cut evidence volume, never a required function."
+- Review: Topic Product · Weight ●●○ · One-liner: Ship all required functions; shrink the evaluation.
+
+### D24 Synthetic evaluation clips replace FLEURS tonight  [status: accepted (auto, Type 2); supersedes D5]
+- 2026-10-18 22:59 CDT · plan-design · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: design-lld (Claude Code, claude-opus-5-5) · docs/architecture/lld.md@3dcf524 §7
+- Context and forces: D23 (4-hour build); D5 needs a dataset download and id join (R03 gap).
+- Options: do nothing (no eval) · FLEURS subset (rejected tonight: download + join time) · our own routine-call sentences synthesised once with OpenAI TTS, with our reference translations (chosen)
+- Choice · Why: we chose synthetic clips to get a same-input eval for both modes in minutes, accepting cleaner-than-real speech (stated in the write-up).
+- Cost accepted: optimistic WER · Reversibility: Type 2 · Confidence: med
+- Revisit if: time remains (swap in FLEURS clips; same runner) · Evidence: LLD §7 · Interview line: "Both modes heard identical audio; it was synthetic, so real-world error rates will be higher."
+- Review: Topic Data · Weight ●●○ · One-liner: Same synthetic clips for both modes; limitation stated.
+
+### D25 Voice-to-voice runs browser-direct over WebRTC; cascade runs through our server  [status: accepted (auto, Type 2)]
+- 2026-10-18 22:59 CDT · plan-design · M1 · Decided by: supervisor under the standing rule (WORKFLOW §5) · Proposed by: design-hld (Claude Code, claude-opus-5-5) · docs/architecture/hld.md@3dcf524 §1
+- Context and forces: NFR-001, NFR-004; R01 (WebRTC + client secrets for browsers).
+- Options: do nothing · relay voice-to-voice through our server over WebSocket (rejected: extra hop skews its latency) · browser-direct WebRTC with short-lived secret (chosen)
+- Choice · Why: each mode runs the way it would in production, accepting two transport shapes behind one interface.
+- Cost accepted: two transports · Reversibility: Type 2 · Confidence: high
+- Revisit if: the eval needs server-side capture of voice-to-voice events · Evidence: R01 F1 · Interview line: "Each mode got its natural transport, so neither paid for the other's plumbing."
+- Review: Topic Infrastructure · Weight ●●○ · One-liner: WebRTC direct for voice-to-voice; WS for the cascade.

@@ -2,3 +2,10 @@
 .handoff/runs/*/events.jsonl
 .handoff/runs/*/stderr.log
 docs/demo/raw/
+
+# Secrets: real keys live only in .env (git-ignored); .env.example lists the names
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
