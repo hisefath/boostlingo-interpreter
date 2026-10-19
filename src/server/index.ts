@@ -47,6 +47,28 @@ export function authorized(
   return false;
 }
 
+// Wrong-code throttle: per client address, 10 failures per minute → 429 (makes online guessing impractical).
+const FAILS = new Map<string, { n: number; until: number }>();
+const FAIL_LIMIT = 10;
+const FAIL_WINDOW_MS = 60_000;
+const clientIp = (req: IncomingMessage) =>
+  String(req.headers["x-forwarded-for"] ?? "")
+    .split(",")[0]
+    .trim() ||
+  req.socket.remoteAddress ||
+  "?";
+function throttled(ip: string, now: number): boolean {
+  const f = FAILS.get(ip);
+  return !!f && f.until > now && f.n >= FAIL_LIMIT;
+}
+function noteFail(ip: string, now: number): void {
+  const f = FAILS.get(ip);
+  if (!f || f.until <= now) FAILS.set(ip, { n: 1, until: now + FAIL_WINDOW_MS });
+  else f.n++;
+  if (FAILS.size > 10_000) FAILS.clear(); // ponytail: bounded memory; a shared limiter (Redis) if scaled out
+}
+const LOCAL_HOST = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
 const STATIC_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -56,6 +78,14 @@ const STATIC_TYPES: Record<string, string> = {
   ".ico": "image/x-icon",
   ".json": "application/json",
   ".woff2": "font/woff2",
+};
+
+const safeDecode = (p: string) => {
+  try {
+    return decodeURIComponent(p);
+  } catch {
+    return "\0"; // never a real file
+  }
 };
 
 function send(res: ServerResponse, status: number, body: unknown) {
@@ -123,13 +153,25 @@ export function createAppServer(opts: AppOptions = {}): Server {
   const code = env.ACCESS_CODE || undefined;
 
   const server = createServer(async (req, res) => {
-    const url = new URL(req.url ?? "/", "http://localhost");
+    let url: URL;
+    try {
+      url = new URL(req.url ?? "/", "http://localhost");
+    } catch {
+      return send(res, 400, { error: "bad request" }); // e.g. "//:" — never let a parse error crash the server
+    }
+    // local mode: refuse foreign Host headers (DNS rebinding against the unauthenticated localhost server)
+    if (!code && !LOCAL_HOST.test(String(req.headers.host ?? "")))
+      return send(res, 403, { error: "forbidden" });
     if (req.method === "GET" && url.pathname === "/api/version") {
       // open on purpose (health check + deploy verification); reveals only the commit id
       return send(res, 200, { sha: env.RAILWAY_GIT_COMMIT_SHA || env.GIT_SHA || "dev" });
     }
+    const ip = clientIp(req);
+    if (code && throttled(ip, Date.now()))
+      return send(res, 429, { error: "too many attempts, wait a minute" });
     const auth = authorized(req, code);
     if (!auth) {
+      if (req.headers.authorization) noteFail(ip, Date.now());
       res.writeHead(401, { "www-authenticate": 'Basic realm="Interpreter Workbench", charset="UTF-8"' });
       return res.end("access code required");
     }
@@ -162,7 +204,12 @@ export function createAppServer(opts: AppOptions = {}): Server {
       }
       const clip = url.pathname.match(/^\/eval\/clips\/([^/]+)\.wav$/);
       if (req.method === "GET" && clip) {
-        const id = decodeURIComponent(clip[1]);
+        let id: string;
+        try {
+          id = decodeURIComponent(clip[1]);
+        } catch {
+          return send(res, 400, { error: "bad path" });
+        }
         if (!SAFE_ID.test(id)) return send(res, 404, { error: "not found" });
         try {
           const wav = await readFile(join(evalDir, "clips", `${id}.wav`));
@@ -186,8 +233,7 @@ export function createAppServer(opts: AppOptions = {}): Server {
       }
       if (req.method === "GET" && !url.pathname.startsWith("/api/")) {
         // built browser app (npm run build → dist/); Vite serves it in development
-        const rel =
-          url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname).replace(/^\/+/, "");
+        const rel = url.pathname === "/" ? "index.html" : safeDecode(url.pathname).replace(/^\/+/, "");
         const file = resolve(staticDir, rel);
         if (file.startsWith(staticDir + "/")) {
           try {
@@ -281,7 +327,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const port = Number(process.env.PORT) || 8787;
   // localhost only by default (hld.md §2); HOST=0.0.0.0 only on a host that also sets ACCESS_CODE
   const host = process.env.HOST || "127.0.0.1";
-  if (host !== "127.0.0.1" && !process.env.ACCESS_CODE)
-    throw new Error("refusing to listen publicly without ACCESS_CODE");
+  if (host !== "127.0.0.1" && (process.env.ACCESS_CODE ?? "").length < 12)
+    throw new Error("refusing to listen publicly without an ACCESS_CODE of at least 12 characters");
   createAppServer().listen(port, host, () => console.log(`server listening on ${host}:${port}`));
 }
